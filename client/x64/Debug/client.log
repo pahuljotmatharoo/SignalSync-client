@@ -1,12 +1,4 @@
 ﻿  main.c
-C:\Users\Pahuljot\source\repos\client\client\main.c(62,30): warning C4133: 'function': incompatible types - from 'data_s *' to 'const char *'
-C:\Users\Pahuljot\source\repos\client\client\main.c(76,38): warning C4133: 'function': incompatible types - from 'int *' to 'char *'
-C:\Users\Pahuljot\source\repos\client\client\main.c(108,2): warning C4047: 'return': 'DWORD' differs in levels of indirection from 'void *'
-C:\Users\Pahuljot\source\repos\client\client\main.c(96,12): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Pahuljot\source\repos\client\client\main.c(132,46): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Pahuljot\source\repos\client\client\main.c(129,8): warning C4047: 'initializing': 'char *' differs in levels of indirection from 'char (*)[128]'
-C:\Users\Pahuljot\source\repos\client\client\main.c(144,42): warning C4133: 'function': incompatible types - from 'list *' to 'char *'
-C:\Users\Pahuljot\source\repos\client\client\main.c(144,57): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Pahuljot\source\repos\client\client\main.c(155,24): warning C4133: 'function': incompatible types - from 'MsgHeader *' to 'const char *'
-C:\Users\Pahuljot\source\repos\client\client\main.c(224,17): warning C4244: '=': conversion from 'SOCKET' to 'int', possible loss of data
-  client.vcxproj -> C:\Users\Pahuljot\source\repos\client\x64\Debug\client.exe
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(81,17): warning C4244: '=': conversion from 'SOCKET' to 'int', possible loss of data
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(108,32): warning C4133: 'function': incompatible types - from 'data_s *' to 'const char *'
+  client.vcxproj -> C:\Users\Pahuljot\source\repos\client\ChatApp-client\x64\Debug\client.exe

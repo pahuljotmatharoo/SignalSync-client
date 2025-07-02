@@ -127,11 +127,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="inital_messaging.c" />
     <ClCompile Include="main.c" />
-    <ClCompile Include="thread_functions.cpp" />
+    <ClCompile Include="thread_functions.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="data.h" />
+    <ClInclude Include="inital_message.h" />
     <ClInclude Include="thread_functions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
