@@ -32,7 +32,7 @@ DWORD WINAPI recieving(LPVOID arg) {
 	int first_rec;
 	int type = 0;
 	while ((first_rec = recv(*(socket), &(type), sizeof(type), 0)) > 0) {
-		int lol = 45;
+
 		if (type == MSG_SEND) {
 			data_to_recieve data;
 			data.sock = *socket;
@@ -42,7 +42,7 @@ DWORD WINAPI recieving(LPVOID arg) {
 				continue;
 			}
 			data.a.message[127] = '\0';
-			printf("Received message: \"%s\"\n", data.a.message);
+			printf("Received message: %s \n", data.a.message);
 			type = INT_MAX;
 			continue;
 		}

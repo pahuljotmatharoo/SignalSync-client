@@ -1,4 +1,9 @@
 ﻿  main.c
-C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(81,17): warning C4244: '=': conversion from 'SOCKET' to 'int', possible loss of data
-C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(108,32): warning C4133: 'function': incompatible types - from 'data_s *' to 'const char *'
+  thread_functions.c
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(82,17): warning C4244: '=': conversion from 'SOCKET' to 'int', possible loss of data
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(110,32): warning C4133: 'function': incompatible types - from 'data_s *' to 'const char *'
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\thread_functions.c(34,38): warning C4133: 'function': incompatible types - from 'int *' to 'char *'
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\thread_functions.c(66,2): warning C4047: 'return': 'DWORD' differs in levels of indirection from 'void *'
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\thread_functions.c(54,12): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  Generating Code...
   client.vcxproj -> C:\Users\Pahuljot\source\repos\client\ChatApp-client\x64\Debug\client.exe

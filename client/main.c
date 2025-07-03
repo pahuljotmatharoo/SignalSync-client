@@ -51,20 +51,21 @@ int main() {
 
 	char input[50];
 
-	printf("Command: \n");
-
 	//create the recieve thread
 	DWORD pThreadID;
 	HANDLE call_thread = create_thread(recieving, &sock, &pThreadID);
 	CloseHandle(call_thread);
 
-
 	while (1) {
 		//input
-		if (scanf_s("%49s", input, (unsigned)sizeof(input)) != 1) {
-			// error or EOF
+		printf("Command: ");
+		fflush(stdout);
+		if (!fgets(input, sizeof input, stdin))
 			break;
-		}
+
+		size_t n = strlen(input);
+		if (n > 0 && input[n - 1] == '\n')
+			input[n - 1] = '\0';
 
 		// exit loop if user typed "Exit"
 		if (strcmp(input, "Exit") == 0) {
@@ -77,7 +78,7 @@ int main() {
 		if (strcmp(input, "Send") == 0) {
 
 			data_to_send* data = malloc(sizeof(*data));
-			memset(data, 0, sizeof (*data));
+			memset(data, 0, sizeof(*data));
 			data->sock = sock;
 
 			MsgHeader* hdr = malloc(sizeof(MsgHeader));
@@ -85,23 +86,24 @@ int main() {
 			//i can make this a common function
 			send_inital_msg(hdr, sock, MSG_SEND);
 
-			/*printf("Enter message to send: ");
-			fflush(stdout);*/
+			printf("Enter message to send: ");
+			fflush(stdout);
 
-			//if (fgets(data->message, sizeof data->message, stdin)) {
-			//	// strlen gives you the number of chars *before* the first '\0'
-			//	size_t len = strlen(data->message);
-			//	// if the last stored char is '\n', overwrite it with '\0'
-			//	if (len > 0 && data->message[len - 1] == '\n') {
-			//		data->message[len - 1] = '\0';
-			//	}
-			//}
+			//char temp[128] = { "hello i'm a person!" };
+			char temp[128];
+			memset(temp, '\0', sizeof(temp));
 
-			char temp[128] = { "hello i'm a person!" };
-			//can prolly use strcpy here instead of this loop
-			for (int i = 0; i < 19; i++) {
-				data->a.message[i] = temp[i];
+			if (fgets(temp, sizeof temp, stdin)) {
+				//	// strlen gives you the number of chars *before* the first '\0'
+				size_t len = strlen(temp);
+				//	// if the last stored char is '\n', overwrite it with '\0'
+				if (len > 128) {
+					printf("Message too long!");
+					continue;
+				}
 			}
+
+			strcpy_s(data->a.message, 128, temp);
 
 			data->a.ip = 1057138880;
 
