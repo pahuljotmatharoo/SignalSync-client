@@ -8,7 +8,7 @@ typedef struct data_r {
 
 typedef struct data_s {
 	char message[128];
-	int ip;
+	char user_to_send[50];
 } data_s;
 
 typedef struct list {

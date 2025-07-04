@@ -99,15 +99,17 @@ int main() {
 			printf("Enter message to send: ");
 			fflush(stdout);
 
-			//char temp[128] = { "hello i'm a person!" };
 			char temp[128];
-			char ip[11];
+			char user_to_send_to[50];
 			memset(temp, '\0', sizeof(temp));
 
 			if (fgets(temp, sizeof temp, stdin)) {
 				//	// strlen gives you the number of chars *before* the first '\0'
 				size_t len = strlen(temp);
-				//	// if the last stored char is '\n', overwrite it with '\0'
+				if (len > 0 && user_to_send_to[len - 1] == '\n') {
+					user_to_send_to[len - 1] = '\0';
+					--len;
+				}
 				if (len > 128) {
 					printf("Message too long!");
 					continue;
@@ -115,24 +117,24 @@ int main() {
 			}
 			strcpy_s(data->a.message, 128, temp);
 
-			printf("Enter IP: ");
+			printf("Enter username to send to: ");
 			fflush(stdout);
 
-			if (fgets(ip, sizeof ip, stdin)) {
-				//	// strlen gives you the number of chars *before* the first '\0'
-				size_t len = strlen(ip);
-				//	// if the last stored char is '\n', overwrite it with '\0'
-				if (len > 12) {
+			if (fgets(user_to_send_to, sizeof user_to_send_to, stdin)) {
+				size_t len = strlen(user_to_send_to);
+				if (len > 0 && user_to_send_to[len - 1] == '\n') {
+					user_to_send_to[len - 1] = '\0';
+					--len;
+				}
+				if (len > 50) {
 					printf("Message too long!");
 					continue;
 				}
 			}
 
-			int i = atoi(ip);
+			strcpy_s(&(data->a.user_to_send), 50, &(user_to_send_to));
 
-			data->a.ip = i;
-
-			int sent = send(data->sock, &(data->a), 132, 0);
+			int sent = send(data->sock, &(data->a), 178, 0);
 
 			if (sent > 0) {
 				printf("Sent %d Successfully! \n", sent);
