@@ -13,6 +13,7 @@
 #define MSG_SEND 1
 #define MSG_LIST 2
 #define MSG_EXIT 3
+//so now we are able to send to a user using their IP, lets make this a user name now
 
 int main() {
 
@@ -44,10 +45,19 @@ int main() {
 	}
 
 	printf("Connected!\n");
+	printf("Enter a username!: ");
+	char username[50];
+	if (fgets(username, sizeof username, stdin)) {
 
-	//char* sending = "Init";
+		size_t len = strlen(username);
 
-	//int to_loop = send(sock, sending, strlen(sending), 0);
+		/*if (len > 128) {
+			printf("Message too long!");
+		}*/
+	}
+
+	//send the username to the server
+	send(sock, &username, sizeof username, 0);
 
 	char input[50];
 
@@ -91,6 +101,7 @@ int main() {
 
 			//char temp[128] = { "hello i'm a person!" };
 			char temp[128];
+			char ip[11];
 			memset(temp, '\0', sizeof(temp));
 
 			if (fgets(temp, sizeof temp, stdin)) {
@@ -102,10 +113,24 @@ int main() {
 					continue;
 				}
 			}
-
 			strcpy_s(data->a.message, 128, temp);
 
-			data->a.ip = 1057138880;
+			printf("Enter IP: ");
+			fflush(stdout);
+
+			if (fgets(ip, sizeof ip, stdin)) {
+				//	// strlen gives you the number of chars *before* the first '\0'
+				size_t len = strlen(ip);
+				//	// if the last stored char is '\n', overwrite it with '\0'
+				if (len > 12) {
+					printf("Message too long!");
+					continue;
+				}
+			}
+
+			int i = atoi(ip);
+
+			data->a.ip = i;
 
 			int sent = send(data->sock, &(data->a), 132, 0);
 

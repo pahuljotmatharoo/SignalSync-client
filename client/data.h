@@ -13,7 +13,7 @@ typedef struct data_s {
 
 typedef struct list {
 	int size;
-	int arr[10];
+	char arr[10][50];
 } list;
 
 //actual data structures to use

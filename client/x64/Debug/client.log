@@ -1,7 +1,9 @@
 ﻿  main.c
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(60,13): warning C4047: 'function': 'const char *' differs in levels of indirection from 'char (*)[50]'
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(60,13): warning C4024: 'send': different types for formal and actual parameter 2
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(92,17): warning C4244: '=': conversion from 'SOCKET' to 'int', possible loss of data
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(135,32): warning C4133: 'function': incompatible types - from 'data_s *' to 'const char *'
   thread_functions.c
-C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(82,17): warning C4244: '=': conversion from 'SOCKET' to 'int', possible loss of data
-C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(110,32): warning C4133: 'function': incompatible types - from 'data_s *' to 'const char *'
 C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\thread_functions.c(34,38): warning C4133: 'function': incompatible types - from 'int *' to 'char *'
 C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\thread_functions.c(66,2): warning C4047: 'return': 'DWORD' differs in levels of indirection from 'void *'
 C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\thread_functions.c(54,12): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
