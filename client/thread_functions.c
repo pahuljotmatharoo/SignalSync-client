@@ -49,13 +49,13 @@ DWORD WINAPI recieving(LPVOID arg) {
 
 		else if (type == MSG_LIST) {
 			client_list temp;
-			temp.a.size = 0;
 			temp.sock = *socket;
 			int x = recv_exact_list(&(temp), 504);
 			if (x <= 0) {
 				printf("Received no data! \n");
 				continue;
 			}
+			temp.a.size = ntohl(temp.a.size);
 			for (int i = 0; i < temp.a.size; i++) {
 				printf("%s \n", temp.a.arr[i]);
 			}

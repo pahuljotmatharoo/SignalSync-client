@@ -1,10 +1,15 @@
-﻿  main.c
-C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(60,13): warning C4047: 'function': 'const char *' differs in levels of indirection from 'char (*)[50]'
-C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(60,13): warning C4024: 'send': different types for formal and actual parameter 2
-C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(92,17): warning C4244: '=': conversion from 'SOCKET' to 'int', possible loss of data
-C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(135,13): warning C4047: 'function': 'char *' differs in levels of indirection from 'char (*)[50]'
-C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(135,13): warning C4024: 'strcpy_s': different types for formal and actual parameter 1
-C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(135,42): warning C4047: 'function': 'const char *' differs in levels of indirection from 'char (*)[50]'
-C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(135,42): warning C4024: 'strcpy_s': different types for formal and actual parameter 3
-C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(137,32): warning C4133: 'function': incompatible types - from 'data_s *' to 'const char *'
+﻿  inital_messaging.c
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\inital_messaging.c(13,46): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\inital_messaging.c(10,8): warning C4047: 'initializing': 'char *' differs in levels of indirection from 'char (*)[128]'
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\inital_messaging.c(25,42): warning C4133: 'function': incompatible types - from 'list *' to 'char *'
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\inital_messaging.c(25,57): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\inital_messaging.c(37,24): warning C4133: 'function': incompatible types - from 'MsgHeader *' to 'const char *'
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\inital_messaging.c(45,21): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
+  main.c
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(58,13): warning C4047: 'function': 'const char *' differs in levels of indirection from 'char (*)[50]'
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(58,13): warning C4024: 'send': different types for formal and actual parameter 2
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(118,39): warning C4047: 'function': 'const char *' differs in levels of indirection from 'char (*)[50]'
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(118,39): warning C4024: 'strcpy_s': different types for formal and actual parameter 3
+C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(120,32): warning C4133: 'function': incompatible types - from 'data_s *' to 'const char *'
+  Generating Code...
   client.vcxproj -> C:\Users\Pahuljot\source\repos\client\ChatApp-client\x64\Debug\client.exe

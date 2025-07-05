@@ -12,24 +12,24 @@ typedef struct data_s {
 } data_s;
 
 typedef struct list {
-	int size;
+	uint32_t size;
 	char arr[10][50];
 } list;
 
 //actual data structures to use
 typedef struct data_send {
 	data_s a;
-	int sock;
+	SOCKET sock;
 } data_to_send;
 
 typedef struct data_recieve {
 	data_r a;
-	int sock;
+	SOCKET sock;
 } data_to_recieve;
 
 typedef struct client_list {
 	list a;
-	int sock;
+	SOCKET sock;
 } client_list;
 
 #endif

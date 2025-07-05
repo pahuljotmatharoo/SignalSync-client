@@ -7,16 +7,20 @@
       "RelativeMoniker": "D:0:0:{515DAA49-E5F5-4F9B-928B-0C78106401AE}|client\\client.vcxproj|solutionrelative:client\\main.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{515DAA49-E5F5-4F9B-928B-0C78106401AE}|client\\client.vcxproj|C:\\Users\\Pahuljot\\source\\repos\\client\\ChatApp-client\\client\\thread_functions.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{515DAA49-E5F5-4F9B-928B-0C78106401AE}|client\\client.vcxproj|solutionrelative:client\\thread_functions.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{515DAA49-E5F5-4F9B-928B-0C78106401AE}|client\\client.vcxproj|C:\\Users\\Pahuljot\\source\\repos\\client\\ChatApp-client\\client\\inital_messaging.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{515DAA49-E5F5-4F9B-928B-0C78106401AE}|client\\client.vcxproj|solutionrelative:client\\inital_messaging.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{515DAA49-E5F5-4F9B-928B-0C78106401AE}|client\\client.vcxproj|C:\\Users\\Pahuljot\\source\\repos\\client\\ChatApp-client\\client\\inital_message.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{515DAA49-E5F5-4F9B-928B-0C78106401AE}|client\\client.vcxproj|solutionrelative:client\\inital_message.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{515DAA49-E5F5-4F9B-928B-0C78106401AE}|client\\client.vcxproj|C:\\Users\\Pahuljot\\source\\repos\\client\\ChatApp-client\\client\\data.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{515DAA49-E5F5-4F9B-928B-0C78106401AE}|client\\client.vcxproj|solutionrelative:client\\data.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{515DAA49-E5F5-4F9B-928B-0C78106401AE}|client\\client.vcxproj|C:\\Users\\Pahuljot\\source\\repos\\client\\ChatApp-client\\client\\thread_functions.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{515DAA49-E5F5-4F9B-928B-0C78106401AE}|client\\client.vcxproj|solutionrelative:client\\thread_functions.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -36,9 +40,36 @@
               "RelativeDocumentMoniker": "client\\main.c",
               "ToolTip": "C:\\Users\\Pahuljot\\source\\repos\\client\\ChatApp-client\\client\\main.c",
               "RelativeToolTip": "client\\main.c",
-              "ViewState": "AgIAAHMAAAAAAAAAAAAEwJIAAAAoAAAAAAAAAA==",
+              "ViewState": "AgIAACUAAAAAAAAAAAAUwC8AAAAYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
               "WhenOpened": "2025-06-22T00:56:15.699Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "inital_messaging.c",
+              "DocumentMoniker": "C:\\Users\\Pahuljot\\source\\repos\\client\\ChatApp-client\\client\\inital_messaging.c",
+              "RelativeDocumentMoniker": "client\\inital_messaging.c",
+              "ToolTip": "C:\\Users\\Pahuljot\\source\\repos\\client\\ChatApp-client\\client\\inital_messaging.c",
+              "RelativeToolTip": "client\\inital_messaging.c",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAmwDIAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
+              "WhenOpened": "2025-07-04T05:18:44.496Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "inital_message.h",
+              "DocumentMoniker": "C:\\Users\\Pahuljot\\source\\repos\\client\\ChatApp-client\\client\\inital_message.h",
+              "RelativeDocumentMoniker": "client\\inital_message.h",
+              "ToolTip": "C:\\Users\\Pahuljot\\source\\repos\\client\\ChatApp-client\\client\\inital_message.h",
+              "RelativeToolTip": "client\\inital_message.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-07-05T01:07:19.184Z",
               "EditorCaption": ""
             },
             {
@@ -49,33 +80,20 @@
               "RelativeDocumentMoniker": "client\\data.h",
               "ToolTip": "C:\\Users\\Pahuljot\\source\\repos\\client\\ChatApp-client\\client\\data.h",
               "RelativeToolTip": "client\\data.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAVAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-07-04T05:25:59.205Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "inital_messaging.c",
-              "DocumentMoniker": "C:\\Users\\Pahuljot\\source\\repos\\client\\ChatApp-client\\client\\inital_messaging.c",
-              "RelativeDocumentMoniker": "client\\inital_messaging.c",
-              "ToolTip": "C:\\Users\\Pahuljot\\source\\repos\\client\\ChatApp-client\\client\\inital_messaging.c",
-              "RelativeToolTip": "client\\inital_messaging.c",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAeAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
-              "WhenOpened": "2025-07-04T05:18:44.496Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
               "Title": "thread_functions.c",
               "DocumentMoniker": "C:\\Users\\Pahuljot\\source\\repos\\client\\ChatApp-client\\client\\thread_functions.c",
               "RelativeDocumentMoniker": "client\\thread_functions.c",
               "ToolTip": "C:\\Users\\Pahuljot\\source\\repos\\client\\ChatApp-client\\client\\thread_functions.c",
               "RelativeToolTip": "client\\thread_functions.c",
-              "ViewState": "AgIAABkAAAAAAAAAAAAUwDkAAAAEAAAAAAAAAA==",
+              "ViewState": "AgIAABkAAAAAAAAAAAAUwDwAAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
               "WhenOpened": "2025-06-28T02:42:53.361Z",
               "EditorCaption": ""

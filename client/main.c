@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "thread_functions.h"
 #include "inital_message.h"
 #include "data.h"
@@ -47,13 +48,10 @@ int main() {
 	printf("Connected!\n");
 	printf("Enter a username!: ");
 	char username[50];
-	if (fgets(username, sizeof username, stdin)) {
 
-		size_t len = strlen(username);
-
-		/*if (len > 128) {
-			printf("Message too long!");
-		}*/
+	//get user input for username
+	if (!get_user_input((username), 50)) {
+		return 0;
 	}
 
 	//send the username to the server
@@ -70,12 +68,9 @@ int main() {
 		//input
 		printf("Command: ");
 		fflush(stdout);
-		if (!fgets(input, sizeof input, stdin))
-			break;
 
-		size_t n = strlen(input);
-		if (n > 0 && input[n - 1] == '\n')
-			input[n - 1] = '\0';
+		if (!(get_user_input((input), 50)))
+			break;
 
 		// exit loop if user typed "Exit"
 		if (strcmp(input, "Exit") == 0) {
@@ -87,10 +82,6 @@ int main() {
 		//if we want to send
 		if (strcmp(input, "Send") == 0) {
 
-			data_to_send* data = malloc(sizeof(*data));
-			memset(data, 0, sizeof(*data));
-			data->sock = sock;
-
 			MsgHeader* hdr = malloc(sizeof(MsgHeader));
 
 			//i can make this a common function
@@ -99,40 +90,32 @@ int main() {
 			printf("Enter message to send: ");
 			fflush(stdout);
 
+			data_to_send* data = malloc(sizeof(*data));
+			memset(data, 0, sizeof(*data));
+			data->sock = sock;
+
 			char temp[128];
 			char user_to_send_to[50];
 			memset(temp, '\0', sizeof(temp));
 
-			if (fgets(temp, sizeof temp, stdin)) {
-				//	// strlen gives you the number of chars *before* the first '\0'
-				size_t len = strlen(temp);
-				if (len > 0 && user_to_send_to[len - 1] == '\n') {
-					user_to_send_to[len - 1] = '\0';
-					--len;
-				}
-				if (len > 128) {
-					printf("Message too long!");
-					continue;
-				}
+			bool send_input = get_user_input(temp, 128);
+			if (!send_input) {
+				printf("Too long!");
+				continue;
 			}
+
 			strcpy_s(data->a.message, 128, temp);
 
 			printf("Enter username to send to: ");
 			fflush(stdout);
 
-			if (fgets(user_to_send_to, sizeof user_to_send_to, stdin)) {
-				size_t len = strlen(user_to_send_to);
-				if (len > 0 && user_to_send_to[len - 1] == '\n') {
-					user_to_send_to[len - 1] = '\0';
-					--len;
-				}
-				if (len > 50) {
-					printf("Message too long!");
-					continue;
-				}
+			bool send_user = get_user_input(user_to_send_to, 50);
+			if (!send_user) {
+				printf("Too long!");
+				continue;
 			}
 
-			strcpy_s(&(data->a.user_to_send), 50, &(user_to_send_to));
+			strcpy_s(data->a.user_to_send, 50, &(user_to_send_to));
 
 			int sent = send(data->sock, &(data->a), 178, 0);
 
@@ -142,12 +125,15 @@ int main() {
 			free(data);
 		}
 		if (strcmp(input, "List") == 0) {
-
 			MsgHeader* hdr = malloc(sizeof(MsgHeader));
 			send_inital_msg(hdr, sock, MSG_LIST);
 			printf("Sent command info Successfully! \n");
 			//it jumps to the other thread now
 		}
+
+		//reset the input
+		//memcpy(input, '\0', 50);
+
 	}
 	closesocket(sock);
 	WSACleanup();
