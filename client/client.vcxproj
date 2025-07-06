@@ -127,12 +127,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="commands.c" />
+    <ClCompile Include="connection.c" />
     <ClCompile Include="inital_messaging.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="thread_functions.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="commands.h" />
     <ClInclude Include="data.h" />
+    <ClInclude Include="connection.h" />
     <ClInclude Include="inital_message.h" />
     <ClInclude Include="thread_functions.h" />
   </ItemGroup>
