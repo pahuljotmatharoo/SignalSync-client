@@ -1,7 +1,0 @@
-﻿  connection.c
-  main.c
-C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\connection.c(12,30): warning C4133: 'function': incompatible types - from 'sockaddr_in *' to 'const sockaddr *'
-C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(53,13): warning C4047: 'function': 'const char *' differs in levels of indirection from 'char (*)[50]'
-C:\Users\Pahuljot\source\repos\client\ChatApp-client\client\main.c(53,13): warning C4024: 'send': different types for formal and actual parameter 2
-  Generating Code...
-  client.vcxproj -> C:\Users\Pahuljot\source\repos\client\ChatApp-client\x64\Debug\client.exe
