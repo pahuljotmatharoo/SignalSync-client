@@ -12,17 +12,17 @@
 
 class ChattingWindow : public QMainWindow {
     Q_OBJECT
-
 private:
     Ui::ChattingWindow ui;
     QString username;
     struct Impl;
     Impl* impl_;
-
+    std::unordered_map<std::string, std::vector<std::string>> messages;
 public:
     explicit ChattingWindow(QWidget* parent = nullptr);
-    ~ChattingWindow();                   // ← add a destructor!
+    ~ChattingWindow();
     void thread_creator();
-    void setSOCKET(SOCKET sock);         // ← take the handle by value
+    void setSOCKET(SOCKET sock);
     void setUsername(const QString& new_user);
+    void addMessage(char message[128], char username[50]);
 };

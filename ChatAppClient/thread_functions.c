@@ -28,21 +28,21 @@ HANDLE create_thread(LPTHREAD_START_ROUTINE func,
 }
 
 DWORD WINAPI recieving(LPVOID arg) {
-	SOCKET* socket = (SOCKET*)arg;
+	RecvParams* funct_arg = (RecvParams*) arg;
 	int first_rec;
 	int type = 0;
-	while ((first_rec = recv(*(socket), &(type), sizeof(type), 0)) > 0) {
+	while ((first_rec = recv(*(funct_arg->sock), &(type), sizeof(type), 0)) > 0) {
 
 		if (type == MSG_SEND) {
 			data_to_recieve data;
-			data.sock = *socket;
-			size_t x = recv_exact_msg(&(data), 128);
+			data.sock = *(funct_arg->sock);
+			size_t x = recv_exact_msg(&(data), sizeof (data_r));
 			if (x <= 0) {
 				printf("Received no data! \n");
 				continue;
 			}
 			data.a.message[127] = '\0';
-			printf("Received message: %s \n", data.a.message);
+			funct_arg->on_message(funct_arg->window_ptr, data.a.message, data.a.username);
 			type = INT_MAX;
 			continue;
 		}
@@ -63,5 +63,6 @@ DWORD WINAPI recieving(LPVOID arg) {
 			continue;
 		}
 	}
+	free(arg);
 	return NULL;
 }
