@@ -11,6 +11,8 @@
 #define MSG_LIST 2
 #define MSG_EXIT 3
 
+//need to remove the magic numbers
+
 //use the HANDLE return value to close the thread
 // Returns the new thread handle, and writes its ID into *pThreadID.
 HANDLE create_thread(LPTHREAD_START_ROUTINE func,
@@ -48,17 +50,15 @@ DWORD WINAPI recieving(LPVOID arg) {
 		}
 
 		else if (type == MSG_LIST) {
-			client_list temp;
-			temp.sock = *socket;
-			int x = recv_exact_list(&(temp), 504);
+			client_list data;
+			data.sock = *(funct_arg->sock);
+			int x = recv_exact_list(&(data), 504);
 			if (x <= 0) {
 				printf("Received no data! \n");
 				continue;
 			}
-			temp.a.size = ntohl(temp.a.size);
-			for (int i = 0; i < temp.a.size; i++) {
-				printf("%s \n", temp.a.arr[i]);
-			}
+			data.a.size = ntohl(data.a.size);
+			funct_arg->on_list(funct_arg->window_ptr, data.a.arr, data.a.size);
 			type = INT_MAX;
 			continue;
 		}

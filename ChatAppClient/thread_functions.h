@@ -11,8 +11,6 @@ HANDLE create_thread(LPTHREAD_START_ROUTINE func,
 
 DWORD WINAPI recieving(LPVOID arg);
 
-//void main_connect();
-
 #ifdef __cplusplus
 }
 #endif

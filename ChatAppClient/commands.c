@@ -10,36 +10,18 @@
 #include "data.h"
 #include "inital_message.h"
 #include <corecrt_malloc.h>
+#define MSG_SEND 1
+#define MSG_LIST 2
+#define MSG_EXIT 3
 
-bool send_to_user(SOCKET sock)
+bool send_to_user(SOCKET* sock, const char* temp, const char* user_to_send_to)
 {
-	printf("Enter message to send: ");
-	fflush(stdout);
+	send_inital_msg(*sock, MSG_SEND);
 
 	data_to_send* data = (data_to_send*) malloc(sizeof(*data));
-
-	data->sock = sock;
-
-	char temp[128];
-	char user_to_send_to[50];
-	memset(temp, '\0', sizeof(temp));
-
-	bool send_input = get_user_input(temp, 128);
-	if (!send_input) {
-		printf("Too long!");
-		return false;
-	}
+	data->sock = *sock;
 
 	strcpy_s(data->a.message, 128, temp);
-
-	printf("Enter username to send to: ");
-	fflush(stdout);
-
-	bool send_user = get_user_input(user_to_send_to, 50);
-	if (!send_user) {
-		printf("Too long!");
-		return false;
-	}
 
 	strcpy_s(data->a.user_to_send, 50, (user_to_send_to));
 
@@ -48,6 +30,7 @@ bool send_to_user(SOCKET sock)
 	if (sent > 0) {
 		printf("Sent %d Successfully! \n", sent);
 	}
+
 	free(data);
 	return true;
 }

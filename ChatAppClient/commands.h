@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-bool send_to_user(SOCKET sock);
+	bool send_to_user(SOCKET* sock, const char* temp, const char* user_to_send_to);
 
 #ifdef __cplusplus
 }
