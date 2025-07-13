@@ -36,6 +36,7 @@ SOCKET main_connect(const char* user) {
 		fprintf(stderr, "connect(): %d\n", WSAGetLastError());
 		closesocket(sock);
 		WSACleanup();
+		return status;
 	}
 
 	printf("Connected!\n");

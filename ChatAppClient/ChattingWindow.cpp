@@ -6,6 +6,9 @@
 #include "data.h"
 #include "commands.h"
 #include <inital_message.h>
+#include <QHBoxLayout>
+#include <message.h>
+#include <message_s.h>
 #define MSG_SEND 1
 #define MSG_LIST 2
 #define MSG_EXIT 3
@@ -69,7 +72,9 @@ void ChattingWindow::addMessage(char message[128], char username[50])
     std::string message_toadd(message);
 
     Messages[username_toadd].push_back(message_toadd);
-    return;
+
+    //since this function will be called by recv thread, cannot create element here so queue it on main thread
+    QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreen(message);},Qt::QueuedConnection);
 }
 
 void ChattingWindow::addUsers(char users[10][50], uint32_t size) {
@@ -84,6 +89,13 @@ void ChattingWindow::addUsers(char users[10][50], uint32_t size) {
     return;
 }
 
+void ChattingWindow::sendMessageToScreen(const QString& message)
+{
+    auto* new_message = new MessageWidget(message, this);
+    ui.verticalLayout->addWidget(new_message);
+    return;
+}
+
 void ChattingWindow::on_Username_input_textEdited(const QString& text)
 {
     username_to_send = text;
@@ -94,7 +106,6 @@ void ChattingWindow::on_Message_input_textEdited(const QString& text)
     message_to_send = text;
 }
 
-//implement this
 void ChattingWindow::on_sendButton_clicked()
 {
     std::string username_to_sendStd = username_to_send.toStdString();
@@ -104,4 +115,8 @@ void ChattingWindow::on_sendButton_clicked()
     const char* message_to_sendCStr = message_to_sendStd.c_str();;
 
     send_to_user(&impl_->sock, message_to_sendCStr, username_to_sendCStr);
+
+    auto* new_message = new MessageWidget_s(message_to_send, this);
+    ui.verticalLayout->addWidget(new_message);
+    return;
 }

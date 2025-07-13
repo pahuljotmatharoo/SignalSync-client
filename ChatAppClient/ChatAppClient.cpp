@@ -22,28 +22,42 @@ ChatAppClient::~ChatAppClient()
     impl_ = nullptr;
 }
 
+void ChatAppClient::throw_connection_error()
+{
+    QMessageBox msgBox;
+    msgBox.setText("Couldn't connect to server.");
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setDefaultButton(QMessageBox::Ok);
+    int ret = msgBox.exec();
+}
+
 void ChatAppClient::on_lineEdit_textEdited(const QString &text)
 {
     username = text;
 }
 
 void ChatAppClient::on_pushButton_clicked() {
-    // make sure you’re getting the final text
-    const QString user = username;
+
     std::string userStd = username.toStdString();
     const char* userCStr = userStd.c_str();;
 
     SOCKET sock = main_connect(userCStr);
+
+    //if we cannot connect to the server
+    if (sock == SOCKET_ERROR) {
+        this->close();
+        throw_connection_error();
+        return;
+    }
+
     this->impl_->sock = sock;
 
-    QMessageBox::information(this,
-        tr("Logged in as %1"),
-        tr("Hello, %1!").arg(user));
+    QMessageBox::information(this,tr("Logged in as %1").arg(username),tr(""));
 
     auto* w = new ChattingWindow;
-
     w->setUsername(this->username);
     w->setSOCKET((this->impl_->sock));
+
     this->close();
 
     w->setAttribute(Qt::WA_DeleteOnClose);

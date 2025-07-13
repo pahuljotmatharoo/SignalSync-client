@@ -7,20 +7,23 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>600</height>
+    <height>632</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="layoutDirection">
+   <enum>Qt::LayoutDirection::LeftToRight</enum>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>220</x>
-      <y>210</y>
+      <x>230</x>
+      <y>10</y>
       <width>91</width>
-      <height>31</height>
+      <height>20</height>
      </rect>
     </property>
     <property name="text">
@@ -30,10 +33,10 @@
    <widget class="QPushButton" name="sendButton">
     <property name="geometry">
      <rect>
-      <x>320</x>
-      <y>370</y>
-      <width>101</width>
-      <height>24</height>
+      <x>690</x>
+      <y>570</y>
+      <width>111</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="text">
@@ -43,35 +46,40 @@
    <widget class="QLineEdit" name="Username_input">
     <property name="geometry">
      <rect>
-      <x>330</x>
-      <y>210</y>
+      <x>320</x>
+      <y>10</y>
       <width>151</width>
       <height>24</height>
      </rect>
     </property>
    </widget>
-   <widget class="QLabel" name="label_2">
-    <property name="geometry">
-     <rect>
-      <x>200</x>
-      <y>280</y>
-      <width>101</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Message to Send:</string>
-    </property>
-   </widget>
    <widget class="QLineEdit" name="Message_input">
     <property name="geometry">
      <rect>
-      <x>310</x>
-      <y>280</y>
-      <width>371</width>
-      <height>24</height>
+      <x>0</x>
+      <y>570</y>
+      <width>691</width>
+      <height>41</height>
      </rect>
     </property>
+   </widget>
+   <widget class="QWidget" name="verticalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>50</y>
+      <width>671</width>
+      <height>501</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <property name="sizeConstraint">
+      <enum>QLayout::SizeConstraint::SetNoConstraint</enum>
+     </property>
+    </layout>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -83,8 +91,19 @@
      <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuUser1">
+    <property name="title">
+     <string>User1</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuUser2">
+    <property name="title">
+     <string>User2</string>
+    </property>
+   </widget>
+   <addaction name="menuUser1"/>
+   <addaction name="menuUser2"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
  <connections/>

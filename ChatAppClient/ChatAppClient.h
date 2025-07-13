@@ -15,6 +15,7 @@ private:
 public:
     ChatAppClient(QWidget* parent = nullptr);
     ~ChatAppClient();
+    void throw_connection_error();
     //void set_WSADATA(WSADATA wsData);
 
 private slots: // Declare slots in this section

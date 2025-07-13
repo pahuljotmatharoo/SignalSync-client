@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Message_chat_s</class>
+ <widget class="QWidget" name="Message_chat_s">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>405</width>
+    <height>41</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QLineEdit" name="message_send">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>401</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">/* bubble background */
+    background-color: rgb(0, 0, 0);
+    /* light border */
+    border: 1px solid #DADADA;
+    /* round most corners */
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 0px;
+    /* leave bottom-left un-rounded for a little “tail” effect */
+    border-bottom-left-radius: 20px;
+    /* give some breathing room around the text */
+    padding: 6px 12px;
+    /* text styling */
+    color: rgb(255, 255, 255);
+    font: 11pt &quot;Segoe UI&quot;;</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTop|Qt::AlignmentFlag::AlignTrailing</set>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

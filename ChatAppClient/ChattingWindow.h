@@ -8,6 +8,7 @@
 #include <ws2tcpip.h>
 #include <QMainWindow>
 #include "ui_ChattingWindow.h"
+#include <QHBoxLayout>
 
 class ChattingWindow : public QMainWindow {
     Q_OBJECT
@@ -27,6 +28,7 @@ public:
     void setSOCKET(SOCKET sock);
     void setUsername(const QString& new_user);
     void addMessage(char message[128], char username[50]);
+    void sendMessageToScreen(const QString& message);
     void addUsers(char users[10][50], uint32_t size);
 private slots:
     void on_sendButton_clicked();
