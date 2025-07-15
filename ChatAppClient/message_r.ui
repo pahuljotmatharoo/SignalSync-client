@@ -241,6 +241,9 @@
     color: rgb(255, 255, 255);
     font: 11pt &quot;Segoe UI&quot;;</string>
    </property>
+   <property name="text">
+    <string/>
+   </property>
    <property name="alignment">
     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
    </property>

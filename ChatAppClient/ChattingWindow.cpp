@@ -1,4 +1,4 @@
-#include <winsock2.h>
+﻿#include <winsock2.h>
 #include <ws2tcpip.h>
 #include <windows.h>
 #include "ChattingWindow.h"
@@ -9,6 +9,9 @@
 #include <QHBoxLayout>
 #include <message.h>
 #include <message_s.h>
+#include <qscrollbar.h>
+#include <qlayout.h>
+#include <qtimer.h>
 #define MSG_SEND 1
 #define MSG_LIST 2
 #define MSG_EXIT 3
@@ -25,6 +28,19 @@ struct ChattingWindow::Impl {
 ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), username{ "" }, impl_(new Impl())
 {
     ui.setupUi(this);
+    
+    //we're just creating a layout for scrolling and out vertical layout
+    QWidget* contents = ui.scrollArea->takeWidget();
+    QVBoxLayout* layout = new QVBoxLayout(contents);
+
+    layout->setContentsMargins(0, 0, 0, 0);
+    contents->setLayout(layout);
+    ui.scrollArea->setWidget(contents);
+
+    ui.verticalLayout = layout;
+    layout->setSpacing(5);
+    layout->setSizeConstraint(QLayout::SetMinimumSize);
+
 }
 
 ChattingWindow::~ChattingWindow()
@@ -91,8 +107,14 @@ void ChattingWindow::addUsers(char users[10][50], uint32_t size) {
 
 void ChattingWindow::sendMessageToScreen(const QString& message)
 {
-    auto* new_message = new MessageWidget(message, this);
-    ui.verticalLayout->addWidget(new_message);
+
+    auto* bubble = new MessageWidget(message, this);
+        
+    // make bubble report a non-zero height
+    bubble->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    bubble->adjustSize();
+
+    ui.verticalLayout->addWidget(bubble, 0,Qt::AlignLeft);
     return;
 }
 
@@ -116,7 +138,13 @@ void ChattingWindow::on_sendButton_clicked()
 
     send_to_user(&impl_->sock, message_to_sendCStr, username_to_sendCStr);
 
-    auto* new_message = new MessageWidget_s(message_to_send, this);
-    ui.verticalLayout->addWidget(new_message);
+    auto* bubble = new MessageWidget_s(message_to_send, this);
+
+    // make bubble report a non-zero height
+    bubble->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    bubble->adjustSize();
+
+    ui.verticalLayout->addWidget(bubble, 0,Qt::AlignRight);
+
     return;
 }

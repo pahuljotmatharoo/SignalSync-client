@@ -11,8 +11,8 @@ class MessageWidget : public QWidget
 
 public:
     explicit MessageWidget(const QString& message, QWidget* parent = nullptr);
-    
     ~MessageWidget();
+    QSize sizeHint() const;
 private:
     Ui::Message_chat* ui;   // owns all the controls from your .ui file
 };
