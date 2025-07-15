@@ -10,13 +10,16 @@
 #define UI_CHATTINGWINDOW_H
 
 #include <QtCore/QVariant>
+#include <QtGui/QAction>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
+#include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
-#include <QtWidgets/QStatusBar>
+#include <QtWidgets/QScrollArea>
+#include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -25,44 +28,75 @@ class Ui_ChattingWindow
 {
 public:
     QWidget *centralwidget;
-    QLabel *label;
-    QPushButton *sendButton;
+    QVBoxLayout *verticalLayout;
     QLineEdit *Username_input;
-    QLabel *label_2;
+    QLabel *label;
+    QScrollArea *scrollArea;
+    QWidget *scrollAreaWidgetContents;
     QLineEdit *Message_input;
+    QPushButton *sendButton;
     QMenuBar *menubar;
-    QStatusBar *statusbar;
+    QMenu *menuUser1;
+    QMenu *menuUser2;
 
     void setupUi(QMainWindow *ChattingWindow)
     {
         if (ChattingWindow->objectName().isEmpty())
             ChattingWindow->setObjectName("ChattingWindow");
-        ChattingWindow->resize(800, 600);
+        ChattingWindow->resize(898, 623);
+        QSizePolicy sizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::MinimumExpanding);
+        sizePolicy.setHorizontalStretch(0);
+        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHeightForWidth(ChattingWindow->sizePolicy().hasHeightForWidth());
+        ChattingWindow->setSizePolicy(sizePolicy);
+        ChattingWindow->setLayoutDirection(Qt::LayoutDirection::LeftToRight);
         centralwidget = new QWidget(ChattingWindow);
         centralwidget->setObjectName("centralwidget");
-        label = new QLabel(centralwidget);
-        label->setObjectName("label");
-        label->setGeometry(QRect(220, 210, 91, 31));
-        sendButton = new QPushButton(centralwidget);
-        sendButton->setObjectName("sendButton");
-        sendButton->setGeometry(QRect(320, 370, 101, 24));
+        verticalLayout = new QVBoxLayout(centralwidget);
+        verticalLayout->setObjectName("verticalLayout");
         Username_input = new QLineEdit(centralwidget);
         Username_input->setObjectName("Username_input");
-        Username_input->setGeometry(QRect(330, 210, 151, 24));
-        label_2 = new QLabel(centralwidget);
-        label_2->setObjectName("label_2");
-        label_2->setGeometry(QRect(200, 280, 101, 16));
+
+        verticalLayout->addWidget(Username_input);
+
+        label = new QLabel(centralwidget);
+        label->setObjectName("label");
+
+        verticalLayout->addWidget(label);
+
+        scrollArea = new QScrollArea(centralwidget);
+        scrollArea->setObjectName("scrollArea");
+        scrollArea->setEnabled(true);
+        scrollArea->setWidgetResizable(true);
+        scrollAreaWidgetContents = new QWidget();
+        scrollAreaWidgetContents->setObjectName("scrollAreaWidgetContents");
+        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 878, 470));
+        scrollArea->setWidget(scrollAreaWidgetContents);
+
+        verticalLayout->addWidget(scrollArea);
+
         Message_input = new QLineEdit(centralwidget);
         Message_input->setObjectName("Message_input");
-        Message_input->setGeometry(QRect(310, 280, 371, 24));
+
+        verticalLayout->addWidget(Message_input);
+
+        sendButton = new QPushButton(centralwidget);
+        sendButton->setObjectName("sendButton");
+
+        verticalLayout->addWidget(sendButton);
+
         ChattingWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(ChattingWindow);
         menubar->setObjectName("menubar");
-        menubar->setGeometry(QRect(0, 0, 800, 21));
+        menubar->setGeometry(QRect(0, 0, 898, 21));
+        menuUser1 = new QMenu(menubar);
+        menuUser1->setObjectName("menuUser1");
+        menuUser2 = new QMenu(menubar);
+        menuUser2->setObjectName("menuUser2");
         ChattingWindow->setMenuBar(menubar);
-        statusbar = new QStatusBar(ChattingWindow);
-        statusbar->setObjectName("statusbar");
-        ChattingWindow->setStatusBar(statusbar);
+
+        menubar->addAction(menuUser1->menuAction());
+        menubar->addAction(menuUser2->menuAction());
 
         retranslateUi(ChattingWindow);
 
@@ -74,7 +108,8 @@ public:
         ChattingWindow->setWindowTitle(QCoreApplication::translate("ChattingWindow", "MainWindow", nullptr));
         label->setText(QCoreApplication::translate("ChattingWindow", "User to Send To:", nullptr));
         sendButton->setText(QCoreApplication::translate("ChattingWindow", "Send Message", nullptr));
-        label_2->setText(QCoreApplication::translate("ChattingWindow", "Message to Send:", nullptr));
+        menuUser1->setTitle(QCoreApplication::translate("ChattingWindow", "User1", nullptr));
+        menuUser2->setTitle(QCoreApplication::translate("ChattingWindow", "User2", nullptr));
     } // retranslateUi
 
 };
