@@ -19,7 +19,7 @@ private:
     QString message_to_send;
     struct Impl;
     Impl* impl_;
-    std::unordered_map<std::string, std::vector<std::string>> Messages;
+    std::unordered_map<QString, std::vector<std::pair<bool, std::string>>> Messages;
     std::unordered_set<std::string> Users;
 public:
     explicit ChattingWindow(QWidget* parent = nullptr);
@@ -29,9 +29,11 @@ public:
     void setUsername(const QString& new_user);
     void addMessage(char message[128], char username[50]);
     void sendMessageToScreen(const QString& message);
+    void sendUserToScreen(QString username);
     void addUsers(char users[10][50], uint32_t size);
 private slots:
     void on_sendButton_clicked();
-    void on_Username_input_textEdited(const QString& text); // this is for 
+    void on_Username_input_textEdited(const QString& text);
     void on_Message_input_textEdited(const QString& text);
+    void onUserClick();
 };

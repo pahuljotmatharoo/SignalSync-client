@@ -10,12 +10,10 @@
 #define UI_CHATTINGWINDOW_H
 
 #include <QtCore/QVariant>
-#include <QtGui/QAction>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
-#include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QScrollArea>
@@ -28,22 +26,24 @@ class Ui_ChattingWindow
 {
 public:
     QWidget *centralwidget;
+    QWidget *verticalLayoutWidget;
+    QVBoxLayout *verticalLayout_2;
+    QWidget *layoutWidget;
     QVBoxLayout *verticalLayout;
-    QLineEdit *Username_input;
-    QLabel *label;
     QScrollArea *scrollArea;
     QWidget *scrollAreaWidgetContents;
+    QLabel *label;
     QLineEdit *Message_input;
     QPushButton *sendButton;
+    QScrollArea *scrollArea_2;
+    QWidget *scrollAreaWidgetContents_2;
     QMenuBar *menubar;
-    QMenu *menuUser1;
-    QMenu *menuUser2;
 
     void setupUi(QMainWindow *ChattingWindow)
     {
         if (ChattingWindow->objectName().isEmpty())
             ChattingWindow->setObjectName("ChattingWindow");
-        ChattingWindow->resize(898, 623);
+        ChattingWindow->resize(1039, 727);
         QSizePolicy sizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::MinimumExpanding);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
@@ -52,51 +52,56 @@ public:
         ChattingWindow->setLayoutDirection(Qt::LayoutDirection::LeftToRight);
         centralwidget = new QWidget(ChattingWindow);
         centralwidget->setObjectName("centralwidget");
-        verticalLayout = new QVBoxLayout(centralwidget);
+        verticalLayoutWidget = new QWidget(centralwidget);
+        verticalLayoutWidget->setObjectName("verticalLayoutWidget");
+        verticalLayoutWidget->setGeometry(QRect(0, 30, 291, 621));
+        verticalLayout_2 = new QVBoxLayout(verticalLayoutWidget);
+        verticalLayout_2->setObjectName("verticalLayout_2");
+        verticalLayout_2->setContentsMargins(0, 0, 0, 0);
+        layoutWidget = new QWidget(centralwidget);
+        layoutWidget->setObjectName("layoutWidget");
+        layoutWidget->setGeometry(QRect(300, 10, 741, 701));
+        verticalLayout = new QVBoxLayout(layoutWidget);
         verticalLayout->setObjectName("verticalLayout");
-        Username_input = new QLineEdit(centralwidget);
-        Username_input->setObjectName("Username_input");
-
-        verticalLayout->addWidget(Username_input);
-
-        label = new QLabel(centralwidget);
-        label->setObjectName("label");
-
-        verticalLayout->addWidget(label);
-
-        scrollArea = new QScrollArea(centralwidget);
+        verticalLayout->setContentsMargins(0, 0, 0, 0);
+        scrollArea = new QScrollArea(layoutWidget);
         scrollArea->setObjectName("scrollArea");
         scrollArea->setEnabled(true);
         scrollArea->setWidgetResizable(true);
         scrollAreaWidgetContents = new QWidget();
         scrollAreaWidgetContents->setObjectName("scrollAreaWidgetContents");
-        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 878, 470));
+        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 737, 637));
+        label = new QLabel(scrollAreaWidgetContents);
+        label->setObjectName("label");
+        label->setGeometry(QRect(0, 0, 739, 16));
         scrollArea->setWidget(scrollAreaWidgetContents);
 
         verticalLayout->addWidget(scrollArea);
 
-        Message_input = new QLineEdit(centralwidget);
+        Message_input = new QLineEdit(layoutWidget);
         Message_input->setObjectName("Message_input");
+        Message_input->setEnabled(true);
 
         verticalLayout->addWidget(Message_input);
 
-        sendButton = new QPushButton(centralwidget);
+        sendButton = new QPushButton(layoutWidget);
         sendButton->setObjectName("sendButton");
 
         verticalLayout->addWidget(sendButton);
 
+        scrollArea_2 = new QScrollArea(centralwidget);
+        scrollArea_2->setObjectName("scrollArea_2");
+        scrollArea_2->setGeometry(QRect(0, 30, 291, 621));
+        scrollArea_2->setWidgetResizable(true);
+        scrollAreaWidgetContents_2 = new QWidget();
+        scrollAreaWidgetContents_2->setObjectName("scrollAreaWidgetContents_2");
+        scrollAreaWidgetContents_2->setGeometry(QRect(0, 0, 289, 619));
+        scrollArea_2->setWidget(scrollAreaWidgetContents_2);
         ChattingWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(ChattingWindow);
         menubar->setObjectName("menubar");
-        menubar->setGeometry(QRect(0, 0, 898, 21));
-        menuUser1 = new QMenu(menubar);
-        menuUser1->setObjectName("menuUser1");
-        menuUser2 = new QMenu(menubar);
-        menuUser2->setObjectName("menuUser2");
+        menubar->setGeometry(QRect(0, 0, 1039, 21));
         ChattingWindow->setMenuBar(menubar);
-
-        menubar->addAction(menuUser1->menuAction());
-        menubar->addAction(menuUser2->menuAction());
 
         retranslateUi(ChattingWindow);
 
@@ -106,10 +111,8 @@ public:
     void retranslateUi(QMainWindow *ChattingWindow)
     {
         ChattingWindow->setWindowTitle(QCoreApplication::translate("ChattingWindow", "MainWindow", nullptr));
-        label->setText(QCoreApplication::translate("ChattingWindow", "User to Send To:", nullptr));
+        label->setText(QCoreApplication::translate("ChattingWindow", "Current User:", nullptr));
         sendButton->setText(QCoreApplication::translate("ChattingWindow", "Send Message", nullptr));
-        menuUser1->setTitle(QCoreApplication::translate("ChattingWindow", "User1", nullptr));
-        menuUser2->setTitle(QCoreApplication::translate("ChattingWindow", "User2", nullptr));
     } // retranslateUi
 
 };

@@ -5,6 +5,7 @@
 #include "inital_message.h"
 #include "data.h"
 
+
 size_t recv_exact_msg(void* buf, size_t len) {
 	data_to_recieve* temp = (data_to_recieve*)buf;
 	char* p = &(temp->a.message);

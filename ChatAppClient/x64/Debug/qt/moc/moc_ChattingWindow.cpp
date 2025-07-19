@@ -39,10 +39,28 @@ template <> constexpr inline auto ChattingWindow::qt_create_metaobjectdata<qt_me
 {
     namespace QMC = QtMocConstants;
     QtMocHelpers::StringRefStorage qt_stringData {
-        "ChattingWindow"
+        "ChattingWindow",
+        "on_sendButton_clicked",
+        "",
+        "on_Username_input_textEdited",
+        "text",
+        "on_Message_input_textEdited",
+        "onUserClick"
     };
 
     QtMocHelpers::UintData qt_methods {
+        // Slot 'on_sendButton_clicked'
+        QtMocHelpers::SlotData<void()>(1, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'on_Username_input_textEdited'
+        QtMocHelpers::SlotData<void(const QString &)>(3, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::QString, 4 },
+        }}),
+        // Slot 'on_Message_input_textEdited'
+        QtMocHelpers::SlotData<void(const QString &)>(5, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::QString, 4 },
+        }}),
+        // Slot 'onUserClick'
+        QtMocHelpers::SlotData<void()>(6, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -64,10 +82,15 @@ Q_CONSTINIT const QMetaObject ChattingWindow::staticMetaObject = { {
 void ChattingWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
 {
     auto *_t = static_cast<ChattingWindow *>(_o);
-    (void)_t;
-    (void)_c;
-    (void)_id;
-    (void)_a;
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        switch (_id) {
+        case 0: _t->on_sendButton_clicked(); break;
+        case 1: _t->on_Username_input_textEdited((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 2: _t->on_Message_input_textEdited((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 3: _t->onUserClick(); break;
+        default: ;
+        }
+    }
 }
 
 const QMetaObject *ChattingWindow::metaObject() const
@@ -86,6 +109,18 @@ void *ChattingWindow::qt_metacast(const char *_clname)
 int ChattingWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
 {
     _id = QMainWindow::qt_metacall(_c, _id, _a);
+    if (_id < 0)
+        return _id;
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        if (_id < 4)
+            qt_static_metacall(this, _c, _id, _a);
+        _id -= 4;
+    }
+    if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
+        if (_id < 4)
+            *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
+        _id -= 4;
+    }
     return _id;
 }
 QT_WARNING_POP

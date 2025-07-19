@@ -12,9 +12,11 @@
 #include <qscrollbar.h>
 #include <qlayout.h>
 #include <qtimer.h>
-#define MSG_SEND 1
-#define MSG_LIST 2
-#define MSG_EXIT 3
+constexpr auto MSG_SEND = 1;
+constexpr auto MSG_LIST = 2;
+constexpr auto MSG_EXIT = 3;
+constexpr auto OTHER_USER = true;
+constexpr auto CURR_USER = false;
 
 struct ChattingWindow::Impl {
     SOCKET sock{ INVALID_SOCKET };
@@ -41,6 +43,18 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), username{
     layout->setSpacing(5);
     layout->setSizeConstraint(QLayout::SetMinimumSize);
 
+
+    //we're just creating a layout for scrolling and out vertical layout
+    QWidget* contents_users = ui.scrollArea_2->takeWidget();
+    QVBoxLayout* layout_users = new QVBoxLayout(contents_users);
+
+    layout_users->setContentsMargins(0, 0, 0, 0);
+    contents_users->setLayout(layout_users);
+    ui.scrollArea_2->setWidget(contents_users);
+
+    ui.verticalLayout_2 = layout_users;
+    layout_users->setSpacing(5);
+    layout_users->setSizeConstraint(QLayout::SetMinimumSize);
 }
 
 ChattingWindow::~ChattingWindow()
@@ -87,7 +101,7 @@ void ChattingWindow::addMessage(char message[128], char username[50])
     std::string username_toadd(username);
     std::string message_toadd(message);
 
-    Messages[username_toadd].push_back(message_toadd);
+    Messages[QString::fromStdString(username_toadd)].push_back(std::make_pair(OTHER_USER, message_toadd));
 
     //since this function will be called by recv thread, cannot create element here so queue it on main thread
     QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreen(message);},Qt::QueuedConnection);
@@ -100,9 +114,9 @@ void ChattingWindow::addUsers(char users[10][50], uint32_t size) {
         std::string username(users[i]);
         if (Users.find(username) == Users.end()) {
             Users.insert(username);
+            QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(QString::fromStdString(username)); }, Qt::QueuedConnection);
         }
     }
-    return;
 }
 
 void ChattingWindow::sendMessageToScreen(const QString& message)
@@ -118,6 +132,14 @@ void ChattingWindow::sendMessageToScreen(const QString& message)
     return;
 }
 
+void ChattingWindow::sendUserToScreen(QString username) {
+    QPushButton* user = new QPushButton;
+    user->setText(username);
+    ui.verticalLayout_2->addWidget(user, 0, Qt::AlignLeft | Qt::AlignTop);
+    connect(user, &QPushButton::clicked, this, &ChattingWindow::onUserClick);
+    return;
+}
+
 void ChattingWindow::on_Username_input_textEdited(const QString& text)
 {
     username_to_send = text;
@@ -126,6 +148,31 @@ void ChattingWindow::on_Username_input_textEdited(const QString& text)
 void ChattingWindow::on_Message_input_textEdited(const QString& text)
 {
     message_to_send = text;
+}
+
+void ChattingWindow::onUserClick()
+{
+    QPushButton* clickedButton = qobject_cast<QPushButton*>(sender());
+
+    QLayoutItem* item;
+    while ((item = ui.verticalLayout->takeAt(0)) != nullptr) {
+        QWidget* widget = item->widget();
+        if (widget != nullptr) {
+            widget->deleteLater();
+        }
+        delete item;
+    }
+
+    ui.label->setText(clickedButton->text());
+    username_to_send = clickedButton->text();
+    auto vec_msg = Messages[username_to_send];
+
+    for (int i = 0; i < vec_msg.size(); i++) {
+        auto* bubble = new MessageWidget(QString::fromStdString(vec_msg[i].second), this);
+        bubble->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+        bubble->adjustSize();
+        vec_msg[i].first ? ui.verticalLayout->addWidget(bubble, 0, Qt::AlignLeft) : ui.verticalLayout->addWidget(bubble, 0, Qt::AlignRight);
+    }
 }
 
 void ChattingWindow::on_sendButton_clicked()
@@ -144,7 +191,9 @@ void ChattingWindow::on_sendButton_clicked()
     bubble->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
     bubble->adjustSize();
 
-    ui.verticalLayout->addWidget(bubble, 0,Qt::AlignRight);
+    ui.verticalLayout->addWidget(bubble, 0, Qt::AlignRight | Qt::AlignTop);
+
+    Messages[QString::fromStdString(username_to_sendStd)].push_back(std::make_pair(CURR_USER, message_to_sendStd));
 
     return;
 }
