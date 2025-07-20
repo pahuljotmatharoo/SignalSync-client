@@ -14,9 +14,12 @@ class ChattingWindow : public QMainWindow {
     Q_OBJECT
 private:
     Ui::ChattingWindow ui;
+    QString default_button_stylesheet;
+    QString pressed_button_stylesheet;
     QString username;
     QString username_to_send;
     QString message_to_send;
+    QPushButton* last_pressed;
     struct Impl;
     Impl* impl_;
     std::unordered_map<QString, std::vector<std::pair<bool, std::string>>> Messages;

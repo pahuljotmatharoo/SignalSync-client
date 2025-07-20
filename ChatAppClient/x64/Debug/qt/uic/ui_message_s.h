@@ -25,10 +25,10 @@ public:
     {
         if (Message_chat_s->objectName().isEmpty())
             Message_chat_s->setObjectName("Message_chat_s");
-        Message_chat_s->resize(405, 41);
+        Message_chat_s->resize(123, 41);
         message_send = new QLineEdit(Message_chat_s);
         message_send->setObjectName("message_send");
-        message_send->setGeometry(QRect(0, 0, 401, 41));
+        message_send->setGeometry(QRect(0, 0, 121, 41));
         message_send->setStyleSheet(QString::fromUtf8("/* bubble background */\n"
 "    background-color: rgb(0, 0, 0);\n"
 "    /* light border */\n"

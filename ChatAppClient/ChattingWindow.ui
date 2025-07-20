@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1039</width>
-    <height>727</height>
+    <width>1010</width>
+    <height>743</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -16,20 +16,28 @@
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
+  <property name="font">
+   <font>
+    <pointsize>16</pointsize>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <property name="layoutDirection">
    <enum>Qt::LayoutDirection::LeftToRight</enum>
   </property>
+  <property name="tabShape">
+   <enum>QTabWidget::TabShape::Rounded</enum>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QWidget" name="verticalLayoutWidget">
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>30</y>
-      <width>291</width>
-      <height>621</height>
+      <y>50</y>
+      <width>231</width>
+      <height>591</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_2"/>
@@ -37,10 +45,10 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>10</y>
-      <width>741</width>
-      <height>701</height>
+      <x>230</x>
+      <y>50</y>
+      <width>781</width>
+      <height>661</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -48,6 +56,12 @@
       <widget class="QScrollArea" name="scrollArea">
        <property name="enabled">
         <bool>true</bool>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::Shape::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Shadow::Raised</enum>
        </property>
        <property name="widgetResizable">
         <bool>true</bool>
@@ -57,23 +71,10 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>737</width>
-          <height>637</height>
+          <width>777</width>
+          <height>592</height>
          </rect>
         </property>
-        <widget class="QLabel" name="label">
-         <property name="geometry">
-          <rect>
-           <x>0</x>
-           <y>0</y>
-           <width>739</width>
-           <height>16</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>Current User:</string>
-         </property>
-        </widget>
        </widget>
       </widget>
      </item>
@@ -86,6 +87,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="sendButton">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Send Message</string>
        </property>
@@ -97,10 +103,17 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>30</y>
-      <width>291</width>
-      <height>621</height>
+      <y>50</y>
+      <width>231</width>
+      <height>594</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QScrollArea { border: 1px solid #555555; background-color: #2b2b2b;}
+</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Shape::VLine</enum>
     </property>
     <property name="widgetResizable">
      <bool>true</bool>
@@ -110,11 +123,48 @@
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>289</width>
-       <height>619</height>
+       <width>229</width>
+       <height>592</height>
       </rect>
      </property>
     </widget>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>0</y>
+      <width>371</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font/>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">text-align: center;</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>20</y>
+      <width>151</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>18</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Current Users</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -122,7 +172,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1039</width>
+     <width>1010</width>
      <height>21</height>
     </rect>
    </property>

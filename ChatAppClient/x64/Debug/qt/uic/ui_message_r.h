@@ -25,11 +25,11 @@ public:
     {
         if (Message_chat->objectName().isEmpty())
             Message_chat->setObjectName("Message_chat");
-        Message_chat->resize(392, 43);
+        Message_chat->resize(172, 43);
         Message_chat->setStyleSheet(QString::fromUtf8(""));
         message_recv = new QLineEdit(Message_chat);
         message_recv->setObjectName("message_recv");
-        message_recv->setGeometry(QRect(0, 0, 391, 41));
+        message_recv->setGeometry(QRect(0, 0, 171, 41));
         QPalette palette;
         QBrush brush(QColor(255, 255, 255, 255));
         brush.setStyle(Qt::BrushStyle::SolidPattern);

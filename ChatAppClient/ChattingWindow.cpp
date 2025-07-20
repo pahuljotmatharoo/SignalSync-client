@@ -27,7 +27,7 @@ struct ChattingWindow::Impl {
     }
 };
 
-ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), username{ "" }, impl_(new Impl())
+ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), username{ "" }, impl_(new Impl()), last_pressed(nullptr)
 {
     ui.setupUi(this);
     
@@ -55,6 +55,34 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), username{
     ui.verticalLayout_2 = layout_users;
     layout_users->setSpacing(5);
     layout_users->setSizeConstraint(QLayout::SetMinimumSize);
+
+    QString default_button =
+        "QPushButton {"
+        " background-color: #4CAF50;"
+        " color: white;"
+        " border: none;"
+        " padding: 10px;"
+        " font-size: 16px;"
+        " border-radius: 5px;"
+        " }"
+        " QPushButton:hover {"
+        " background-color: #45a049;"
+        " }";
+    default_button_stylesheet = default_button;
+
+    QString pressed_button =
+        "QPushButton {"
+        " background-color: #1E90FF;"
+        " color: white;"
+        " border: none;"
+        " padding: 10px;"
+        " font-size: 16px;"
+        " border-radius: 5px;"
+        " }"
+        " QPushButton:hover {"
+        " background-color: #055cb0;"
+        " }";
+    pressed_button_stylesheet = pressed_button;
 }
 
 ChattingWindow::~ChattingWindow()
@@ -129,12 +157,20 @@ void ChattingWindow::sendMessageToScreen(const QString& message)
     bubble->adjustSize();
 
     ui.verticalLayout->addWidget(bubble, 0,Qt::AlignLeft);
+
+    QTimer::singleShot(0, this, [=]() {
+        ui.scrollArea->ensureWidgetVisible(bubble);
+        });
+
     return;
 }
 
 void ChattingWindow::sendUserToScreen(QString username) {
     QPushButton* user = new QPushButton;
     user->setText(username);
+
+    user->setStyleSheet(default_button_stylesheet);
+
     ui.verticalLayout_2->addWidget(user, 0, Qt::AlignLeft | Qt::AlignTop);
     connect(user, &QPushButton::clicked, this, &ChattingWindow::onUserClick);
     return;
@@ -153,6 +189,13 @@ void ChattingWindow::on_Message_input_textEdited(const QString& text)
 void ChattingWindow::onUserClick()
 {
     QPushButton* clickedButton = qobject_cast<QPushButton*>(sender());
+    
+    if (last_pressed) {
+        last_pressed->setStyleSheet(default_button_stylesheet);
+    }
+
+    clickedButton->setStyleSheet(pressed_button_stylesheet);
+    last_pressed = clickedButton;
 
     QLayoutItem* item;
     while ((item = ui.verticalLayout->takeAt(0)) != nullptr) {
@@ -171,7 +214,12 @@ void ChattingWindow::onUserClick()
         auto* bubble = new MessageWidget(QString::fromStdString(vec_msg[i].second), this);
         bubble->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
         bubble->adjustSize();
+
         vec_msg[i].first ? ui.verticalLayout->addWidget(bubble, 0, Qt::AlignLeft) : ui.verticalLayout->addWidget(bubble, 0, Qt::AlignRight);
+
+        QTimer::singleShot(0, this, [=]() {
+            ui.scrollArea->ensureWidgetVisible(bubble);
+            });
     }
 }
 

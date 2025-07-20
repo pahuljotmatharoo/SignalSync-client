@@ -52,7 +52,7 @@ void ChatAppClient::on_pushButton_clicked() {
 
     this->impl_->sock = sock;
 
-    QMessageBox::information(this,tr("Logged in as %1").arg(username),tr(""));
+    QMessageBox::information(this,tr("Logged in!"),tr("Logged in as %1").arg(username));
 
     auto* w = new ChattingWindow;
     w->setUsername(this->username);
