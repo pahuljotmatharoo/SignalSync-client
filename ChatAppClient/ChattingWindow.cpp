@@ -83,6 +83,9 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), username{
         " background-color: #055cb0;"
         " }";
     pressed_button_stylesheet = pressed_button;
+
+    Messages = new std::unordered_map<QString, std::vector<std::pair<bool, std::string>>>();
+    Users = new std::unordered_set<std::string>();
 }
 
 ChattingWindow::~ChattingWindow()
@@ -90,6 +93,10 @@ ChattingWindow::~ChattingWindow()
     send_inital_msg(impl_->sock, MSG_EXIT);
     delete impl_;
     impl_ = nullptr;
+    delete Messages;
+    Messages = nullptr;
+    delete Users;
+    Users = nullptr;
 }
 
 //this is function i use to interact with recieved messages (sort of acts as the middle man)
@@ -129,7 +136,7 @@ void ChattingWindow::addMessage(char message[128], char username[50])
     std::string username_toadd(username);
     std::string message_toadd(message);
 
-    Messages[QString::fromStdString(username_toadd)].push_back(std::make_pair(OTHER_USER, message_toadd));
+    (*Messages)[QString::fromStdString(username_toadd)].push_back(std::make_pair(OTHER_USER, message_toadd));
 
     //since this function will be called by recv thread, cannot create element here so queue it on main thread
     QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreen(message);},Qt::QueuedConnection);
@@ -140,8 +147,8 @@ void ChattingWindow::addUsers(char users[10][50], uint32_t size) {
     //better logic will be implemented later from server side soon
     for (std::size_t i = 0; i < size; i++) {
         std::string username(users[i]);
-        if (Users.find(username) == Users.end()) {
-            Users.insert(username);
+        if ((*Users).find(username) == (*Users).end()) {
+            (*Users).insert(username);
             QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(QString::fromStdString(username)); }, Qt::QueuedConnection);
         }
     }
@@ -208,7 +215,7 @@ void ChattingWindow::onUserClick()
 
     ui.label->setText(clickedButton->text());
     username_to_send = clickedButton->text();
-    auto vec_msg = Messages[username_to_send];
+    auto vec_msg = (*Messages)[username_to_send];
 
     for (int i = 0; i < vec_msg.size(); i++) {
         auto* bubble = new MessageWidget(QString::fromStdString(vec_msg[i].second), this);
@@ -241,7 +248,6 @@ void ChattingWindow::on_sendButton_clicked()
 
     ui.verticalLayout->addWidget(bubble, 0, Qt::AlignRight | Qt::AlignTop);
 
-    Messages[QString::fromStdString(username_to_sendStd)].push_back(std::make_pair(CURR_USER, message_to_sendStd));
-
+    (*Messages)[QString::fromStdString(username_to_sendStd)].push_back(std::make_pair(CURR_USER, message_to_sendStd));
     return;
 }

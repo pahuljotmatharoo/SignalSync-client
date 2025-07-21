@@ -22,8 +22,8 @@ private:
     QPushButton* last_pressed;
     struct Impl;
     Impl* impl_;
-    std::unordered_map<QString, std::vector<std::pair<bool, std::string>>> Messages;
-    std::unordered_set<std::string> Users;
+    std::unordered_map<QString, std::vector<std::pair<bool, std::string>>>* Messages;
+    std::unordered_set<std::string>* Users;
 public:
     explicit ChattingWindow(QWidget* parent = nullptr);
     ~ChattingWindow();
