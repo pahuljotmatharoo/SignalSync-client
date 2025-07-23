@@ -40,6 +40,17 @@ size_t send_inital_msg(SOCKET sock, int constant) {
 	return x;
 }
 
+size_t recv_exact_username(SOCKET sock, char* username, size_t len) {
+	size_t total = 0;
+	while (total < len) {
+		size_t r = recv(sock, username + (total), len - total, 0);
+		if (r < 0)  return -1;   // error
+		if (r == 0)  return 0;   // peer closed
+		total += r;
+	}
+	return total;
+}
+
 bool get_user_input(char* buffer, size_t size) {
 	// read up to size-1 chars + '\n'
 	if (!fgets(buffer, size, stdin))

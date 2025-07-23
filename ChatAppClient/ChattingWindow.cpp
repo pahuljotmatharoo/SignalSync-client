@@ -85,7 +85,11 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), username{
     pressed_button_stylesheet = pressed_button;
 
     Messages = new std::unordered_map<QString, std::vector<std::pair<bool, std::string>>>();
-    Users = new std::unordered_set<std::string>();
+    Users = new std::unordered_map<QString, QWidget*>();
+
+    ui.verticalLayout_2->setContentsMargins(10, 0, 10, 0); // 10px left/right margins
+
+    ui.verticalLayout->setContentsMargins(10, 0, 0, 0); // 10px left/right margins
 }
 
 ChattingWindow::~ChattingWindow()
@@ -109,9 +113,15 @@ extern "C" void handle_list_update(void* window_ptr, char users[10][50], uint32_
     static_cast<ChattingWindow*>(window_ptr)->addUsers(users, size);
 }
 
+extern "C" void handle_user_update(void* window_ptr, char user[50], uint32_t size) {
+    static_cast<ChattingWindow*>(window_ptr)->removeUsers(user, size);
+}
+
+
+
 void ChattingWindow::thread_creator()
 {
-    auto* arg = new RecvParams{&(impl_->sock), this, handle_message, handle_list_update};
+    auto* arg = new RecvParams{&(impl_->sock), this, handle_message, handle_list_update, handle_user_update};
 
     DWORD pThreadID;
     HANDLE call_thread = create_thread(recieving, arg, &pThreadID);
@@ -147,21 +157,35 @@ void ChattingWindow::addUsers(char users[10][50], uint32_t size) {
     //better logic will be implemented later from server side soon
     for (std::size_t i = 0; i < size; i++) {
         std::string username(users[i]);
-        if ((*Users).find(username) == (*Users).end()) {
-            (*Users).insert(username);
+        QString usernamee = QString::fromStdString(username);
+
+        if ((*Users).find(usernamee) == (*Users).end()) {
             QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(QString::fromStdString(username)); }, Qt::QueuedConnection);
         }
     }
+}
+
+void ChattingWindow::removeUsers(char user[50], uint32_t size)
+{
+    std::string user_to_remove(user);
+    QMetaObject::invokeMethod(this, [=] { this->removeUserfromScreen(QString::fromStdString(user_to_remove)); }, Qt::QueuedConnection);
+}
+
+void ChattingWindow::removeUserfromScreen(const QString& user)
+{
+    if ((*Users)[user]) {
+        ui.verticalLayout_2->removeWidget((*Users)[user]);
+        (*Users)[user]->hide();
+        (*Users)[user]->deleteLater();
+        (*Users)[user] = nullptr;
+    }
+    return;
 }
 
 void ChattingWindow::sendMessageToScreen(const QString& message)
 {
 
     auto* bubble = new MessageWidget(message, this);
-        
-    // make bubble report a non-zero height
-    bubble->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
-    bubble->adjustSize();
 
     ui.verticalLayout->addWidget(bubble, 0,Qt::AlignLeft);
 
@@ -174,11 +198,15 @@ void ChattingWindow::sendMessageToScreen(const QString& message)
 
 void ChattingWindow::sendUserToScreen(QString username) {
     QPushButton* user = new QPushButton;
-    user->setText(username);
 
+    user->setText(username);
+    user->setMinimumSize(205, 40);
     user->setStyleSheet(default_button_stylesheet);
 
     ui.verticalLayout_2->addWidget(user, 0, Qt::AlignLeft | Qt::AlignTop);
+
+    Users->insert(std::pair<QString, QWidget*>(username, user));
+
     connect(user, &QPushButton::clicked, this, &ChattingWindow::onUserClick);
     return;
 }
@@ -241,10 +269,6 @@ void ChattingWindow::on_sendButton_clicked()
     send_to_user(&impl_->sock, message_to_sendCStr, username_to_sendCStr);
 
     auto* bubble = new MessageWidget_s(message_to_send, this);
-
-    // make bubble report a non-zero height
-    bubble->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
-    bubble->adjustSize();
 
     ui.verticalLayout->addWidget(bubble, 0, Qt::AlignRight | Qt::AlignTop);
 

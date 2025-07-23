@@ -16,6 +16,7 @@ typedef struct {
 size_t recv_exact_msg(void* buf, size_t len);
 size_t recv_exact_list(void* buf, size_t len);
 size_t send_inital_msg(SOCKET sock, int constant);
+size_t recv_exact_username(SOCKET sock, char* username, size_t len);
 bool get_user_input(char* buffer, size_t size);
 
 #ifdef __cplusplus

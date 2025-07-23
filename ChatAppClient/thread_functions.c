@@ -10,6 +10,7 @@
 #define MSG_SEND 1
 #define MSG_LIST 2
 #define MSG_EXIT 3
+#define USER_EXIT 4
 
 //need to remove the magic numbers
 
@@ -46,7 +47,6 @@ DWORD WINAPI recieving(LPVOID arg) {
 			data.a.message[127] = '\0';
 			funct_arg->on_message(funct_arg->window_ptr, data.a.message, data.a.username);
 			type = INT_MAX;
-			continue;
 		}
 
 		else if (type == MSG_LIST) {
@@ -60,7 +60,11 @@ DWORD WINAPI recieving(LPVOID arg) {
 			data.a.size = ntohl(data.a.size);
 			funct_arg->on_list(funct_arg->window_ptr, data.a.arr, data.a.size);
 			type = INT_MAX;
-			continue;
+		}
+		else if (type == USER_EXIT) {
+			char username[50];
+			int x = recv_exact_username(*(funct_arg->sock), username, 50);
+			funct_arg->on_user(funct_arg->window_ptr, username, 50);
 		}
 	}
 	free(arg);

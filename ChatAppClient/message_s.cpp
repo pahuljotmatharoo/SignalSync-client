@@ -14,13 +14,7 @@ MessageWidget_s::MessageWidget_s(const QString& message, QWidget* parent): ui(ne
         ui->message_send->setText(message);
         ui->message_send->setReadOnly(true);
 
-        auto* h = new QHBoxLayout(this);
-        h->setContentsMargins(0, 0, 0, 0);
-        h->addWidget(ui->message_send);
-
-        setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
-
-        adjustSize();
+        setMinimumSize(200, 50);
 }
 
 MessageWidget_s::~MessageWidget_s()

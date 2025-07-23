@@ -11,6 +11,7 @@
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QPushButton>
@@ -24,20 +25,31 @@ public:
     QWidget *centralWidget;
     QPushButton *pushButton;
     QLineEdit *lineEdit;
+    QLabel *label;
+    QLabel *label_2;
 
     void setupUi(QMainWindow *ChatAppClientClass)
     {
         if (ChatAppClientClass->objectName().isEmpty())
             ChatAppClientClass->setObjectName("ChatAppClientClass");
-        ChatAppClientClass->resize(600, 400);
+        ChatAppClientClass->resize(618, 443);
         centralWidget = new QWidget(ChatAppClientClass);
         centralWidget->setObjectName("centralWidget");
         pushButton = new QPushButton(centralWidget);
         pushButton->setObjectName("pushButton");
-        pushButton->setGeometry(QRect(250, 300, 80, 24));
+        pushButton->setGeometry(QRect(260, 330, 80, 24));
         lineEdit = new QLineEdit(centralWidget);
         lineEdit->setObjectName("lineEdit");
-        lineEdit->setGeometry(QRect(220, 220, 151, 24));
+        lineEdit->setGeometry(QRect(200, 250, 201, 24));
+        label = new QLabel(centralWidget);
+        label->setObjectName("label");
+        label->setGeometry(QRect(210, 40, 171, 51));
+        QFont font;
+        font.setPointSize(26);
+        label->setFont(font);
+        label_2 = new QLabel(centralWidget);
+        label_2->setObjectName("label_2");
+        label_2->setGeometry(QRect(200, 230, 61, 16));
         ChatAppClientClass->setCentralWidget(centralWidget);
 
         retranslateUi(ChatAppClientClass);
@@ -49,6 +61,9 @@ public:
     {
         ChatAppClientClass->setWindowTitle(QCoreApplication::translate("ChatAppClientClass", "ChatAppClient", nullptr));
         pushButton->setText(QCoreApplication::translate("ChatAppClientClass", "Connect", nullptr));
+        lineEdit->setPlaceholderText(QCoreApplication::translate("ChatAppClientClass", "Enter a username", nullptr));
+        label->setText(QCoreApplication::translate("ChatAppClientClass", "SignalSync", nullptr));
+        label_2->setText(QCoreApplication::translate("ChatAppClientClass", "Username", nullptr));
     } // retranslateUi
 
 };
