@@ -11,6 +11,9 @@
 #define MSG_LIST 2
 #define MSG_EXIT 3
 #define USER_EXIT 4
+#define message_length 128
+#define max_users 10
+#define username_length 50
 
 //need to remove the magic numbers
 
@@ -44,15 +47,14 @@ DWORD WINAPI recieving(LPVOID arg) {
 				printf("Received no data! \n");
 				continue;
 			}
-			data.a.message[127] = '\0';
+			data.a.message[message_length - 1] = '\0';
 			funct_arg->on_message(funct_arg->window_ptr, data.a.message, data.a.username);
 			type = INT_MAX;
 		}
-
 		else if (type == MSG_LIST) {
 			client_list data;
 			data.sock = *(funct_arg->sock);
-			int x = recv_exact_list(&(data), 504);
+			int x = recv_exact_list(&(data), sizeof(list));
 			if (x <= 0) {
 				printf("Received no data! \n");
 				continue;
@@ -62,9 +64,9 @@ DWORD WINAPI recieving(LPVOID arg) {
 			type = INT_MAX;
 		}
 		else if (type == USER_EXIT) {
-			char username[50];
-			int x = recv_exact_username(*(funct_arg->sock), username, 50);
-			funct_arg->on_user(funct_arg->window_ptr, username, 50);
+			char username[username_length];
+			int x = recv_exact_username(*(funct_arg->sock), username, username_length);
+			funct_arg->on_user(funct_arg->window_ptr, username, username_length);
 		}
 	}
 	free(arg);

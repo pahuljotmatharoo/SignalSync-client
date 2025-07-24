@@ -51,25 +51,3 @@ size_t recv_exact_username(SOCKET sock, char* username, size_t len) {
 	return total;
 }
 
-bool get_user_input(char* buffer, size_t size) {
-	// read up to size-1 chars + '\n'
-	if (!fgets(buffer, size, stdin))
-		return false;  // EOF or error
-
-	size_t len = strlen(buffer);
-	// if we got the newline, strip it
-	if (len > 0 && buffer[len - 1] == '\n') {
-		buffer[--len] = '\0';
-	}
-	// if buffer is full (no '\n') then the user typed too many chars
-	else if (len == size - 1) {
-		printf("Message too long!\n");
-		// flush the rest of the over-long line
-		int c;
-		while ((c = getchar()) != '\n' && c != EOF) {}
-		return false;
-	}
-
-	return true;
-}
-
