@@ -2,6 +2,8 @@
 #include "message.h"
 #include "ui_message_r.h"   // generated from message.ui
 #include <qboxlayout.h>
+#include <qtimer.h>
+#include <QAbstractTextDocumentLayout>
 
 QSize MessageWidget::sizeHint() const {
     // forward the hint from your layout
@@ -10,14 +12,14 @@ QSize MessageWidget::sizeHint() const {
 }
 
 
-MessageWidget::MessageWidget(const QString& message, QWidget* parent): ui(new Ui::Message_chat)
+MessageWidget::MessageWidget(const QString& message, QWidget* parent)
+    : QWidget(parent), ui(new Ui::Message_chat)
 {
+    setSizePolicy({ QSizePolicy::Expanding, QSizePolicy::Preferred });
     ui->setupUi(this);
     ui->message_recv->setText(message);
-    ui->message_recv->setReadOnly(true);        // since it’s a bubble
-
-    setMinimumSize(200, 50);
 }
+
 
 MessageWidget::~MessageWidget()
 {

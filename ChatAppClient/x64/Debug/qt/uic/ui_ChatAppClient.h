@@ -37,16 +37,20 @@ public:
         centralWidget->setObjectName("centralWidget");
         pushButton = new QPushButton(centralWidget);
         pushButton->setObjectName("pushButton");
-        pushButton->setGeometry(QRect(260, 330, 80, 24));
+        pushButton->setGeometry(QRect(240, 310, 101, 24));
         lineEdit = new QLineEdit(centralWidget);
         lineEdit->setObjectName("lineEdit");
         lineEdit->setGeometry(QRect(200, 250, 201, 24));
+        lineEdit->setStyleSheet(QString::fromUtf8("border-radius: 5px;\n"
+"border: 1px solid #C0C0C0;   /* subtle outline */"));
         label = new QLabel(centralWidget);
         label->setObjectName("label");
-        label->setGeometry(QRect(210, 40, 171, 51));
+        label->setGeometry(QRect(200, 80, 191, 51));
         QFont font;
         font.setPointSize(26);
         label->setFont(font);
+        label->setStyleSheet(QString::fromUtf8("border-radius: 5px;\n"
+"border: 1px solid #C0C0C0;   /* subtle outline */"));
         label_2 = new QLabel(centralWidget);
         label_2->setObjectName("label_2");
         label_2->setGeometry(QRect(200, 230, 61, 16));
@@ -59,7 +63,7 @@ public:
 
     void retranslateUi(QMainWindow *ChatAppClientClass)
     {
-        ChatAppClientClass->setWindowTitle(QCoreApplication::translate("ChatAppClientClass", "ChatAppClient", nullptr));
+        ChatAppClientClass->setWindowTitle(QCoreApplication::translate("ChatAppClientClass", "SignalSync", nullptr));
         pushButton->setText(QCoreApplication::translate("ChatAppClientClass", "Connect", nullptr));
         lineEdit->setPlaceholderText(QCoreApplication::translate("ChatAppClientClass", "Enter a username", nullptr));
         label->setText(QCoreApplication::translate("ChatAppClientClass", "SignalSync", nullptr));

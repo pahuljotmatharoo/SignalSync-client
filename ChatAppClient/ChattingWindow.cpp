@@ -8,7 +8,6 @@
 #include <inital_message.h>
 #include <QHBoxLayout>
 #include <message.h>
-#include <message_s.h>
 #include <qscrollbar.h>
 #include <qlayout.h>
 #include <qtimer.h>
@@ -17,6 +16,7 @@ constexpr auto MSG_LIST = 2;
 constexpr auto MSG_EXIT = 3;
 constexpr auto OTHER_USER = true;
 constexpr auto CURR_USER = false;
+//just need to ensure that the scroll area doesn't condense the messages down
 
 struct ChattingWindow::Impl {
     SOCKET sock{ INVALID_SOCKET };
@@ -84,9 +84,13 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), username{
     Messages = new std::unordered_map<QString, std::vector<std::pair<bool, std::string>>>();
     Users = new std::unordered_map<QString, QPushButton*>();
 
-    ui.verticalLayout_2->setContentsMargins(10, 0, 10, 0); // 10px left/right margins
+    ui.verticalLayout_2->setContentsMargins(10, 5, 10, 0); // 10px left/right margins
 
-    ui.verticalLayout->setContentsMargins(10, 0, 0, 0); // 10px left/right margins
+    ui.verticalLayout->setContentsMargins(10, 10, 10, 10); // 10px left/right margins
+
+    auto* l = static_cast<QVBoxLayout*>(ui.scrollAreaWidgetContents->layout());
+    l->insertStretch(0, 1);
+
 }
 
 ChattingWindow::~ChattingWindow()
@@ -162,12 +166,14 @@ void ChattingWindow::addUsers(char users[max_users][username_length], uint32_t s
             QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(QString::fromStdString(username)); }, Qt::QueuedConnection);
         }
     }
+    return;
 }
 
 void ChattingWindow::removeUsers(char user[username_length], uint32_t size)
 {
     std::string user_to_remove(user);
     QMetaObject::invokeMethod(this, [=] { this->removeUserfromScreen(QString::fromStdString(user_to_remove)); }, Qt::QueuedConnection);
+    return;
 }
 
 void ChattingWindow::removeUserfromScreen(const QString& user)
@@ -188,10 +194,12 @@ void ChattingWindow::removeUserfromScreen(const QString& user)
 
 void ChattingWindow::sendMessageToScreen(const QString& message, const std::string &username)
 {
-    if (last_pressed->text() == QString::fromStdString(username)) {
+    if (last_pressed && last_pressed->text() == QString::fromStdString(username)) {
         auto* bubble = new MessageWidget(message, this);
 
-        ui.verticalLayout->addWidget(bubble, 0, Qt::AlignLeft);
+        ui.verticalLayout->addWidget(bubble, 0, Qt::AlignLeft | Qt::AlignTop);
+
+        ui.scrollArea->verticalScrollBar()->setValue(ui.scrollArea->verticalScrollBar()->maximum());
 
         QTimer::singleShot(0, this, [=]() {
             ui.scrollArea->ensureWidgetVisible(bubble);
@@ -220,16 +228,22 @@ void ChattingWindow::sendUserToScreen(QString username) {
 void ChattingWindow::on_Username_input_textEdited(const QString& text)
 {
     username_to_send = text;
+    return;
 }
 
 void ChattingWindow::on_Message_input_textEdited(const QString& text)
 {
     message_to_send = text;
+    return;
 }
 
 void ChattingWindow::onUserClick()
 {
     QPushButton* clickedButton = qobject_cast<QPushButton*>(sender());
+
+    if (last_pressed == clickedButton) {
+        return;
+    }
     
     if (last_pressed) {
         last_pressed->setStyleSheet(default_button_stylesheet);
@@ -262,6 +276,7 @@ void ChattingWindow::onUserClick()
             ui.scrollArea->ensureWidgetVisible(bubble);
             });
     }
+    return;
 }
 
 void ChattingWindow::on_sendButton_clicked()
@@ -274,9 +289,11 @@ void ChattingWindow::on_sendButton_clicked()
 
     send_to_user(&impl_->sock, message_to_sendCStr, username_to_sendCStr);
 
-    auto* bubble = new MessageWidget_s(message_to_send, this);
+    auto* bubble = new MessageWidget(message_to_send, this);
 
     ui.verticalLayout->addWidget(bubble, 0, Qt::AlignRight | Qt::AlignTop);
+
+    ui.scrollArea->verticalScrollBar()->setValue(ui.scrollArea->verticalScrollBar()->maximum());
 
     (*Messages)[QString::fromStdString(username_to_sendStd)].push_back(std::make_pair(CURR_USER, message_to_sendStd));
     return;
