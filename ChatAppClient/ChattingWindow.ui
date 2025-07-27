@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1025</width>
-    <height>757</height>
+    <height>739</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -88,106 +88,6 @@ QScrollArea#scrollArea_2 QScrollBar::sub-page {
          </rect>
         </property>
        </widget>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>240</x>
-      <y>70</y>
-      <width>781</width>
-      <height>661</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <property name="spacing">
-      <number>5</number>
-     </property>
-     <item>
-      <widget class="QScrollArea" name="scrollArea">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="autoFillBackground">
-        <bool>false</bool>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">/* ===== ScrollArea &amp; viewport ===== */
-QScrollArea {
-    border: 1px solid #C0C0C0;   /* subtle outline */
-    border-radius: 12px;         /* round the outer border */
-    background-color: #ECE5DD;
-    padding: 3px;
-}
-
-/* ===== Vertical ScrollBar ===== */
-QScrollBar:vertical {
-    background: transparent;
-    width: 6px;
-    margin: 0;
-}
-QScrollBar::handle:vertical {
-    background: rgba(0,0,0,0.2);
-    min-height: 20px;
-    border-radius: 3px;
-}
-QScrollBar::add-line, QScrollBar::sub-line,
-QScrollBar::add-page, QScrollBar::sub-page {
-    height: 0px;
-}
-
-</string>
-       </property>
-       <property name="frameShape">
-        <enum>QFrame::Shape::Panel</enum>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Shadow::Plain</enum>
-       </property>
-       <property name="widgetResizable">
-        <bool>true</bool>
-       </property>
-       <widget class="QWidget" name="scrollAreaWidgetContents">
-        <property name="geometry">
-         <rect>
-          <x>0</x>
-          <y>0</y>
-          <width>771</width>
-          <height>578</height>
-         </rect>
-        </property>
-       </widget>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="Message_input">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">border: 1px solid #C0C0C0;   /* subtle outline */
-    border-radius: 12px;         /* round the outer border */
-    padding: 5px;</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="sendButton">
-       <property name="font">
-        <font>
-         <pointsize>12</pointsize>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true"> border: 1px solid #C0C0C0;   /* subtle outline */
- border-radius: 12px;         /* round the outer border */
-padding: 5px;</string>
-       </property>
-       <property name="text">
-        <string>Send Message</string>
-       </property>
       </widget>
      </item>
     </layout>
@@ -275,16 +175,126 @@ padding: 5px;</string>
      <string>SignalSync</string>
     </property>
    </widget>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1025</width>
-     <height>21</height>
-    </rect>
-   </property>
+   <widget class="QScrollArea" name="scrollArea">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>280</x>
+      <y>74</y>
+      <width>681</width>
+      <height>551</height>
+     </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">/* ===== ScrollArea &amp; viewport ===== */
+QScrollArea {
+    border: 1px solid #C0C0C0;   /* subtle outline */
+    border-radius: 12px;         /* round the outer border */
+    background-color: #ECE5DD;
+    padding: 3px;
+}
+
+/* ===== Vertical ScrollBar ===== */
+QScrollBar:vertical {
+    background: transparent;
+    width: 6px;
+    margin: 0;
+}
+QScrollBar::handle:vertical {
+    background: rgba(0,0,0,0.2);
+    min-height: 20px;
+    border-radius: 3px;
+}
+QScrollBar::add-line, QScrollBar::sub-line,
+QScrollBar::add-page, QScrollBar::sub-page {
+    height: 0px;
+}
+
+</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Shape::Panel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Shadow::Plain</enum>
+    </property>
+    <property name="sizeAdjustPolicy">
+     <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustToContentsOnFirstShow</enum>
+    </property>
+    <property name="widgetResizable">
+     <bool>true</bool>
+    </property>
+    <widget class="QWidget" name="scrollAreaWidgetContents">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>673</width>
+       <height>543</height>
+      </rect>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LayoutDirection::LeftToRight</enum>
+     </property>
+     <widget class="QWidget" name="verticalLayoutWidget_2">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>651</width>
+        <height>521</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="chatLayout"/>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QLineEdit" name="Message_input">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>280</x>
+      <y>637</y>
+      <width>691</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border: 1px solid #C0C0C0;   /* subtle outline */
+    border-radius: 12px;         /* round the outer border */
+    padding: 5px;</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="sendButton">
+    <property name="geometry">
+     <rect>
+      <x>280</x>
+      <y>680</y>
+      <width>701</width>
+      <height>33</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"> border: 1px solid #C0C0C0;   /* subtle outline */
+ border-radius: 12px;         /* round the outer border */
+padding: 5px;</string>
+    </property>
+    <property name="text">
+     <string>Send Message</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>

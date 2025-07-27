@@ -15,7 +15,6 @@
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
-#include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QScrollArea>
 #include <QtWidgets/QVBoxLayout>
@@ -31,23 +30,22 @@ public:
     QVBoxLayout *verticalLayout_2;
     QScrollArea *scrollArea_2;
     QWidget *scrollAreaWidgetContents_3;
-    QWidget *layoutWidget;
-    QVBoxLayout *verticalLayout;
-    QScrollArea *scrollArea;
-    QWidget *scrollAreaWidgetContents;
-    QLineEdit *Message_input;
-    QPushButton *sendButton;
     QFrame *frame;
     QLabel *label;
     QLabel *label_2;
     QLabel *label_3;
-    QMenuBar *menubar;
+    QScrollArea *scrollArea;
+    QWidget *scrollAreaWidgetContents;
+    QWidget *verticalLayoutWidget_2;
+    QVBoxLayout *chatLayout;
+    QLineEdit *Message_input;
+    QPushButton *sendButton;
 
     void setupUi(QMainWindow *ChattingWindow)
     {
         if (ChattingWindow->objectName().isEmpty())
             ChattingWindow->setObjectName("ChattingWindow");
-        ChattingWindow->resize(1025, 757);
+        ChattingWindow->resize(1025, 739);
         QSizePolicy sizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Ignored);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
@@ -104,16 +102,40 @@ public:
 
         verticalLayout_2->addWidget(scrollArea_2);
 
-        layoutWidget = new QWidget(centralwidget);
-        layoutWidget->setObjectName("layoutWidget");
-        layoutWidget->setGeometry(QRect(240, 70, 781, 661));
-        verticalLayout = new QVBoxLayout(layoutWidget);
-        verticalLayout->setSpacing(5);
-        verticalLayout->setObjectName("verticalLayout");
-        verticalLayout->setContentsMargins(0, 0, 0, 0);
-        scrollArea = new QScrollArea(layoutWidget);
+        frame = new QFrame(centralwidget);
+        frame->setObjectName("frame");
+        frame->setGeometry(QRect(240, 10, 777, 51));
+        frame->setStyleSheet(QString::fromUtf8("border-radius: 5px;\n"
+"border: 1px solid #C0C0C0;   /* subtle outline */"));
+        frame->setFrameShape(QFrame::Shape::StyledPanel);
+        frame->setFrameShadow(QFrame::Shadow::Raised);
+        label = new QLabel(frame);
+        label->setObjectName("label");
+        label->setGeometry(QRect(0, 0, 777, 51));
+        QFont font1;
+        font1.setFamilies({QString::fromUtf8("Arial")});
+        font1.setPointSize(23);
+        label->setFont(font1);
+        label->setStyleSheet(QString::fromUtf8("text-align: center;"));
+        label_2 = new QLabel(centralwidget);
+        label_2->setObjectName("label_2");
+        label_2->setGeometry(QRect(40, 130, 151, 31));
+        QFont font2;
+        font2.setPointSize(18);
+        label_2->setFont(font2);
+        label_3 = new QLabel(centralwidget);
+        label_3->setObjectName("label_3");
+        label_3->setGeometry(QRect(30, 10, 181, 61));
+        QFont font3;
+        font3.setPointSize(24);
+        label_3->setFont(font3);
+        label_3->setStyleSheet(QString::fromUtf8("border-radius: 5px;\n"
+"border: 1px solid #C0C0C0;   /* subtle outline */\n"
+"padding: 5px;"));
+        scrollArea = new QScrollArea(centralwidget);
         scrollArea->setObjectName("scrollArea");
         scrollArea->setEnabled(true);
+        scrollArea->setGeometry(QRect(280, 74, 681, 551));
         scrollArea->setAutoFillBackground(false);
         scrollArea->setStyleSheet(QString::fromUtf8("/* ===== ScrollArea & viewport ===== */\n"
 "QScrollArea {\n"
@@ -142,69 +164,36 @@ public:
 ""));
         scrollArea->setFrameShape(QFrame::Shape::Panel);
         scrollArea->setFrameShadow(QFrame::Shadow::Plain);
+        scrollArea->setSizeAdjustPolicy(QAbstractScrollArea::SizeAdjustPolicy::AdjustToContentsOnFirstShow);
         scrollArea->setWidgetResizable(true);
         scrollAreaWidgetContents = new QWidget();
         scrollAreaWidgetContents->setObjectName("scrollAreaWidgetContents");
-        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 771, 578));
+        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 673, 543));
+        scrollAreaWidgetContents->setLayoutDirection(Qt::LayoutDirection::LeftToRight);
+        verticalLayoutWidget_2 = new QWidget(scrollAreaWidgetContents);
+        verticalLayoutWidget_2->setObjectName("verticalLayoutWidget_2");
+        verticalLayoutWidget_2->setGeometry(QRect(10, 10, 651, 521));
+        chatLayout = new QVBoxLayout(verticalLayoutWidget_2);
+        chatLayout->setObjectName("chatLayout");
+        chatLayout->setContentsMargins(0, 0, 0, 0);
         scrollArea->setWidget(scrollAreaWidgetContents);
-
-        verticalLayout->addWidget(scrollArea);
-
-        Message_input = new QLineEdit(layoutWidget);
+        Message_input = new QLineEdit(centralwidget);
         Message_input->setObjectName("Message_input");
         Message_input->setEnabled(true);
+        Message_input->setGeometry(QRect(280, 637, 691, 30));
         Message_input->setStyleSheet(QString::fromUtf8("border: 1px solid #C0C0C0;   /* subtle outline */\n"
 "    border-radius: 12px;         /* round the outer border */\n"
 "    padding: 5px;"));
-
-        verticalLayout->addWidget(Message_input);
-
-        sendButton = new QPushButton(layoutWidget);
+        sendButton = new QPushButton(centralwidget);
         sendButton->setObjectName("sendButton");
-        QFont font1;
-        font1.setPointSize(12);
-        sendButton->setFont(font1);
+        sendButton->setGeometry(QRect(280, 680, 701, 33));
+        QFont font4;
+        font4.setPointSize(12);
+        sendButton->setFont(font4);
         sendButton->setStyleSheet(QString::fromUtf8(" border: 1px solid #C0C0C0;   /* subtle outline */\n"
 " border-radius: 12px;         /* round the outer border */\n"
 "padding: 5px;"));
-
-        verticalLayout->addWidget(sendButton);
-
-        frame = new QFrame(centralwidget);
-        frame->setObjectName("frame");
-        frame->setGeometry(QRect(240, 10, 777, 51));
-        frame->setStyleSheet(QString::fromUtf8("border-radius: 5px;\n"
-"border: 1px solid #C0C0C0;   /* subtle outline */"));
-        frame->setFrameShape(QFrame::Shape::StyledPanel);
-        frame->setFrameShadow(QFrame::Shadow::Raised);
-        label = new QLabel(frame);
-        label->setObjectName("label");
-        label->setGeometry(QRect(0, 0, 777, 51));
-        QFont font2;
-        font2.setFamilies({QString::fromUtf8("Arial")});
-        font2.setPointSize(23);
-        label->setFont(font2);
-        label->setStyleSheet(QString::fromUtf8("text-align: center;"));
-        label_2 = new QLabel(centralwidget);
-        label_2->setObjectName("label_2");
-        label_2->setGeometry(QRect(40, 130, 151, 31));
-        QFont font3;
-        font3.setPointSize(18);
-        label_2->setFont(font3);
-        label_3 = new QLabel(centralwidget);
-        label_3->setObjectName("label_3");
-        label_3->setGeometry(QRect(30, 10, 181, 61));
-        QFont font4;
-        font4.setPointSize(24);
-        label_3->setFont(font4);
-        label_3->setStyleSheet(QString::fromUtf8("border-radius: 5px;\n"
-"border: 1px solid #C0C0C0;   /* subtle outline */\n"
-"padding: 5px;"));
         ChattingWindow->setCentralWidget(centralwidget);
-        menubar = new QMenuBar(ChattingWindow);
-        menubar->setObjectName("menubar");
-        menubar->setGeometry(QRect(0, 0, 1025, 21));
-        ChattingWindow->setMenuBar(menubar);
 
         retranslateUi(ChattingWindow);
 
@@ -214,10 +203,10 @@ public:
     void retranslateUi(QMainWindow *ChattingWindow)
     {
         ChattingWindow->setWindowTitle(QCoreApplication::translate("ChattingWindow", "MainWindow", nullptr));
-        sendButton->setText(QCoreApplication::translate("ChattingWindow", "Send Message", nullptr));
         label->setText(QCoreApplication::translate("ChattingWindow", "Select a User to talk to!", nullptr));
         label_2->setText(QCoreApplication::translate("ChattingWindow", "Current Users", nullptr));
         label_3->setText(QCoreApplication::translate("ChattingWindow", "SignalSync", nullptr));
+        sendButton->setText(QCoreApplication::translate("ChattingWindow", "Send Message", nullptr));
     } // retranslateUi
 
 };

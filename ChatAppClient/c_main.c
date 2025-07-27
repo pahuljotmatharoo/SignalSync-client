@@ -39,8 +39,6 @@ SOCKET main_connect(const char* user) {
 		return status;
 	}
 
-	printf("Connected!\n");
-	printf("Enter a username!: ");
 	char username[50];
 
 	strcpy_s(username, 50, user);

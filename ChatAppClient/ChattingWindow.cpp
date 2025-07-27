@@ -30,7 +30,6 @@ struct ChattingWindow::Impl {
 ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), username{ "" }, impl_(new Impl()), last_pressed(nullptr)
 {
     ui.setupUi(this);
-    
     //we're just creating a layout for scrolling and out vertical layout
     QWidget* contents = ui.scrollArea->takeWidget();
     QVBoxLayout* layout = new QVBoxLayout(contents);
@@ -39,7 +38,7 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), username{
     contents->setLayout(layout);
     ui.scrollArea->setWidget(contents);
 
-    ui.verticalLayout = layout;
+    ui.chatLayout = layout;
     layout->setSpacing(5);
     layout->setSizeConstraint(QLayout::SetMinimumSize);
 
@@ -86,7 +85,7 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), username{
 
     ui.verticalLayout_2->setContentsMargins(10, 5, 10, 0); // 10px left/right margins
 
-    ui.verticalLayout->setContentsMargins(10, 10, 10, 10); // 10px left/right margins
+    ui.chatLayout->setContentsMargins(10, 10, 10, 10); // 10px left/right margins
 
     auto* l = static_cast<QVBoxLayout*>(ui.scrollAreaWidgetContents->layout());
     l->insertStretch(0, 1);
@@ -196,8 +195,7 @@ void ChattingWindow::sendMessageToScreen(const QString& message, const std::stri
 {
     if (last_pressed && last_pressed->text() == QString::fromStdString(username)) {
         auto* bubble = new MessageWidget(message, this);
-
-        ui.verticalLayout->addWidget(bubble, 0, Qt::AlignLeft | Qt::AlignTop);
+        ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
 
         ui.scrollArea->verticalScrollBar()->setValue(ui.scrollArea->verticalScrollBar()->maximum());
 
@@ -253,7 +251,7 @@ void ChattingWindow::onUserClick()
     last_pressed = clickedButton;
 
     QLayoutItem* item;
-    while ((item = ui.verticalLayout->takeAt(0)) != nullptr) {
+    while ((item = ui.chatLayout->takeAt(0)) != nullptr) {
         QWidget* widget = item->widget();
         if (widget != nullptr) {
             widget->deleteLater();
@@ -270,7 +268,7 @@ void ChattingWindow::onUserClick()
         bubble->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
         bubble->adjustSize();
 
-        vec_msg[i].first ? ui.verticalLayout->addWidget(bubble, 0, Qt::AlignLeft) : ui.verticalLayout->addWidget(bubble, 0, Qt::AlignRight);
+        vec_msg[i].first ? ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft) : ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
 
         QTimer::singleShot(0, this, [=]() {
             ui.scrollArea->ensureWidgetVisible(bubble);
@@ -291,7 +289,7 @@ void ChattingWindow::on_sendButton_clicked()
 
     auto* bubble = new MessageWidget(message_to_send, this);
 
-    ui.verticalLayout->addWidget(bubble, 0, Qt::AlignRight | Qt::AlignTop);
+    ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
 
     ui.scrollArea->verticalScrollBar()->setValue(ui.scrollArea->verticalScrollBar()->maximum());
 
