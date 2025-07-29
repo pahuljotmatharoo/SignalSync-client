@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1025</width>
-    <height>739</height>
+    <width>1295</width>
+    <height>920</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -22,7 +22,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>SignalSync</string>
   </property>
   <property name="layoutDirection">
    <enum>Qt::LayoutDirection::LeftToRight</enum>
@@ -34,10 +34,10 @@
    <widget class="QWidget" name="verticalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>0</x>
-      <y>170</y>
-      <width>231</width>
-      <height>561</height>
+      <x>10</x>
+      <y>320</y>
+      <width>261</width>
+      <height>531</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -83,8 +83,8 @@ QScrollArea#scrollArea_2 QScrollBar::sub-page {
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>221</width>
-          <height>551</height>
+          <width>251</width>
+          <height>521</height>
          </rect>
         </property>
        </widget>
@@ -95,9 +95,9 @@ QScrollArea#scrollArea_2 QScrollBar::sub-page {
    <widget class="QFrame" name="frame">
     <property name="geometry">
      <rect>
-      <x>240</x>
+      <x>280</x>
       <y>10</y>
-      <width>777</width>
+      <width>1001</width>
       <height>51</height>
      </rect>
     </property>
@@ -116,7 +116,7 @@ border: 1px solid #C0C0C0;   /* subtle outline */</string>
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>777</width>
+       <width>1001</width>
        <height>51</height>
       </rect>
      </property>
@@ -137,8 +137,8 @@ border: 1px solid #C0C0C0;   /* subtle outline */</string>
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>130</y>
+      <x>70</x>
+      <y>280</y>
       <width>151</width>
       <height>31</height>
      </rect>
@@ -155,7 +155,7 @@ border: 1px solid #C0C0C0;   /* subtle outline */</string>
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>30</x>
+      <x>50</x>
       <y>10</y>
       <width>181</width>
       <height>61</height>
@@ -183,8 +183,8 @@ padding: 5px;</string>
      <rect>
       <x>280</x>
       <y>74</y>
-      <width>681</width>
-      <height>551</height>
+      <width>1001</width>
+      <height>781</height>
      </rect>
     </property>
     <property name="autoFillBackground">
@@ -234,8 +234,8 @@ QScrollBar::add-page, QScrollBar::sub-page {
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>673</width>
-       <height>543</height>
+       <width>993</width>
+       <height>773</height>
       </rect>
      </property>
      <property name="layoutDirection">
@@ -246,11 +246,15 @@ QScrollBar::add-page, QScrollBar::sub-page {
        <rect>
         <x>10</x>
         <y>10</y>
-        <width>651</width>
-        <height>521</height>
+        <width>1021</width>
+        <height>751</height>
        </rect>
       </property>
-      <layout class="QVBoxLayout" name="chatLayout"/>
+      <layout class="QVBoxLayout" name="chatLayout">
+       <property name="spacing">
+        <number>20</number>
+       </property>
+      </layout>
      </widget>
     </widget>
    </widget>
@@ -261,9 +265,9 @@ QScrollBar::add-page, QScrollBar::sub-page {
     <property name="geometry">
      <rect>
       <x>280</x>
-      <y>637</y>
-      <width>691</width>
-      <height>30</height>
+      <y>860</y>
+      <width>881</width>
+      <height>51</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -271,14 +275,17 @@ QScrollBar::add-page, QScrollBar::sub-page {
     border-radius: 12px;         /* round the outer border */
     padding: 5px;</string>
     </property>
+    <property name="placeholderText">
+     <string>Type a message...</string>
+    </property>
    </widget>
    <widget class="QPushButton" name="sendButton">
     <property name="geometry">
      <rect>
-      <x>280</x>
-      <y>680</y>
-      <width>701</width>
-      <height>33</height>
+      <x>1160</x>
+      <y>860</y>
+      <width>121</width>
+      <height>51</height>
      </rect>
     </property>
     <property name="font">
@@ -293,6 +300,32 @@ padding: 5px;</string>
     </property>
     <property name="text">
      <string>Send Message</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>130</y>
+      <width>111</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>User List</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_2">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>170</y>
+      <width>111</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Group Chat</string>
     </property>
    </widget>
   </widget>

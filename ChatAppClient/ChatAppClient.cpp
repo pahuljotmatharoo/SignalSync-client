@@ -22,23 +22,30 @@ ChatAppClient::~ChatAppClient()
     impl_ = nullptr;
 }
 
-void ChatAppClient::throw_connection_error()
-{
-    QMessageBox msgBox;
-    msgBox.setText("Couldn't connect to server.");
-    msgBox.setStandardButtons(QMessageBox::Ok);
-    msgBox.setDefaultButton(QMessageBox::Ok);
-    int ret = msgBox.exec();
-}
-
 void ChatAppClient::on_lineEdit_textEdited(const QString &text)
 {
     username = text;
 }
 
+void ChatAppClient::send_error(const QString& error_message)
+{
+    QMessageBox msgBox;
+    msgBox.setText(error_message);
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setDefaultButton(QMessageBox::Ok);
+    int ret = msgBox.exec();
+    return;
+}
+
 void ChatAppClient::on_pushButton_clicked() {
 
-    std::string userStd = username.toStdString();
+    const std::string userStd = username.toStdString();
+
+    if (userStd.length() >= 50) {
+        send_error("Username too long! Cannot be longer than 50 characters.");
+        return;
+    }
+
     const char* userCStr = userStd.c_str();;
 
     SOCKET sock = main_connect(userCStr);
@@ -46,7 +53,7 @@ void ChatAppClient::on_pushButton_clicked() {
     //if we cannot connect to the server
     if (sock == SOCKET_ERROR) {
         this->close();
-        throw_connection_error();
+        send_error("Couldn't connect to server.");
         return;
     }
 

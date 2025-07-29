@@ -11,12 +11,15 @@
 #include <qscrollbar.h>
 #include <qlayout.h>
 #include <qtimer.h>
+#include <QMessageBox>
 constexpr auto MSG_SEND = 1;
 constexpr auto MSG_LIST = 2;
 constexpr auto MSG_EXIT = 3;
 constexpr auto OTHER_USER = true;
 constexpr auto CURR_USER = false;
-//just need to ensure that the scroll area doesn't condense the messages down
+
+//Add group messaging feature
+//Add dynamically resizing UI
 
 struct ChattingWindow::Impl {
     SOCKET sock{ INVALID_SOCKET };
@@ -90,6 +93,9 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), username{
     auto* l = static_cast<QVBoxLayout*>(ui.scrollAreaWidgetContents->layout());
     l->insertStretch(0, 1);
 
+    ui.chatLayout->addStretch(1);  // Push all bubbles to top
+
+    ui.chatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
 }
 
 ChattingWindow::~ChattingWindow()
@@ -104,6 +110,40 @@ ChattingWindow::~ChattingWindow()
 
     delete Users;
     Users = nullptr;
+}
+
+void ChattingWindow::setSOCKET(SOCKET newsock) {
+    impl_->sock = newsock;
+    thread_creator();
+    return;
+}
+
+void ChattingWindow::setUsername(const QString& new_user)
+{
+    this->username = new_user;
+    return;
+}
+
+void ChattingWindow::on_Username_input_textEdited(const QString& text)
+{
+    username_to_send = text;
+    return;
+}
+
+void ChattingWindow::on_Message_input_textEdited(const QString& text)
+{
+    message_to_send = text;
+    return;
+}
+
+void ChattingWindow::send_error(const QString& error_message)
+{
+    QMessageBox msgBox;
+    msgBox.setText(error_message);
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setDefaultButton(QMessageBox::Ok);
+    int ret = msgBox.exec();
+    return;
 }
 
 //this is function i use to interact with recieved messages (sort of acts as the middle man)
@@ -130,19 +170,6 @@ void ChattingWindow::thread_creator()
     return;
 }
 
-void ChattingWindow::setSOCKET(SOCKET newsock) {
-    impl_->sock = newsock;
-    thread_creator();
-    return;
-}
-
-void ChattingWindow::setUsername(const QString& new_user)
-{
-    this->username = new_user;
-    return;
-}
-
-
 void ChattingWindow::addMessage(char message[message_length], char username[username_length])
 {
     std::string username_toadd(username);
@@ -161,6 +188,7 @@ void ChattingWindow::addUsers(char users[max_users][username_length], uint32_t s
         std::string username(users[i]);
         QString usernamee = QString::fromStdString(username);
 
+        //since this function will be called by recv thread, cannot create element here so queue it on main thread
         if ((*Users).find(usernamee) == (*Users).end()) {
             QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(QString::fromStdString(username)); }, Qt::QueuedConnection);
         }
@@ -194,7 +222,11 @@ void ChattingWindow::removeUserfromScreen(const QString& user)
 void ChattingWindow::sendMessageToScreen(const QString& message, const std::string &username)
 {
     if (last_pressed && last_pressed->text() == QString::fromStdString(username)) {
-        auto* bubble = new MessageWidget(message, this);
+        auto* bubble = new QLabel (message, this);
+        bubble->setWordWrap(true);
+        bubble->setMaximumWidth(500);  // Adjust to how wide you want chat bubbles
+        bubble->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+
         ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
 
         ui.scrollArea->verticalScrollBar()->setValue(ui.scrollArea->verticalScrollBar()->maximum());
@@ -220,18 +252,6 @@ void ChattingWindow::sendUserToScreen(QString username) {
 
     connect(user, &QPushButton::clicked, this, &ChattingWindow::onUserClick);
 
-    return;
-}
-
-void ChattingWindow::on_Username_input_textEdited(const QString& text)
-{
-    username_to_send = text;
-    return;
-}
-
-void ChattingWindow::on_Message_input_textEdited(const QString& text)
-{
-    message_to_send = text;
     return;
 }
 
@@ -261,12 +281,13 @@ void ChattingWindow::onUserClick()
 
     ui.label->setText(clickedButton->text());
     username_to_send = clickedButton->text();
-    auto vec_msg = (*Messages)[username_to_send];
+    auto& vec_msg = (*Messages)[username_to_send];
 
     for (std::size_t i = 0; i < vec_msg.size(); i++) {
-        auto* bubble = new MessageWidget(QString::fromStdString(vec_msg[i].second), this);
-        bubble->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
-        bubble->adjustSize();
+        auto* bubble = new QLabel(QString::fromStdString(vec_msg[i].second), this);
+        bubble->setWordWrap(true);
+        bubble->setMaximumWidth(500);  // Adjust to how wide you want chat bubbles
+        bubble->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
 
         vec_msg[i].first ? ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft) : ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
 
@@ -283,15 +304,32 @@ void ChattingWindow::on_sendButton_clicked()
     const char* username_to_sendCStr = username_to_sendStd.c_str();;
 
     std::string message_to_sendStd = message_to_send.toStdString();
-    const char* message_to_sendCStr = message_to_sendStd.c_str();;
+    const char* message_to_sendCStr = message_to_sendStd.c_str();
+
+    if (message_to_sendStd.length() >= 128) {
+        send_error("Message is too long! Cannot be longer than 128 characters.");
+        return;
+    }
+
+    if (message_to_sendStd.length() == 0) {
+        send_error("Message is empty! Cannot send empty message!.");
+        return;
+    }
 
     send_to_user(&impl_->sock, message_to_sendCStr, username_to_sendCStr);
 
-    auto* bubble = new MessageWidget(message_to_send, this);
+    auto* bubble = new QLabel(message_to_send, this);
+    bubble->setWordWrap(true);
+    bubble->setMaximumWidth(500);  // Adjust to how wide you want chat bubbles
+    bubble->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
 
     ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
 
     ui.scrollArea->verticalScrollBar()->setValue(ui.scrollArea->verticalScrollBar()->maximum());
+
+    QTimer::singleShot(0, this, [=]() {
+        ui.scrollArea->ensureWidgetVisible(bubble);
+        });
 
     (*Messages)[QString::fromStdString(username_to_sendStd)].push_back(std::make_pair(CURR_USER, message_to_sendStd));
     return;

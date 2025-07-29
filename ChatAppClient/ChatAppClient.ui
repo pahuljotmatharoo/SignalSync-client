@@ -17,9 +17,9 @@
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>260</x>
-      <y>330</y>
-      <width>80</width>
+      <x>240</x>
+      <y>310</y>
+      <width>101</width>
       <height>24</height>
      </rect>
     </property>
@@ -36,6 +36,10 @@
       <height>24</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius: 5px;
+border: 1px solid #C0C0C0;   /* subtle outline */</string>
+    </property>
     <property name="placeholderText">
      <string>Enter a username</string>
     </property>
@@ -43,9 +47,9 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>210</x>
-      <y>40</y>
-      <width>171</width>
+      <x>200</x>
+      <y>80</y>
+      <width>191</width>
       <height>51</height>
      </rect>
     </property>
@@ -53,6 +57,10 @@
      <font>
       <pointsize>26</pointsize>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius: 5px;
+border: 1px solid #C0C0C0;   /* subtle outline */</string>
     </property>
     <property name="text">
      <string>SignalSync</string>

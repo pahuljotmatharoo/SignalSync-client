@@ -11,7 +11,6 @@ QSize MessageWidget::sizeHint() const {
     return QWidget::sizeHint();
 }
 
-
 MessageWidget::MessageWidget(const QString& message, QWidget* parent)
     : QWidget(parent), ui(new Ui::Message_chat)
 {
