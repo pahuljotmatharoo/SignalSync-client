@@ -7,25 +7,29 @@
 #include <QMainWindow>
 #include "ui_ChattingWindow.h"
 #include <QHBoxLayout>
-constexpr auto message_length = 128;
-constexpr auto username_length = 50;
-constexpr auto max_users = 10;
+constexpr auto messageLength = 128;
+constexpr auto usernameLength = 50;
+constexpr auto maxUsers = 10;
 
 class ChattingWindow : public QMainWindow {
     Q_OBJECT
 private:
     Ui::ChattingWindow ui;
-    QString default_button_stylesheet;
-    QString pressed_button_stylesheet;
+    QString defaultButtonStylesheet;
+    QString pressedButtonStylesheet;
     QString username;
-    QString username_to_send;
-    QString message_to_send;
+    QString usernameToSend; // this also serves as the group name to send to...
+    QString messageToSend;
     //should get deleted itself
-    QPushButton* last_pressed;
+    QPushButton* lastPressedUser;
+    QPushButton* lastPressedGroup;
+    QFont messageFont;
+    QFont titleFont;
     struct Impl;
     Impl* impl_;
     std::unordered_map<QString, std::vector<std::pair<bool, std::string>>>* Messages;
     std::unordered_map<QString, QPushButton*>* Users;
+    std::unordered_map<QString, QPushButton*>* Groups;
 public:
     explicit ChattingWindow(QWidget* parent = nullptr);
     ~ChattingWindow();
@@ -33,15 +37,19 @@ public:
     void thread_creator();
     void setSOCKET(SOCKET sock);
     void setUsername(const QString& new_user);
-    void addMessage(char message[message_length], char username[username_length]);
+    void addMessage(char message[messageLength], char username[usernameLength]);
     void sendMessageToScreen(const QString& message, const std::string& username);
     void sendUserToScreen(QString username);
-    void addUsers(char users[max_users][username_length], uint32_t size);
-    void removeUsers(char user[username_length], uint32_t size);
+    void addUsers(char users[maxUsers][usernameLength], uint32_t size);
+    void removeUsers(char user[usernameLength], uint32_t size);
     void removeUserfromScreen(const QString& user);
 private slots:
     void on_sendButton_clicked();
     void on_Username_input_textEdited(const QString& text);
     void on_Message_input_textEdited(const QString& text);
+    void on_groupChat_clicked();
+    void on_userList_clicked();
     void onUserClick();
+    void onGroupClick();
+    void on_addGroup_clicked();
 };

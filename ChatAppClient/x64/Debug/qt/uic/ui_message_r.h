@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
 ** Form generated from reading UI file 'message_r.ui'
 **
 ** Created by: Qt User Interface Compiler version 6.9.1
@@ -13,7 +13,6 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QWidget>
-#include <qboxlayout.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -26,36 +25,25 @@ public:
     {
         if (Message_chat->objectName().isEmpty())
             Message_chat->setObjectName("Message_chat");
-
-        auto* mainLayout = new QVBoxLayout(Message_chat);
-
+        Message_chat->resize(226, 50);
+        Message_chat->setStyleSheet(QString::fromUtf8(""));
         message_recv = new QLabel(Message_chat);
         message_recv->setObjectName("message_recv");
-
-        // wrapping + width bounds
+        message_recv->setGeometry(QRect(0, 0, 226, 51));
+        message_recv->setStyleSheet(QString::fromUtf8("background-color: #FFFFFF;     /* white bubble */\n"
+"    border: 1px solid #E0E0E0;     /* light gray outline */\n"
+"    border-radius: 12px;           /* round corners */\n"
+"    padding: 8px 12px;             /* space inside */\n"
+"    color: #212121;                /* dark text */\n"
+"    font-size: 16px;\n"
+"qproperty-wordWrap: true;\n"
+"/* wrap once the text exceeds this width */\n"
+"    min-width: 80px;     /* never get narrower than 80px */\n"
+"    min-height: 24px;    /* never shorter than a line of text */\n"
+"    max-width: 200px;    /* wrap beyond ~200px */"));
         message_recv->setWordWrap(true);
-        message_recv->setMinimumWidth(80);
-        message_recv->setMinimumHeight(10);
-        message_recv->setMaximumWidth(500);
-
-        // allow it to stretch horizontally
-        message_recv->setSizePolicy(
-            QSizePolicy(QSizePolicy::Expanding,
-                QSizePolicy::MinimumExpanding)
-        );
-
-        // bubble styling…
-        message_recv->setStyleSheet(
-            "background-color: #FFFFFF;"
-            "border: 1px solid #E0E0E0;"
-            "border-radius: 12px;"
-            "padding: 8px 12px;"
-            "font-size: 16px;"
-            "color: #212121;"
-        );
-
-        mainLayout->addWidget(message_recv);
-        //mainLayout->addStretch(1);
+        //bubble->setMaximumWidth(500);  // Adjust to how wide you want chat bubbles
+        //bubble->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
 
         retranslateUi(Message_chat);
 

@@ -1,28 +1,28 @@
 #ifndef DATA_H
 #define DATA_H
-#define message_length 128
-#define username_length 50
-#define max_users 10
+#define messageLength 128
+#define usernameLength 50
+#define maxUsers 10
 #include <stdint.h>
 
 //function def for the linker function between c and c++
-typedef void (*message_callback_t)(void* ctx, char message[message_length], char username[username_length]);
-typedef void (*message_callback_t_list)(void* ctx, char users[max_users][username_length], uint32_t size);
-typedef void (*message_callback_t_user)(void* ctx, char user[username_length], uint32_t size);
+typedef void (*message_callback_t)(void* ctx, char message[messageLength], char username[usernameLength]);
+typedef void (*message_callback_t_list)(void* ctx, char users[maxUsers][usernameLength], uint32_t size);
+typedef void (*message_callback_t_user)(void* ctx, char user[usernameLength], uint32_t size);
 
 typedef struct data_r {
-	char message[message_length];
-	char username[username_length];
+	char message[messageLength];
+	char username[usernameLength];
 } data_r;
 
 typedef struct data_s {
-	char message[message_length];
-	char user_to_send[username_length];
+	char message[messageLength];
+	char user_to_send[usernameLength];
 } data_s;
 
 typedef struct list {
 	uint32_t size;
-	char arr[max_users][username_length];
+	char arr[maxUsers][usernameLength];
 } list;
 
 //actual data structures to use
