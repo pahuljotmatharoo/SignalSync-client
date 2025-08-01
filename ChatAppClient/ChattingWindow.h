@@ -20,6 +20,7 @@ private:
     QString username;
     QString usernameToSend; // this also serves as the group name to send to...
     QString messageToSend;
+    QString groupToSend;
     //should get deleted itself
     QPushButton* lastPressedUser;
     QPushButton* lastPressedGroup;
@@ -45,7 +46,6 @@ public:
     void removeUserfromScreen(const QString& user);
 private slots:
     void on_sendButton_clicked();
-    void on_Username_input_textEdited(const QString& text);
     void on_Message_input_textEdited(const QString& text);
     void on_groupChat_clicked();
     void on_userList_clicked();

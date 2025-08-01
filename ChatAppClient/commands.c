@@ -13,6 +13,7 @@
 #define MSG_SEND 1
 #define MSG_LIST 2
 #define MSG_EXIT 3
+#define ROOM_CREATE 5
 #define message_length 128
 #define max_users 10
 #define username_length 50
@@ -41,4 +42,16 @@ bool send_to_user(SOCKET* sock, const char* temp, const char* user_to_send_to)
 
 	free(data);
 	return true;
+}
+
+bool send_chatroom_name(SOCKET* sock, const char* temp)
+{
+	send_inital_msg(*sock, ROOM_CREATE);
+	char username[50];
+
+	strcpy_s(username, 50, temp);
+
+	int sent = send(*sock, username, sizeof(username), 0);
+	
+	return false;
 }

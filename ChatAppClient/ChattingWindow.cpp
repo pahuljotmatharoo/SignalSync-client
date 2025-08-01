@@ -131,12 +131,6 @@ void ChattingWindow::setUsername(const QString& new_user)
     return;
 }
 
-void ChattingWindow::on_Username_input_textEdited(const QString& text)
-{
-    usernameToSend = text;
-    return;
-}
-
 void ChattingWindow::on_Message_input_textEdited(const QString& text)
 {
     messageToSend = text;
@@ -158,6 +152,11 @@ void ChattingWindow::on_addGroup_clicked()
     ui.userLayout->addWidget(group, 0, Qt::AlignLeft | Qt::AlignTop);
 
     connect(group, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
+
+    std::string name_to_sendStd = groupName.toStdString();
+    const char* name_to_sendCStr = name_to_sendStd.c_str();;
+
+    send_chatroom_name(&impl_->sock, name_to_sendCStr);
 }
 
 void ChattingWindow::on_groupChat_clicked()
@@ -176,8 +175,10 @@ void ChattingWindow::on_groupChat_clicked()
         }
     }
 
-    lastPressedUser->setStyleSheet(defaultButtonStylesheet);
-    lastPressedUser = nullptr;
+    if (lastPressedUser) {
+        lastPressedUser->setStyleSheet(defaultButtonStylesheet);
+        lastPressedUser = nullptr;
+    }
 }
 
 void ChattingWindow::on_userList_clicked()
@@ -196,8 +197,10 @@ void ChattingWindow::on_userList_clicked()
         }
     }
 
-    lastPressedGroup->setStyleSheet(defaultButtonStylesheet);
-    lastPressedGroup = nullptr;
+    if (lastPressedGroup) {
+        lastPressedGroup->setStyleSheet(defaultButtonStylesheet);
+        lastPressedGroup = nullptr;
+    }
 }
 
 void ChattingWindow::send_error(const QString& error_message)
@@ -373,7 +376,7 @@ void ChattingWindow::onGroupClick()
     }
 
     if (lastPressedGroup) {
-        lastPressedUser->setStyleSheet(defaultButtonStylesheet);
+        lastPressedGroup->setStyleSheet(defaultButtonStylesheet);
     }
 
     clickedButton->setStyleSheet(pressedButtonStylesheet);
@@ -389,8 +392,8 @@ void ChattingWindow::onGroupClick()
     }
 
     ui.username_label->setText(clickedButton->text());
-    usernameToSend = clickedButton->text();
-    auto& vec_msg = (*Messages)[usernameToSend];
+    groupToSend = clickedButton->text();
+    auto& vec_msg = (*Messages)[groupToSend];
 
     for (std::size_t i = 0; i < vec_msg.size(); i++) {
         auto* bubble = new QLabel(QString::fromStdString(vec_msg[i].second), this);
