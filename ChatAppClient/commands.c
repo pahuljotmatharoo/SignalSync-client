@@ -14,13 +14,19 @@
 #define MSG_LIST 2
 #define MSG_EXIT 3
 #define ROOM_CREATE 5
+#define ROOM_MSG 6
 #define message_length 128
 #define max_users 10
 #define username_length 50
 
-bool send_to_user(SOCKET* sock, const char* temp, const char* user_to_send_to)
+bool send_to_user(SOCKET* sock, const char* temp, const char* user_to_send_to, bool UserOrGroup)
 {
-	send_inital_msg(*sock, MSG_SEND);
+	if (UserOrGroup == true) {
+		send_inital_msg(*sock, MSG_SEND);
+	}
+	else {
+		send_inital_msg(*sock, ROOM_MSG);
+	}
 
 	data_to_send* data = (data_to_send*) malloc(sizeof(*data));
 	if (data == NULL) {

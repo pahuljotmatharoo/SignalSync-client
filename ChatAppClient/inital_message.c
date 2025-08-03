@@ -19,6 +19,19 @@ size_t recv_exact_msg(void* buf, size_t len) {
 	return total;
 }
 
+size_t recv_exact_msg_group(void* buf, size_t len) {
+	data_to_recieve_group* temp = (data_to_recieve_group*)buf;
+	char* p = &(temp->a.message);
+	size_t total = 0;
+	while (total < len) {
+		size_t r = recv(temp->sock, p + total, len - total, 0);
+		if (r < 0)  return -1;   // error
+		if (r == 0)  return 0;   // peer closed
+		total += r;
+	}
+	return total;
+}
+
 size_t recv_exact_list(void* buf, size_t len) {
 	client_list* temp = (client_list*)buf;
 	size_t total = 0;

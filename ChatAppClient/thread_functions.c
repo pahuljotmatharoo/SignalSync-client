@@ -11,6 +11,7 @@
 #define MSG_LIST 2
 #define MSG_EXIT 3
 #define USER_EXIT 4
+#define ROOM_MSG 6
 #define message_length 128
 #define max_users 10
 #define username_length 50
@@ -67,6 +68,18 @@ DWORD WINAPI recieving(LPVOID arg) {
 			char username[username_length];
 			int x = recv_exact_username(*(funct_arg->sock), username, username_length);
 			funct_arg->on_user(funct_arg->window_ptr, username, username_length);
+		}
+		else if (type == ROOM_MSG) {
+			data_to_recieve_group data;
+			data.sock = *(funct_arg->sock);
+			size_t x = recv_exact_msg_group(&(data), sizeof(data_r_group));
+			if (x <= 0) {
+				printf("Received no data! \n");
+				continue;
+			}
+			data.a.message[message_length - 1] = '\0';
+			funct_arg->on_group_message(funct_arg->window_ptr, data.a.message, data.a.username, data.a.groupName);
+			type = INT_MAX;
 		}
 	}
 	free(arg);

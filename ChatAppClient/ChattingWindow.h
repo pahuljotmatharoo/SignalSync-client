@@ -15,6 +15,7 @@ class ChattingWindow : public QMainWindow {
     Q_OBJECT
 private:
     Ui::ChattingWindow ui;
+    bool UserOrGroup;
     QString defaultButtonStylesheet;
     QString pressedButtonStylesheet;
     QString username;
@@ -29,6 +30,7 @@ private:
     struct Impl;
     Impl* impl_;
     std::unordered_map<QString, std::vector<std::pair<bool, std::string>>>* Messages;
+    std::unordered_map<QString, std::vector<std::pair<bool, std::pair<QString, std::string> > > >* groupMessages;
     std::unordered_map<QString, QPushButton*>* Users;
     std::unordered_map<QString, QPushButton*>* Groups;
 public:
@@ -39,7 +41,8 @@ public:
     void setSOCKET(SOCKET sock);
     void setUsername(const QString& new_user);
     void addMessage(char message[messageLength], char username[usernameLength]);
-    void sendMessageToScreen(const QString& message, const std::string& username);
+    void addMessage_group(char message[messageLength], char username[usernameLength], char group[usernameLength]);
+    void sendMessageToScreen(const QString& message, const std::string& username, bool user);
     void sendUserToScreen(QString username);
     void addUsers(char users[maxUsers][usernameLength], uint32_t size);
     void removeUsers(char user[usernameLength], uint32_t size);
