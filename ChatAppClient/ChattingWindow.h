@@ -48,6 +48,7 @@ public:
     void removeUsers(char user[usernameLength], uint32_t size);
     void removeUserfromScreen(const QString& user);
     void addGroup(const char group[usernameLength]);
+    void addGroups(char users[maxUsers][usernameLength], uint32_t size);
     void addGrouptoScreen(const QString& user);
 private slots:
     void on_sendButton_clicked();

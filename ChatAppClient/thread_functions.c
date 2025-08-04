@@ -13,6 +13,7 @@
 #define USER_EXIT 4
 #define ROOM_CREATE 5
 #define ROOM_MSG 6
+#define ROOM_LIST 7
 #define message_length 128
 #define max_users 10
 #define username_length 50
@@ -93,6 +94,18 @@ DWORD WINAPI recieving(LPVOID arg) {
 			type = INT_MAX;
 		}
 
+		else if (type == ROOM_LIST) {
+			client_list data;
+			data.sock = *(funct_arg->sock);
+			int x = recv_exact_list(&(data), sizeof(list));
+			if (x <= 0) {
+				printf("Received no data! \n");
+				continue;
+			}
+			data.a.size = ntohl(data.a.size);
+			funct_arg->on_group_list(funct_arg->window_ptr, data.a.arr, data.a.size);
+			type = INT_MAX;
+		}
 	}
 	free(arg);
 	return NULL;

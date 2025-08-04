@@ -410,6 +410,10 @@ extern "C" void handle_group_creation(void* window_ptr, char group[usernameLengt
     static_cast<ChattingWindow*>(window_ptr)->addGroup(group);
 }
 
+extern "C" void handle_group_list_update(void* window_ptr, char groups[maxUsers][usernameLength], uint32_t size) {
+    static_cast<ChattingWindow*>(window_ptr)->addGroups(groups, size);
+}
+
 //this is function i use to interact with recieved messages (sort of acts as the middle man)
 extern "C" void handle_list_update(void* window_ptr, char users[maxUsers][usernameLength], uint32_t size) {
     static_cast<ChattingWindow*>(window_ptr)->addUsers(users, size);
@@ -469,7 +473,22 @@ void ChattingWindow::addUsers(char users[maxUsers][usernameLength], uint32_t siz
 
         //since this function will be called by recv thread, cannot create element here so queue it on main thread
         if ((*Users).find(usernamee) == (*Users).end()) {
-            QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(QString::fromStdString(username)); }, Qt::QueuedConnection);
+            QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(usernamee); }, Qt::QueuedConnection);
+        }
+    }
+    return;
+}
+
+void ChattingWindow::addGroups(char groups[maxUsers][usernameLength], uint32_t size) {
+    //just goes through the list of users when its updated from the server end, and adds any new ones.
+    //better logic will be implemented later from server side soon
+    for (std::size_t i = 0; i < size; i++) {
+        std::string group(groups[i]);
+        QString groupp = QString::fromStdString(group);
+
+        //since this function will be called by recv thread, cannot create element here so queue it on main thread
+        if ((*Groups).find(groupp) == (*Groups).end()) {
+            QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(groupp); }, Qt::QueuedConnection);
         }
     }
     return;
@@ -483,9 +502,6 @@ void ChattingWindow::removeUsers(char user[usernameLength], uint32_t size)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
 
 
 
@@ -601,7 +617,7 @@ void ChattingWindow::sendUserToScreen(QString username) {
 
 void ChattingWindow::thread_creator()
 {
-    auto* arg = new RecvParams{ &(impl_->sock), this, handle_message, handle_group_message, handle_group_creation, handle_list_update, handle_user_update };
+    auto* arg = new RecvParams{ &(impl_->sock), this, handle_message, handle_group_message, handle_group_list_update, handle_group_creation, handle_list_update, handle_user_update };
 
     DWORD pThreadID;
     HANDLE call_thread = create_thread(recieving, arg, &pThreadID);
