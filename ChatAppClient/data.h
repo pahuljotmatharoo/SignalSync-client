@@ -8,6 +8,7 @@
 //function def for the linker function between c and c++
 typedef void (*message_callback_t)(void* ctx, char message[messageLength], char username[usernameLength]);
 typedef void (*message_callback_t_group)(void* ctx, char message[messageLength], char username[usernameLength], char group[usernameLength]);
+typedef void (*message_callback_t_group_create)(void* ctx, char group[usernameLength]);
 typedef void (*message_callback_t_list)(void* ctx, char users[maxUsers][usernameLength], uint32_t size);
 typedef void (*message_callback_t_user)(void* ctx, char user[usernameLength], uint32_t size);
 
@@ -53,11 +54,17 @@ typedef struct client_list {
 	SOCKET sock;
 } client_list;
 
+typedef struct room_add {
+	char groupName[usernameLength];
+	SOCKET sock;
+} room_add;
+
 typedef struct {
 	SOCKET *sock;
 	void* window_ptr;
 	message_callback_t on_message;
 	message_callback_t_group on_group_message;
+	message_callback_t_group_create on_group_create;
 	message_callback_t_list on_list;
 	message_callback_t_user on_user;
 } RecvParams;

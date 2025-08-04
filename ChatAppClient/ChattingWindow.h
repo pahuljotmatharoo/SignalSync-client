@@ -15,7 +15,7 @@ class ChattingWindow : public QMainWindow {
     Q_OBJECT
 private:
     Ui::ChattingWindow ui;
-    bool UserOrGroup;
+    bool UserOrGroup; // lets us know whether the user is on userlist or grouplist
     QString defaultButtonStylesheet;
     QString pressedButtonStylesheet;
     QString username;
@@ -47,6 +47,8 @@ public:
     void addUsers(char users[maxUsers][usernameLength], uint32_t size);
     void removeUsers(char user[usernameLength], uint32_t size);
     void removeUserfromScreen(const QString& user);
+    void addGroup(const char group[usernameLength]);
+    void addGrouptoScreen(const QString& user);
 private slots:
     void on_sendButton_clicked();
     void on_Message_input_textEdited(const QString& text);

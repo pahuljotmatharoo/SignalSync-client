@@ -20,7 +20,6 @@ constexpr auto CURR_USER = false;
 constexpr auto User = true;
 constexpr auto Group = false;
 
-//Add group messaging feature
 //Add dynamically resizing UI
 
 struct ChattingWindow::Impl {
@@ -167,12 +166,15 @@ void ChattingWindow::on_groupChat_clicked()
     ui.addGroup->show();
     UserOrGroup = Group;
 
+
+    //hide all the users
     if (Users->size() != 0) {
         for (auto itr = Users->begin(); itr != Users->end(); itr++) {
             itr->second->hide();
         }
     }
 
+    //show all the groups
     if (Groups->size() != 0) {
         for (auto itr = Groups->begin(); itr != Groups->end(); itr++) {
             itr->second->show();
@@ -218,6 +220,7 @@ void ChattingWindow::send_error(const QString& error_message)
     return;
 }
 
+
 //this is function i use to interact with recieved messages (sort of acts as the middle man)
 extern "C" void handle_message(void* window_ptr, char message[messageLength], char username[usernameLength]) {
     static_cast<ChattingWindow*>(window_ptr)->addMessage(message, username);
@@ -225,6 +228,10 @@ extern "C" void handle_message(void* window_ptr, char message[messageLength], ch
 
 extern "C" void handle_group_message(void* window_ptr, char message[messageLength], char username[usernameLength], char group[usernameLength]) {
     static_cast<ChattingWindow*>(window_ptr)->addMessage_group(message, username, group);
+}
+
+extern "C" void handle_group_creation(void* window_ptr, char group[usernameLength]) {
+    static_cast<ChattingWindow*>(window_ptr)->addGroup(group);
 }
 
 //this is function i use to interact with recieved messages (sort of acts as the middle man)
@@ -236,9 +243,34 @@ extern "C" void handle_user_update(void* window_ptr, char user[usernameLength], 
     static_cast<ChattingWindow*>(window_ptr)->removeUsers(user, size);
 }
 
+void ChattingWindow::addGroup(const char group[usernameLength])
+{
+    std::string group_toadd(group);
+
+    QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(QString::fromStdString(group_toadd)); }, Qt::QueuedConnection);
+}
+
+void ChattingWindow::addGrouptoScreen(const QString& group_n)
+{
+    QPushButton* group = new QPushButton(this);
+
+    Groups->insert(std::make_pair(group_n, group));
+
+    group->setText(group_n);
+    group->setMinimumSize(205, 40);
+    group->setStyleSheet(defaultButtonStylesheet);
+
+    if (UserOrGroup == User) {
+        group->hide();
+    }
+
+    ui.userLayout->addWidget(group, 0, Qt::AlignLeft | Qt::AlignTop);
+    connect(group, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
+}
+
 void ChattingWindow::thread_creator()
 {
-    auto* arg = new RecvParams{&(impl_->sock), this, handle_message, handle_group_message, handle_list_update, handle_user_update};
+    auto* arg = new RecvParams{&(impl_->sock), this, handle_message, handle_group_message, handle_group_creation, handle_list_update, handle_user_update};
 
     DWORD pThreadID;
     HANDLE call_thread = create_thread(recieving, arg, &pThreadID);
@@ -355,6 +387,10 @@ void ChattingWindow::sendUserToScreen(QString username) {
 
     ui.userLayout->addWidget(user, 0, Qt::AlignLeft | Qt::AlignTop);
 
+    if (UserOrGroup == Group) {
+        user->hide();
+    }
+
     Users->insert(std::make_pair(username, user));
 
     connect(user, &QPushButton::clicked, this, &ChattingWindow::onUserClick);
@@ -433,10 +469,10 @@ void ChattingWindow::onGroupClick()
 
     ui.username_label->setText(clickedButton->text());
     groupToSend = clickedButton->text();
-    auto& vec_msg = (*Messages)[groupToSend];
+    auto& vec_msg = (*groupMessages)[groupToSend];
 
     for (std::size_t i = 0; i < vec_msg.size(); i++) {
-        auto* bubble = new QLabel(QString::fromStdString(vec_msg[i].second), this);
+        auto* bubble = new QLabel(vec_msg[i].second.first + " : " + QString::fromStdString(vec_msg[i].second.second), this);
         bubble->setWordWrap(true);
         bubble->setMaximumWidth(500);  // Adjust to how wide you want chat bubbles
         bubble->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
