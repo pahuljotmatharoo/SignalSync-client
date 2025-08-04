@@ -18,21 +18,21 @@ private:
     bool UserOrGroup; // lets us know whether the user is on userlist or grouplist
     QString defaultButtonStylesheet;
     QString pressedButtonStylesheet;
-    QString username;
-    QString usernameToSend; // this also serves as the group name to send to...
+    QString ourUsername; // username of this instance
+    QString usernameToSend;
     QString messageToSend;
     QString groupToSend;
     //should get deleted itself
-    QPushButton* lastPressedUser;
-    QPushButton* lastPressedGroup;
+    QPushButton* lastPressedUser; // basically current button pressed (last pressed as we need to see if we had pressed a button before, and which)
+    QPushButton* lastPressedGroup; // basically current button pressed (last pressed as we need to see if we had pressed a button before, and which)
     QFont messageFont;
     QFont titleFont;
     struct Impl;
     Impl* impl_;
-    std::unordered_map<QString, std::vector<std::pair<bool, std::string>>>* Messages;
-    std::unordered_map<QString, std::vector<std::pair<bool, std::pair<QString, std::string> > > >* groupMessages;
-    std::unordered_map<QString, QPushButton*>* Users;
-    std::unordered_map<QString, QPushButton*>* Groups;
+    std::unordered_map<QString, std::vector<std::pair<bool, std::string>>>* Messages; // Name of other user, <Who sent it, The Message>
+    std::unordered_map<QString, std::vector<std::pair<bool, std::pair<QString, std::string> > > >* groupMessages; // Name of Group, <Who sent it <The user who sent it, The Message>>
+    std::unordered_map<QString, QPushButton*>* Users; // <Name of User, Button addr>
+    std::unordered_map<QString, QPushButton*>* Groups;  // <Name of Group, Button addr> 
 public:
     explicit ChattingWindow(QWidget* parent = nullptr);
     ~ChattingWindow();
