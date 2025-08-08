@@ -42,25 +42,32 @@ template <> constexpr inline auto ChattingWindow::qt_create_metaobjectdata<qt_me
         "ChattingWindow",
         "on_sendButton_clicked",
         "",
-        "on_Username_input_textEdited",
-        "text",
         "on_Message_input_textEdited",
-        "onUserClick"
+        "text",
+        "on_groupChat_clicked",
+        "on_userList_clicked",
+        "onUserClick",
+        "onGroupClick",
+        "on_addGroup_clicked"
     };
 
     QtMocHelpers::UintData qt_methods {
         // Slot 'on_sendButton_clicked'
         QtMocHelpers::SlotData<void()>(1, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'on_Username_input_textEdited'
+        // Slot 'on_Message_input_textEdited'
         QtMocHelpers::SlotData<void(const QString &)>(3, 2, QMC::AccessPrivate, QMetaType::Void, {{
             { QMetaType::QString, 4 },
         }}),
-        // Slot 'on_Message_input_textEdited'
-        QtMocHelpers::SlotData<void(const QString &)>(5, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::QString, 4 },
-        }}),
-        // Slot 'onUserClick'
+        // Slot 'on_groupChat_clicked'
+        QtMocHelpers::SlotData<void()>(5, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'on_userList_clicked'
         QtMocHelpers::SlotData<void()>(6, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onUserClick'
+        QtMocHelpers::SlotData<void()>(7, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onGroupClick'
+        QtMocHelpers::SlotData<void()>(8, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'on_addGroup_clicked'
+        QtMocHelpers::SlotData<void()>(9, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -85,9 +92,12 @@ void ChattingWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _
     if (_c == QMetaObject::InvokeMetaMethod) {
         switch (_id) {
         case 0: _t->on_sendButton_clicked(); break;
-        case 1: _t->on_Username_input_textEdited((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 2: _t->on_Message_input_textEdited((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 3: _t->onUserClick(); break;
+        case 1: _t->on_Message_input_textEdited((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 2: _t->on_groupChat_clicked(); break;
+        case 3: _t->on_userList_clicked(); break;
+        case 4: _t->onUserClick(); break;
+        case 5: _t->onGroupClick(); break;
+        case 6: _t->on_addGroup_clicked(); break;
         default: ;
         }
     }
@@ -112,14 +122,14 @@ int ChattingWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 4)
+        if (_id < 7)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 4;
+        _id -= 7;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 4)
+        if (_id < 7)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 4;
+        _id -= 7;
     }
     return _id;
 }
