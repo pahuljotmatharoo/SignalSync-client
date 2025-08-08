@@ -27,6 +27,8 @@ private:
     QPushButton* lastPressedGroup; // basically current button pressed (last pressed as we need to see if we had pressed a button before, and which)
     QFont messageFont;
     QFont titleFont;
+    QFont button_addGroup_Font;
+    QFont buttonFont;
     struct Impl;
     Impl* impl_;
     std::unordered_map<QString, std::vector<std::pair<bool, std::string>>>* Messages; // Name of other user, <Who sent it, The Message>

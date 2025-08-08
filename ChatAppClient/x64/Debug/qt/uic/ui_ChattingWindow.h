@@ -11,7 +11,6 @@
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QFrame>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
@@ -30,8 +29,6 @@ public:
     QVBoxLayout *userLayout;
     QScrollArea *scrollArea_2;
     QWidget *scrollAreaWidgetContents_3;
-    QFrame *frame;
-    QLabel *username_label;
     QLabel *currUsers_label;
     QLabel *title_label;
     QScrollArea *scrollArea;
@@ -43,12 +40,13 @@ public:
     QPushButton *userList;
     QPushButton *groupChat;
     QPushButton *addGroup;
+    QLabel *username_label;
 
     void setupUi(QMainWindow *ChattingWindow)
     {
         if (ChattingWindow->objectName().isEmpty())
             ChattingWindow->setObjectName("ChattingWindow");
-        ChattingWindow->resize(1295, 920);
+        ChattingWindow->resize(1149, 869);
         QSizePolicy sizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Ignored);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
@@ -61,9 +59,11 @@ public:
         ChattingWindow->setTabShape(QTabWidget::TabShape::Rounded);
         centralwidget = new QWidget(ChattingWindow);
         centralwidget->setObjectName("centralwidget");
+        centralwidget->setStyleSheet(QString::fromUtf8("background-color: #1e1e1e;\n"
+"    color: #dddddd;"));
         verticalLayoutWidget = new QWidget(centralwidget);
         verticalLayoutWidget->setObjectName("verticalLayoutWidget");
-        verticalLayoutWidget->setGeometry(QRect(10, 320, 261, 531));
+        verticalLayoutWidget->setGeometry(QRect(10, 250, 261, 561));
         userLayout = new QVBoxLayout(verticalLayoutWidget);
         userLayout->setObjectName("userLayout");
         userLayout->setContentsMargins(0, 0, 0, 0);
@@ -98,47 +98,41 @@ public:
 "}\n"
 ""));
         scrollArea_2->setWidgetResizable(true);
+        scrollArea_2->setAlignment(Qt::AlignmentFlag::AlignCenter);
         scrollAreaWidgetContents_3 = new QWidget();
         scrollAreaWidgetContents_3->setObjectName("scrollAreaWidgetContents_3");
-        scrollAreaWidgetContents_3->setGeometry(QRect(0, 0, 251, 521));
+        scrollAreaWidgetContents_3->setGeometry(QRect(0, 0, 251, 551));
         scrollArea_2->setWidget(scrollAreaWidgetContents_3);
 
         userLayout->addWidget(scrollArea_2);
 
-        frame = new QFrame(centralwidget);
-        frame->setObjectName("frame");
-        frame->setGeometry(QRect(280, 10, 1001, 51));
-        frame->setStyleSheet(QString::fromUtf8("border-radius: 5px;\n"
-"border: 1px solid #C0C0C0;   /* subtle outline */"));
-        frame->setFrameShape(QFrame::Shape::StyledPanel);
-        frame->setFrameShadow(QFrame::Shadow::Raised);
-        username_label = new QLabel(frame);
-        username_label->setObjectName("username_label");
-        username_label->setGeometry(QRect(0, 0, 1001, 51));
-        QFont font1;
-        font1.setFamilies({QString::fromUtf8("Arial")});
-        font1.setPointSize(23);
-        username_label->setFont(font1);
-        username_label->setStyleSheet(QString::fromUtf8("text-align: center;"));
         currUsers_label = new QLabel(centralwidget);
         currUsers_label->setObjectName("currUsers_label");
-        currUsers_label->setGeometry(QRect(70, 280, 151, 31));
-        QFont font2;
-        font2.setPointSize(18);
-        currUsers_label->setFont(font2);
+        currUsers_label->setGeometry(QRect(46, 210, 191, 33));
+        QFont font1;
+        font1.setPointSize(18);
+        currUsers_label->setFont(font1);
+        currUsers_label->setAlignment(Qt::AlignmentFlag::AlignCenter);
         title_label = new QLabel(centralwidget);
         title_label->setObjectName("title_label");
-        title_label->setGeometry(QRect(50, 10, 181, 61));
-        QFont font3;
-        font3.setPointSize(24);
-        title_label->setFont(font3);
-        title_label->setStyleSheet(QString::fromUtf8("border-radius: 5px;\n"
-"border: 1px solid #C0C0C0;   /* subtle outline */\n"
-"padding: 5px;"));
+        title_label->setGeometry(QRect(40, 10, 191, 61));
+        QFont font2;
+        font2.setBold(true);
+        title_label->setFont(font2);
+        title_label->setStyleSheet(QString::fromUtf8("font-size: 28px;\n"
+"    font-weight: bold;\n"
+"    letter-spacing: 1px;\n"
+"    color: #ffffff;\n"
+"    padding: 10px;\n"
+"    border: 2px solid #3a3a3a;\n"
+"    border-radius: 8px;\n"
+"    background-color: #2a2a2a;\n"
+"    qproperty-alignment: AlignCenter;"));
+        title_label->setAlignment(Qt::AlignmentFlag::AlignCenter);
         scrollArea = new QScrollArea(centralwidget);
         scrollArea->setObjectName("scrollArea");
         scrollArea->setEnabled(true);
-        scrollArea->setGeometry(QRect(280, 74, 1001, 781));
+        scrollArea->setGeometry(QRect(280, 74, 861, 741));
         scrollArea->setAutoFillBackground(false);
         scrollArea->setStyleSheet(QString::fromUtf8("/* ===== ScrollArea & viewport ===== */\n"
 "QScrollArea {\n"
@@ -171,11 +165,11 @@ public:
         scrollArea->setWidgetResizable(true);
         scrollAreaWidgetContents = new QWidget();
         scrollAreaWidgetContents->setObjectName("scrollAreaWidgetContents");
-        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 993, 773));
+        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 853, 733));
         scrollAreaWidgetContents->setLayoutDirection(Qt::LayoutDirection::LeftToRight);
         verticalLayoutWidget_2 = new QWidget(scrollAreaWidgetContents);
         verticalLayoutWidget_2->setObjectName("verticalLayoutWidget_2");
-        verticalLayoutWidget_2->setGeometry(QRect(10, 10, 1021, 751));
+        verticalLayoutWidget_2->setGeometry(QRect(10, 10, 831, 711));
         chatLayout = new QVBoxLayout(verticalLayoutWidget_2);
         chatLayout->setSpacing(20);
         chatLayout->setObjectName("chatLayout");
@@ -184,28 +178,97 @@ public:
         Message_input = new QLineEdit(centralwidget);
         Message_input->setObjectName("Message_input");
         Message_input->setEnabled(true);
-        Message_input->setGeometry(QRect(280, 860, 881, 51));
-        Message_input->setStyleSheet(QString::fromUtf8("border: 1px solid #C0C0C0;   /* subtle outline */\n"
-"    border-radius: 12px;         /* round the outer border */\n"
-"    padding: 5px;"));
+        Message_input->setGeometry(QRect(280, 820, 741, 41));
+        Message_input->setStyleSheet(QString::fromUtf8("padding: 6px;\n"
+"    border: 1px solid #444;\n"
+"    border-radius: 4px;\n"
+"    background-color: #2c2c2c;\n"
+"    color: #ccc;\n"
+"    selection-background-color: #0078d7;"));
         sendButton = new QPushButton(centralwidget);
         sendButton->setObjectName("sendButton");
-        sendButton->setGeometry(QRect(1160, 860, 121, 51));
-        QFont font4;
-        font4.setPointSize(12);
-        sendButton->setFont(font4);
-        sendButton->setStyleSheet(QString::fromUtf8(" border: 1px solid #C0C0C0;   /* subtle outline */\n"
-" border-radius: 12px;         /* round the outer border */\n"
-"padding: 5px;"));
+        sendButton->setGeometry(QRect(1030, 820, 111, 41));
+        QFont font3;
+        font3.setPointSize(12);
+        font3.setBold(true);
+        sendButton->setFont(font3);
+        sendButton->setStyleSheet(QString::fromUtf8("QPushButton#sendButton {\n"
+"    background-color: #0078d7;\n"
+"    color: white;\n"
+"    font-weight: bold;\n"
+"    padding: 3px 7px;\n"
+"    border-radius: 5px;\n"
+"    border: none;\n"
+"}\n"
+"\n"
+"QPushButton#sendButton:hover {\n"
+"    background-color: #2892ff;\n"
+"}\n"
+"\n"
+"QPushButton#sendButton:pressed {\n"
+"    background-color: #005fa3;\n"
+"}\n"
+""));
         userList = new QPushButton(centralwidget);
         userList->setObjectName("userList");
-        userList->setGeometry(QRect(80, 150, 111, 31));
+        userList->setGeometry(QRect(80, 100, 111, 31));
+        userList->setStyleSheet(QString::fromUtf8("QPushButton {\n"
+"    background-color: #0078d7;\n"
+"    border: none;\n"
+"    padding: 8px 16px;\n"
+"    color: white;\n"
+"    font-weight: bold;\n"
+"    border-radius: 4px;\n"
+"}\n"
+"QPushButton:hover {\n"
+"    background-color: #2892ff;\n"
+"}\n"
+"QPushButton:pressed {\n"
+"    background-color: #005fa3;\n"
+"}"));
         groupChat = new QPushButton(centralwidget);
         groupChat->setObjectName("groupChat");
-        groupChat->setGeometry(QRect(80, 190, 111, 31));
+        groupChat->setGeometry(QRect(80, 140, 111, 31));
+        groupChat->setStyleSheet(QString::fromUtf8("QPushButton {\n"
+"    background-color: #0078d7;\n"
+"    border: none;\n"
+"    padding: 8px 16px;\n"
+"    color: white;\n"
+"    font-weight: bold;\n"
+"    border-radius: 4px;\n"
+"}\n"
+"QPushButton:hover {\n"
+"    background-color: #2892ff;\n"
+"}\n"
+"QPushButton:pressed {\n"
+"    background-color: #005fa3;\n"
+"}"));
         addGroup = new QPushButton(centralwidget);
         addGroup->setObjectName("addGroup");
-        addGroup->setGeometry(QRect(110, 860, 80, 24));
+        addGroup->setGeometry(QRect(90, 820, 91, 31));
+        addGroup->setStyleSheet(QString::fromUtf8("QPushButton {\n"
+"    background-color: #0078d7;\n"
+"    border: none;\n"
+"    padding: 8px 16px;\n"
+"    color: white;\n"
+"    font-weight: bold;\n"
+"    border-radius: 4px;\n"
+"}\n"
+"QPushButton:hover {\n"
+"    background-color: #2892ff;\n"
+"}\n"
+"QPushButton:pressed {\n"
+"    background-color: #005fa3;\n"
+"}"));
+        username_label = new QLabel(centralwidget);
+        username_label->setObjectName("username_label");
+        username_label->setGeometry(QRect(280, 20, 851, 51));
+        QFont font4;
+        font4.setFamilies({QString::fromUtf8("Arial")});
+        font4.setPointSize(23);
+        username_label->setFont(font4);
+        username_label->setStyleSheet(QString::fromUtf8("text-align: center;"));
+        username_label->setAlignment(Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter);
         ChattingWindow->setCentralWidget(centralwidget);
 
         retranslateUi(ChattingWindow);
@@ -216,14 +279,14 @@ public:
     void retranslateUi(QMainWindow *ChattingWindow)
     {
         ChattingWindow->setWindowTitle(QCoreApplication::translate("ChattingWindow", "SignalSync", nullptr));
-        username_label->setText(QCoreApplication::translate("ChattingWindow", "Select a User to talk to!", nullptr));
         currUsers_label->setText(QCoreApplication::translate("ChattingWindow", "Current Users", nullptr));
         title_label->setText(QCoreApplication::translate("ChattingWindow", "SignalSync", nullptr));
         Message_input->setPlaceholderText(QCoreApplication::translate("ChattingWindow", "Type a message...", nullptr));
         sendButton->setText(QCoreApplication::translate("ChattingWindow", "Send Message", nullptr));
         userList->setText(QCoreApplication::translate("ChattingWindow", "User List", nullptr));
         groupChat->setText(QCoreApplication::translate("ChattingWindow", "Group Chat", nullptr));
-        addGroup->setText(QCoreApplication::translate("ChattingWindow", "Add ", nullptr));
+        addGroup->setText(QCoreApplication::translate("ChattingWindow", "Add Group", nullptr));
+        username_label->setText(QCoreApplication::translate("ChattingWindow", "Select a User to talk to!", nullptr));
     } // retranslateUi
 
 };

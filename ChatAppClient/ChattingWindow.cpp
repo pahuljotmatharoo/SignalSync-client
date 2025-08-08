@@ -33,7 +33,7 @@ struct ChattingWindow::Impl {
     }
 };
 
-ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), ourUsername{ "" }, impl_(new Impl()), lastPressedUser(nullptr), lastPressedGroup(nullptr), messageFont("Montserrat", 14), titleFont("Montserrat", 18), UserOrGroup(User)
+ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), ourUsername{ "" }, impl_(new Impl()), lastPressedUser(nullptr), lastPressedGroup(nullptr), messageFont("Montserrat", 14), titleFont("Montserrat", 25), UserOrGroup(User), button_addGroup_Font("Montserrat", 8), buttonFont("Montserrat", 10)
 {
     ui.setupUi(this);
     //we're just creating a layout for scrolling and out vertical layout
@@ -101,6 +101,12 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), ourUserna
     ui.chatLayout->addStretch(1);  // Push all bubbles to top
 
     ui.title_label->setFont(titleFont);
+
+    ui.addGroup->setFont(button_addGroup_Font);
+    ui.userList->setFont(buttonFont);
+    ui.groupChat->setFont(buttonFont);
+    ui.Message_input->setFont(buttonFont);
+    ui.sendButton->setFont(buttonFont);
 
     ui.chatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
     ui.addGroup->hide();
@@ -179,6 +185,7 @@ void ChattingWindow::on_groupChat_clicked()
     ui.addGroup->show();
     UserOrGroup = Group;
 
+    ui.currUsers_label->setText("Current Groups");
 
     //hide all the users
     if (Users->size() != 0) {
@@ -204,6 +211,8 @@ void ChattingWindow::on_userList_clicked()
 {
     ui.addGroup->hide();
     UserOrGroup = User;
+
+    ui.currUsers_label->setText("Current Users");
 
     if (Groups->size() != 0) {
         for (auto itr = Groups->begin(); itr != Groups->end(); itr++) {
@@ -521,7 +530,7 @@ void ChattingWindow::addGrouptoScreen(const QString& group_n)
         group->hide();
     }
 
-    ui.userLayout->addWidget(group, 0, Qt::AlignLeft | Qt::AlignTop);
+    ui.userLayout->addWidget(group, 0, Qt::AlignCenter | Qt::AlignTop);
     connect(group, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
 }
 
@@ -592,7 +601,7 @@ void ChattingWindow::sendUserToScreen(QString username) {
     user->setMinimumSize(205, 40);
     user->setStyleSheet(defaultButtonStylesheet);
 
-    ui.userLayout->addWidget(user, 0, Qt::AlignLeft | Qt::AlignTop);
+    ui.userLayout->addWidget(user, 0, Qt::AlignCenter | Qt::AlignTop);
 
     if (UserOrGroup == Group) {
         user->hide();
