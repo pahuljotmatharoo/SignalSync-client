@@ -1,11 +1,10 @@
-#include "mainwindow.h"
+#include "ChatAppClient.h"
+#include <QtWidgets/QApplication>
 
-#include <QApplication>
-
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
-    return a.exec();
+    QApplication app(argc, argv);
+    ChatAppClient window;
+    window.show();
+    return app.exec();
 }
