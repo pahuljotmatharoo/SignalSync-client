@@ -18,6 +18,8 @@ private:
     bool UserOrGroup; // lets us know whether the user is on userlist or grouplist
     QString defaultButtonStylesheet;
     QString pressedButtonStylesheet;
+    QString sendMessageStylesheet;
+    QString recvMessageStylesheet;
     QString ourUsername; // username of this instance
     QString usernameToSend;
     QString messageToSend;

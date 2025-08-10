@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1149</width>
-    <height>869</height>
+    <height>866</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -53,9 +53,9 @@
        <property name="styleSheet">
         <string notr="true">/* ===== scrollArea_2 &amp; viewport ===== */
 QScrollArea#scrollArea_2 {
-    border: 1px solid #C0C0C0;   /* subtle outline */
+    border: 1px solid #3a3a3a;   /* subtle outline */
     border-radius: 12px;         /* round the outer border */
-    background-color: #ECE5DD;
+    background-color: #3a3a3a;
     padding: 3px;
 }
 
@@ -111,7 +111,11 @@ QScrollArea#scrollArea_2 QScrollBar::sub-page {
     <property name="font">
      <font>
       <pointsize>18</pointsize>
+      <bold>true</bold>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font-weight: bold;</string>
     </property>
     <property name="text">
      <string>Current Users</string>
@@ -123,7 +127,7 @@ QScrollArea#scrollArea_2 QScrollBar::sub-page {
    <widget class="QLabel" name="title_label">
     <property name="geometry">
      <rect>
-      <x>40</x>
+      <x>42</x>
       <y>10</y>
       <width>191</width>
       <height>61</height>
@@ -171,9 +175,9 @@ QScrollArea#scrollArea_2 QScrollBar::sub-page {
     <property name="styleSheet">
      <string notr="true">/* ===== ScrollArea &amp; viewport ===== */
 QScrollArea {
-    border: 1px solid #C0C0C0;   /* subtle outline */
+    border: 1px solid #3a3a3a;   /* subtle outline */
     border-radius: 12px;         /* round the outer border */
-    background-color: #ECE5DD;
+    background-color: #3a3a3a;
     padding: 3px;
 }
 
@@ -242,7 +246,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
     </property>
     <property name="geometry">
      <rect>
-      <x>280</x>
+      <x>281</x>
       <y>820</y>
       <width>741</width>
       <height>41</height>
@@ -263,9 +267,9 @@ QScrollBar::add-page, QScrollBar::sub-page {
    <widget class="QPushButton" name="sendButton">
     <property name="geometry">
      <rect>
-      <x>1030</x>
+      <x>1025</x>
       <y>820</y>
-      <width>111</width>
+      <width>121</width>
       <height>41</height>
      </rect>
     </property>
@@ -301,9 +305,9 @@ QPushButton#sendButton:pressed {
    <widget class="QPushButton" name="userList">
     <property name="geometry">
      <rect>
-      <x>80</x>
+      <x>40</x>
       <y>100</y>
-      <width>111</width>
+      <width>191</width>
       <height>31</height>
      </rect>
     </property>
@@ -330,9 +334,9 @@ QPushButton:pressed {
    <widget class="QPushButton" name="groupChat">
     <property name="geometry">
      <rect>
-      <x>80</x>
+      <x>40</x>
       <y>140</y>
-      <width>111</width>
+      <width>191</width>
       <height>31</height>
      </rect>
     </property>
@@ -359,9 +363,9 @@ QPushButton:pressed {
    <widget class="QPushButton" name="addGroup">
     <property name="geometry">
      <rect>
-      <x>90</x>
+      <x>40</x>
       <y>820</y>
-      <width>91</width>
+      <width>191</width>
       <height>31</height>
      </rect>
     </property>
@@ -398,10 +402,11 @@ QPushButton:pressed {
      <font>
       <family>Arial</family>
       <pointsize>23</pointsize>
+      <bold>true</bold>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">text-align: center;</string>
+     <string notr="true">font-weight: bold;</string>
     </property>
     <property name="text">
      <string>Select a User to talk to!</string>

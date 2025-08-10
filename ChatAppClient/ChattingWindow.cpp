@@ -86,6 +86,21 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), ourUserna
         " background-color: #055cb0;"
         " }";
 
+    sendMessageStylesheet =
+        " background-color: #4CAF50;"
+        " color:#212121;"
+        " border:1px solid #E0E0E0;"
+        " border-radius:12px;"
+        " font-size: 16px;";
+
+    recvMessageStylesheet =
+        " background-color: #555555;"
+        " color:#212121;"
+        " border:1px solid #E0E0E0;"
+        " border-radius:12px;"
+        " font-size: 16px;";
+
+
     Messages = new std::unordered_map<QString, std::vector<std::pair<bool, std::string>>>();
     groupMessages = new std::unordered_map<QString, std::vector<std::pair<bool, std::pair<QString, std::string>>>>();
     Users = new std::unordered_map<QString, QPushButton*>();
@@ -160,6 +175,11 @@ void ChattingWindow::on_Message_input_textEdited(const QString& text)
 //------------------------------------------------ BUTTON CLICKED FUNCTIONS---------------------------------------------------------------------
 void ChattingWindow::on_addGroup_clicked()
 {
+    if (Groups->size() >= 10) {
+        send_error("Already at a maximum number of Groups!");
+        return;
+    }
+
     QPushButton* group = new QPushButton(this);
 
     QString groupName = QString("Group %1").arg(Groups->size() + 1);
@@ -170,7 +190,7 @@ void ChattingWindow::on_addGroup_clicked()
 
     Groups->insert(std::make_pair(groupName, group));
 
-    ui.userLayout->addWidget(group, 0, Qt::AlignLeft | Qt::AlignTop);
+    ui.userLayout->addWidget(group, 0, Qt::AlignCenter | Qt::AlignTop);
 
     connect(group, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
 
@@ -262,10 +282,7 @@ void ChattingWindow::onUserClick()
     auto& vec_msg = (*Messages)[usernameToSend];
 
     for (std::size_t i = 0; i < vec_msg.size(); i++) {
-        auto* bubble = new QLabel(QString::fromStdString(vec_msg[i].second), this);
-        bubble->setWordWrap(true);
-        bubble->setMaximumWidth(500);  // Adjust to how wide you want chat bubbles
-        bubble->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+        auto* bubble = new MessageWidget(QString::fromStdString(vec_msg[i].second), this);
 
         vec_msg[i].first ? ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft) : ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
 
@@ -306,10 +323,7 @@ void ChattingWindow::onGroupClick()
     auto& vec_msg = (*groupMessages)[groupToSend];
 
     for (std::size_t i = 0; i < vec_msg.size(); i++) {
-        auto* bubble = new QLabel(vec_msg[i].second.first + " : " + QString::fromStdString(vec_msg[i].second.second), this);
-        bubble->setWordWrap(true);
-        bubble->setMaximumWidth(500);  // Adjust to how wide you want chat bubbles
-        bubble->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+        auto* bubble = new MessageWidget(vec_msg[i].second.first + ": " + QString::fromStdString(vec_msg[i].second.second), this);
 
         vec_msg[i].first ? ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft) : ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
 
@@ -341,11 +355,7 @@ void ChattingWindow::on_sendButton_clicked()
 
         send_to_user(&impl_->sock, message_to_sendCStr, username_to_sendCStr, UserOrGroup);
 
-        auto* bubble = new QLabel(messageToSend, this);
-        bubble->setWordWrap(true);
-        bubble->setMaximumWidth(500);  // Adjust to how wide you want chat bubbles
-        bubble->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
-        bubble->setFont(messageFont);
+        auto* bubble = new MessageWidget(messageToSend, this);
 
         ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
 
@@ -377,11 +387,7 @@ void ChattingWindow::on_sendButton_clicked()
 
         send_to_user(&impl_->sock, message_to_sendCStr, group_to_sendCStr, UserOrGroup);
 
-        auto* bubble = new QLabel(ourUsername + " : " + messageToSend, this);
-        bubble->setWordWrap(true);
-        bubble->setMaximumWidth(500);  // Adjust to how wide you want chat bubbles
-        bubble->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
-        bubble->setFont(messageFont);
+        auto* bubble = new MessageWidget(ourUsername + " : " + messageToSend, this);
 
         ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
 
@@ -554,11 +560,7 @@ void ChattingWindow::sendMessageToScreen(const QString& message, const std::stri
 {
     if (user && lastPressedUser && lastPressedUser->text() == QString::fromStdString(username)) {
 
-        auto* bubble = new QLabel (message, this);
-        bubble->setWordWrap(true);
-        bubble->setMaximumWidth(500);  // Adjust to how wide you want chat bubbles
-        bubble->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
-        bubble->setFont(messageFont);
+        auto* bubble = new MessageWidget (message, this);
 
         ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
 
@@ -571,11 +573,7 @@ void ChattingWindow::sendMessageToScreen(const QString& message, const std::stri
     }
 
     else if (!user && lastPressedGroup && lastPressedGroup->text() == QString::fromStdString(username)) {
-        auto* bubble = new QLabel(message, this);
-        bubble->setWordWrap(true);
-        bubble->setMaximumWidth(500);  // Adjust to how wide you want chat bubbles
-        bubble->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
-        bubble->setFont(messageFont);
+        auto* bubble = new MessageWidget(message, this);
 
         ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
 

@@ -25,15 +25,14 @@ public:
     {
         if (Message_chat->objectName().isEmpty())
             Message_chat->setObjectName("Message_chat");
-        Message_chat->resize(226, 50);
+        Message_chat->resize(203, 51);
         Message_chat->setStyleSheet(QString::fromUtf8(""));
         message_recv = new QLabel(Message_chat);
         message_recv->setObjectName("message_recv");
-        message_recv->setGeometry(QRect(0, 0, 226, 51));
+        message_recv->setGeometry(QRect(0, 0, 202, 51));
         message_recv->setStyleSheet(QString::fromUtf8("background-color: #FFFFFF;     /* white bubble */\n"
 "    border: 1px solid #E0E0E0;     /* light gray outline */\n"
 "    border-radius: 12px;           /* round corners */\n"
-"    padding: 8px 12px;             /* space inside */\n"
 "    color: #212121;                /* dark text */\n"
 "    font-size: 16px;\n"
 "qproperty-wordWrap: true;\n"
@@ -41,11 +40,6 @@ public:
 "    min-width: 80px;     /* never get narrower than 80px */\n"
 "    min-height: 24px;    /* never shorter than a line of text */\n"
 "    max-width: 200px;    /* wrap beyond ~200px */"));
-        message_recv->setWordWrap(true);
-        //bubble->setMaximumWidth(500);  // Adjust to how wide you want chat bubbles
-        //bubble->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
-
-        retranslateUi(Message_chat);
 
         QMetaObject::connectSlotsByName(Message_chat);
     } // setupUi

@@ -38,7 +38,7 @@ public:
 "    color: #dddddd;"));
         pushButton = new QPushButton(centralWidget);
         pushButton->setObjectName("pushButton");
-        pushButton->setGeometry(QRect(260, 290, 101, 31));
+        pushButton->setGeometry(QRect(260, 290, 111, 31));
         pushButton->setStyleSheet(QString::fromUtf8("QPushButton {\n"
 "    background-color: #0078d7;\n"
 "    border: none;\n"
