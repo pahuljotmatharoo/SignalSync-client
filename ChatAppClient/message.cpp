@@ -18,8 +18,8 @@ MessageWidget::MessageWidget(const QString& message, QWidget* parent)
 
     // Keep only visual styling — remove width/height limits from the stylesheet
     ui->message_recv->setStyleSheet(R"(
-        background-color: #2196F3; border:1px solid #E0E0E0; border-radius:12px;
-        color:#212121; font-size:15px; font-family: "Montserrat";
+        background-color: #2e2e2e; color:#E0E0E0; border:1px solid #E0E0E0; border-radius:12px;
+        font-size:15px; font-family: "Montserrat";
     )");
 
     ui->message_recv->setWordWrap(true);

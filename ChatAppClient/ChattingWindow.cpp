@@ -8,6 +8,7 @@
 #include <inital_message.h>
 #include <QHBoxLayout>
 #include <message.h>
+#include <message_s.h>
 #include <qscrollbar.h>
 #include <qlayout.h>
 #include <qtimer.h>
@@ -22,7 +23,7 @@ constexpr auto Group = false;
 
 //Add dynamically resizing UI
 
-//I did change username -> ourUsername, might have caused some issues 
+//add check which sees if curr selected user has disconnected
 
 struct ChattingWindow::Impl {
     SOCKET sock{ INVALID_SOCKET };
@@ -282,13 +283,21 @@ void ChattingWindow::onUserClick()
     auto& vec_msg = (*Messages)[usernameToSend];
 
     for (std::size_t i = 0; i < vec_msg.size(); i++) {
-        auto* bubble = new MessageWidget(QString::fromStdString(vec_msg[i].second), this);
 
-        vec_msg[i].first ? ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft) : ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
-
-        QTimer::singleShot(0, this, [=]() {
-            ui.scrollArea->ensureWidgetVisible(bubble);
-            });
+        if (vec_msg[i].first == CURR_USER) {
+            auto* bubble = new MessageWidget_s(QString::fromStdString(vec_msg[i].second), this);
+            ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
+            QTimer::singleShot(0, this, [=]() {
+                ui.scrollArea->ensureWidgetVisible(bubble);
+                });
+        }
+        else {
+            auto* bubble = new MessageWidget(QString::fromStdString(vec_msg[i].second), this);
+            ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
+            QTimer::singleShot(0, this, [=]() {
+                ui.scrollArea->ensureWidgetVisible(bubble);
+                });
+        }
     }
     return;
 }
@@ -324,12 +333,21 @@ void ChattingWindow::onGroupClick()
 
     for (std::size_t i = 0; i < vec_msg.size(); i++) {
         auto* bubble = new MessageWidget(vec_msg[i].second.first + ": " + QString::fromStdString(vec_msg[i].second.second), this);
+        if(vec_msg[i].first == CURR_USER) {
+            auto* bubble = new MessageWidget_s(vec_msg[i].second.first + ": " + QString::fromStdString(vec_msg[i].second.second), this);
+            ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
+            QTimer::singleShot(0, this, [=]() {
+                ui.scrollArea->ensureWidgetVisible(bubble);
+                });
+        }
+        else {
+            auto* bubble = new MessageWidget(vec_msg[i].second.first + ": " + QString::fromStdString(vec_msg[i].second.second), this);
+            ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
+            QTimer::singleShot(0, this, [=]() {
+                ui.scrollArea->ensureWidgetVisible(bubble);
+                });
+        }
 
-        vec_msg[i].first ? ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft) : ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
-
-        QTimer::singleShot(0, this, [=]() {
-            ui.scrollArea->ensureWidgetVisible(bubble);
-            });
     }
     return;
 }
@@ -355,7 +373,7 @@ void ChattingWindow::on_sendButton_clicked()
 
         send_to_user(&impl_->sock, message_to_sendCStr, username_to_sendCStr, UserOrGroup);
 
-        auto* bubble = new MessageWidget(messageToSend, this);
+        auto* bubble = new MessageWidget_s(messageToSend, this);
 
         ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
 
@@ -387,7 +405,7 @@ void ChattingWindow::on_sendButton_clicked()
 
         send_to_user(&impl_->sock, message_to_sendCStr, group_to_sendCStr, UserOrGroup);
 
-        auto* bubble = new MessageWidget(ourUsername + " : " + messageToSend, this);
+        auto* bubble = new MessageWidget_s(ourUsername + " : " + messageToSend, this);
 
         ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
 

@@ -11,7 +11,7 @@
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QLabel>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -19,47 +19,43 @@ QT_BEGIN_NAMESPACE
 class Ui_Message_chat_s
 {
 public:
-    QLineEdit *message_send;
+    QLabel *message_recv;
 
     void setupUi(QWidget *Message_chat_s)
     {
         if (Message_chat_s->objectName().isEmpty())
             Message_chat_s->setObjectName("Message_chat_s");
-        Message_chat_s->resize(123, 41);
-        message_send = new QLineEdit(Message_chat_s);
-        message_send->setObjectName("message_send");
-        message_send->setGeometry(QRect(0, 0, 121, 41));
-        message_send->setStyleSheet(QString::fromUtf8("/* bubble background */\n"
-"    background-color: rgb(0, 0, 0);\n"
-"    /* light border */\n"
-"    border: 1px solid #DADADA;\n"
-"    /* round most corners */\n"
-"    border-top-left-radius: 20px;\n"
-"    border-top-right-radius: 20px;\n"
-"    border-bottom-right-radius: 0px;\n"
-"    /* leave bottom-left un-rounded for a little \342\200\234tail\342\200\235 effect */\n"
-"    border-bottom-left-radius: 20px;\n"
-"    /* give some breathing room around the text */\n"
-"    padding: 6px 12px;\n"
-"    /* text styling */\n"
-"    color: rgb(255, 255, 255);\n"
-"    font: 11pt \"Segoe UI\";"));
-        message_send->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTop|Qt::AlignmentFlag::AlignTrailing);
+        Message_chat_s->resize(202, 51);
+        message_recv = new QLabel(Message_chat_s);
+        message_recv->setObjectName("message_recv");
+        message_recv->setGeometry(QRect(0, 0, 202, 51));
+        message_recv->setStyleSheet(QString::fromUtf8("background-color: #FFFFFF;     /* white bubble */\n"
+"    border: 1px solid #E0E0E0;     /* light gray outline */\n"
+"    border-radius: 12px;           /* round corners */\n"
+"    color: #212121;                /* dark text */\n"
+"    font-size: 16px;\n"
+"qproperty-wordWrap: true;\n"
+"/* wrap once the text exceeds this width */\n"
+"    min-width: 80px;     /* never get narrower than 80px */\n"
+"    min-height: 24px;    /* never shorter than a line of text */\n"
+"    max-width: 200px;    /* wrap beyond ~200px */"));
+        message_recv->setWordWrap(true);
 
         retranslateUi(Message_chat_s);
 
         QMetaObject::connectSlotsByName(Message_chat_s);
     } // setupUi
 
-    void retranslateUi(QWidget *Message_chat_s)
+    void retranslateUi(QWidget * Message_chat_s)
     {
-        Message_chat_s->setWindowTitle(QCoreApplication::translate("Message_chat_s", "Form", nullptr));
+        Message_chat_s->setWindowTitle(QCoreApplication::translate("Message_chat_s", "Message_chat_s", nullptr));
+        message_recv->setText(QString());
     } // retranslateUi
 
 };
 
 namespace Ui {
-    class Message_chat_s: public Ui_Message_chat_s {};
+    class Message_chat_s : public Ui_Message_chat_s {};
 } // namespace Ui
 
 QT_END_NAMESPACE

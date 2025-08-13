@@ -46,7 +46,7 @@ public:
     {
         if (ChattingWindow->objectName().isEmpty())
             ChattingWindow->setObjectName("ChattingWindow");
-        ChattingWindow->resize(1149, 866);
+        ChattingWindow->resize(1070, 684);
         QSizePolicy sizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Ignored);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
@@ -63,7 +63,7 @@ public:
 "    color: #dddddd;"));
         verticalLayoutWidget = new QWidget(centralwidget);
         verticalLayoutWidget->setObjectName("verticalLayoutWidget");
-        verticalLayoutWidget->setGeometry(QRect(10, 250, 261, 561));
+        verticalLayoutWidget->setGeometry(QRect(10, 250, 261, 371));
         userLayout = new QVBoxLayout(verticalLayoutWidget);
         userLayout->setObjectName("userLayout");
         userLayout->setContentsMargins(0, 0, 0, 0);
@@ -101,7 +101,7 @@ public:
         scrollArea_2->setAlignment(Qt::AlignmentFlag::AlignCenter);
         scrollAreaWidgetContents_3 = new QWidget();
         scrollAreaWidgetContents_3->setObjectName("scrollAreaWidgetContents_3");
-        scrollAreaWidgetContents_3->setGeometry(QRect(0, 0, 251, 551));
+        scrollAreaWidgetContents_3->setGeometry(QRect(0, 0, 251, 361));
         scrollArea_2->setWidget(scrollAreaWidgetContents_3);
 
         userLayout->addWidget(scrollArea_2);
@@ -134,7 +134,7 @@ public:
         scrollArea = new QScrollArea(centralwidget);
         scrollArea->setObjectName("scrollArea");
         scrollArea->setEnabled(true);
-        scrollArea->setGeometry(QRect(280, 74, 861, 741));
+        scrollArea->setGeometry(QRect(280, 74, 781, 551));
         scrollArea->setAutoFillBackground(false);
         scrollArea->setStyleSheet(QString::fromUtf8("/* ===== ScrollArea & viewport ===== */\n"
 "QScrollArea {\n"
@@ -167,11 +167,11 @@ public:
         scrollArea->setWidgetResizable(true);
         scrollAreaWidgetContents = new QWidget();
         scrollAreaWidgetContents->setObjectName("scrollAreaWidgetContents");
-        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 853, 733));
+        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 773, 543));
         scrollAreaWidgetContents->setLayoutDirection(Qt::LayoutDirection::LeftToRight);
         verticalLayoutWidget_2 = new QWidget(scrollAreaWidgetContents);
         verticalLayoutWidget_2->setObjectName("verticalLayoutWidget_2");
-        verticalLayoutWidget_2->setGeometry(QRect(10, 10, 831, 711));
+        verticalLayoutWidget_2->setGeometry(QRect(10, 10, 751, 521));
         chatLayout = new QVBoxLayout(verticalLayoutWidget_2);
         chatLayout->setSpacing(20);
         chatLayout->setObjectName("chatLayout");
@@ -180,7 +180,7 @@ public:
         Message_input = new QLineEdit(centralwidget);
         Message_input->setObjectName("Message_input");
         Message_input->setEnabled(true);
-        Message_input->setGeometry(QRect(281, 820, 741, 41));
+        Message_input->setGeometry(QRect(281, 630, 645, 41));
         Message_input->setStyleSheet(QString::fromUtf8("padding: 6px;\n"
 "    border: 1px solid #444;\n"
 "    border-radius: 4px;\n"
@@ -189,7 +189,7 @@ public:
 "    selection-background-color: #0078d7;"));
         sendButton = new QPushButton(centralwidget);
         sendButton->setObjectName("sendButton");
-        sendButton->setGeometry(QRect(1025, 820, 121, 41));
+        sendButton->setGeometry(QRect(930, 630, 131, 41));
         QFont font3;
         font3.setPointSize(12);
         font3.setBold(true);
@@ -247,7 +247,7 @@ public:
 "}"));
         addGroup = new QPushButton(centralwidget);
         addGroup->setObjectName("addGroup");
-        addGroup->setGeometry(QRect(40, 820, 191, 31));
+        addGroup->setGeometry(QRect(50, 630, 191, 31));
         addGroup->setStyleSheet(QString::fromUtf8("QPushButton {\n"
 "    background-color: #0078d7;\n"
 "    border: none;\n"
@@ -264,7 +264,7 @@ public:
 "}"));
         username_label = new QLabel(centralwidget);
         username_label->setObjectName("username_label");
-        username_label->setGeometry(QRect(280, 20, 851, 51));
+        username_label->setGeometry(QRect(280, 20, 771, 51));
         QFont font4;
         font4.setFamilies({QString::fromUtf8("Arial")});
         font4.setPointSize(23);

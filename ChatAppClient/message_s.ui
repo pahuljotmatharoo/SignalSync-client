@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>202</width>
+    <height>51</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QLabel" name="message_recv">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>202</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: #FFFFFF;     /* white bubble */
+    border: 1px solid #E0E0E0;     /* light gray outline */
+    border-radius: 12px;           /* round corners */
+    color: #212121;                /* dark text */
+    font-size: 16px;
+qproperty-wordWrap: true;
+/* wrap once the text exceeds this width */
+    min-width: 80px;     /* never get narrower than 80px */
+    min-height: 24px;    /* never shorter than a line of text */
+    max-width: 200px;    /* wrap beyond ~200px */</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="wordWrap">
+    <bool>true</bool>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
