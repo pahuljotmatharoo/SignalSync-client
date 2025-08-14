@@ -1,5 +1,4 @@
-﻿// tell windows.h *not* to drag in the old winsock.h
-#ifndef WIN32_LEAN_AND_MEAN
+﻿#ifndef WIN32_LEAN_AND_MEAN
 #  define WIN32_LEAN_AND_MEAN
 #endif
 #include <winsock2.h>
@@ -54,6 +53,7 @@ public:
     void addGroup(const char group[usernameLength]);
     void addGroups(char users[maxUsers][usernameLength], uint32_t size);
     void addGrouptoScreen(const QString& user);
+    void removeMessagesFromScreen();
 private slots:
     void on_sendButton_clicked();
     void on_Message_input_textEdited(const QString& text);

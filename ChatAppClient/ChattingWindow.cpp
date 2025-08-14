@@ -269,14 +269,7 @@ void ChattingWindow::onUserClick()
     clickedButton->setStyleSheet(pressedButtonStylesheet);
     lastPressedUser = clickedButton;
 
-    QLayoutItem* item;
-    while ((item = ui.chatLayout->takeAt(0)) != nullptr) {
-        QWidget* widget = item->widget();
-        if (widget != nullptr) {
-            widget->deleteLater();
-        }
-        delete item;
-    }
+    removeMessagesFromScreen();
 
     ui.username_label->setText(clickedButton->text());
     usernameToSend = clickedButton->text();
@@ -318,14 +311,7 @@ void ChattingWindow::onGroupClick()
     lastPressedGroup = clickedButton;
 
     //remove all the items in the current chat layout
-    QLayoutItem* item;
-    while ((item = ui.chatLayout->takeAt(0)) != nullptr) {
-        QWidget* widget = item->widget();
-        if (widget != nullptr) {
-            widget->deleteLater();
-        }
-        delete item;
-    }
+    removeMessagesFromScreen();
 
     ui.username_label->setText(clickedButton->text());
     groupToSend = clickedButton->text();
@@ -563,12 +549,16 @@ void ChattingWindow::removeUserfromScreen(const QString& user)
     if ((*Users)[user]) {
         if (lastPressedUser == (*Users)[user]) {
             lastPressedUser = nullptr;
+            //need to remove messages 
+            removeMessagesFromScreen();
+            ui.username_label->setText("Select a User to talk to!");
         }
         ui.userLayout->removeWidget((*Users)[user]);
         (*Users)[user]->hide();
         (*Users)[user]->deleteLater();
         (*Users)[user] = nullptr;
         Users->erase(user);
+        Messages->erase(user);
         //remove from the map as well
     }
     return;
@@ -658,6 +648,17 @@ void ChattingWindow::send_error(const QString& error_message)
     msgBox.setDefaultButton(QMessageBox::Ok);
     int ret = msgBox.exec();
     return;
+}
+
+void ChattingWindow::removeMessagesFromScreen() {
+    QLayoutItem* item;
+    while ((item = ui.chatLayout->takeAt(0)) != nullptr) {
+        QWidget* widget = item->widget();
+        if (widget != nullptr) {
+            widget->deleteLater();
+        }
+        delete item;
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------------

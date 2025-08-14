@@ -54,7 +54,7 @@
         <string notr="true">/* ===== scrollArea_2 &amp; viewport ===== */
 QScrollArea#scrollArea_2 {
     border: 1px solid #3a3a3a;   /* subtle outline */
-    border-radius: 12px;         /* round the outer border */
+    border-radius: 8px;         /* round the outer border */
     background-color: #3a3a3a;
     padding: 3px;
 }
@@ -176,7 +176,7 @@ QScrollArea#scrollArea_2 QScrollBar::sub-page {
      <string notr="true">/* ===== ScrollArea &amp; viewport ===== */
 QScrollArea {
     border: 1px solid #3a3a3a;   /* subtle outline */
-    border-radius: 12px;         /* round the outer border */
+    border-radius: 8px;         /* round the outer border */
     background-color: #3a3a3a;
     padding: 3px;
 }
