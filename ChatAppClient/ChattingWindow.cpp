@@ -21,9 +21,7 @@ constexpr auto CURR_USER = false;
 constexpr auto User = true;
 constexpr auto Group = false;
 
-//Add dynamically resizing UI
-
-//add check which sees if curr selected user has disconnected
+//Add simple resizing
 
 struct ChattingWindow::Impl {
     SOCKET sock{ INVALID_SOCKET };
@@ -123,6 +121,8 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), ourUserna
     ui.groupChat->setFont(buttonFont);
     ui.Message_input->setFont(buttonFont);
     ui.sendButton->setFont(buttonFont);
+    ui.sendButton->setIcon(QIcon("icon.png"));
+    ui.sendButton->setIconSize(QSize(45,37));
 
     ui.chatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
     ui.addGroup->hide();

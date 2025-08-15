@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1070</width>
-    <height>684</height>
+    <width>1063</width>
+    <height>680</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -248,7 +248,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
      <rect>
       <x>281</x>
       <y>630</y>
-      <width>645</width>
+      <width>721</width>
       <height>41</height>
      </rect>
     </property>
@@ -267,9 +267,9 @@ QScrollBar::add-page, QScrollBar::sub-page {
    <widget class="QPushButton" name="sendButton">
     <property name="geometry">
      <rect>
-      <x>930</x>
+      <x>1005</x>
       <y>630</y>
-      <width>131</width>
+      <width>55</width>
       <height>41</height>
      </rect>
     </property>
@@ -282,8 +282,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
     <property name="styleSheet">
      <string notr="true">QPushButton#sendButton {
     background-color: #0078d7;
-    color: white;
-    font-weight: bold;
     padding: 3px 7px;
     border-radius: 5px;
     border: none;
@@ -299,7 +297,7 @@ QPushButton#sendButton:pressed {
 </string>
     </property>
     <property name="text">
-     <string>Send Message</string>
+     <string/>
     </property>
    </widget>
    <widget class="QPushButton" name="userList">
