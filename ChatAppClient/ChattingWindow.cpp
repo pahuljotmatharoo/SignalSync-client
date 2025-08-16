@@ -120,7 +120,6 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), ourUserna
     ui.userList->setFont(buttonFont);
     ui.groupChat->setFont(buttonFont);
     ui.Message_input->setFont(buttonFont);
-    ui.sendButton->setFont(buttonFont);
     ui.sendButton->setIcon(QIcon("icon.png"));
     ui.sendButton->setIconSize(QSize(45,37));
 

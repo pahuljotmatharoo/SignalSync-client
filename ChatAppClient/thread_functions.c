@@ -45,67 +45,60 @@ DWORD WINAPI recieving(LPVOID arg) {
 		if (type == MSG_SEND) {
 			data_to_recieve data;
 			data.sock = *(funct_arg->sock);
-			size_t x = recv_exact_msg(&(data), sizeof (data_r));
-			if (x <= 0) {
-				printf("Received no data! \n");
+			size_t recieve = recv_exact_msg(&(data), sizeof (data_r));
+			if (recieve <= 0) {
 				continue;
 			}
 			data.a.message[message_length - 1] = '\0';
 			funct_arg->on_message(funct_arg->window_ptr, data.a.message, data.a.username);
-			type = INT_MAX;
 		}
 
 		else if (type == MSG_LIST) {
 			client_list data;
 			data.sock = *(funct_arg->sock);
-			int x = recv_exact_list(&(data), sizeof(list));
-			if (x <= 0) {
-				printf("Received no data! \n");
+			int recieve = recv_exact_list(&(data), sizeof(list));
+			if (recieve <= 0) {
 				continue;
 			}
 			data.a.size = ntohl(data.a.size);
 			funct_arg->on_list(funct_arg->window_ptr, data.a.arr, data.a.size);
-			type = INT_MAX;
 		}
 
 		else if (type == USER_EXIT) {
 			char username[username_length];
-			int x = recv_exact_username(*(funct_arg->sock), username, username_length);
+			int recieve = recv_exact_username(*(funct_arg->sock), username, username_length);
 			funct_arg->on_user(funct_arg->window_ptr, username, username_length);
 		}
 
 		else if (type == ROOM_CREATE) {
 			room_add data;
 			data.sock = *(funct_arg->sock);
-			int x = recv_exact_username((data.sock),data.groupName, sizeof(data.groupName));
+			int recieve = recv_exact_username((data.sock),data.groupName, sizeof(data.groupName));
 			funct_arg->on_group_create(funct_arg->window_ptr, data.groupName);
 		}
 
 		else if (type == ROOM_MSG) {
 			data_to_recieve_group data;
 			data.sock = *(funct_arg->sock);
-			size_t x = recv_exact_msg_group(&(data), sizeof(data_r_group));
-			if (x <= 0) {
-				printf("Received no data! \n");
+			size_t recieve = recv_exact_msg_group(&(data), sizeof(data_r_group));
+			if (recieve <= 0) {
 				continue;
 			}
 			data.a.message[message_length - 1] = '\0';
 			funct_arg->on_group_message(funct_arg->window_ptr, data.a.message, data.a.username, data.a.groupName);
-			type = INT_MAX;
 		}
 
 		else if (type == ROOM_LIST) {
 			client_list data;
 			data.sock = *(funct_arg->sock);
-			int x = recv_exact_list(&(data), sizeof(list));
-			if (x <= 0) {
-				printf("Received no data! \n");
+			int recieve = recv_exact_list(&(data), sizeof(list));
+			if (recieve <= 0) {
 				continue;
 			}
 			data.a.size = ntohl(data.a.size);
 			funct_arg->on_group_list(funct_arg->window_ptr, data.a.arr, data.a.size);
-			type = INT_MAX;
 		}
+		type = INT_MAX;
 	}
 	free(arg);
 	return NULL;
