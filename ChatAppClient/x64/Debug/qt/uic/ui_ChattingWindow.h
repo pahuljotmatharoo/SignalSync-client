@@ -46,7 +46,7 @@ public:
     {
         if (ChattingWindow->objectName().isEmpty())
             ChattingWindow->setObjectName("ChattingWindow");
-        ChattingWindow->resize(1070, 684);
+        ChattingWindow->resize(1063, 680);
         QSizePolicy sizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Ignored);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
@@ -73,7 +73,7 @@ public:
         scrollArea_2->setStyleSheet(QString::fromUtf8("/* ===== scrollArea_2 & viewport ===== */\n"
 "QScrollArea#scrollArea_2 {\n"
 "    border: 1px solid #3a3a3a;   /* subtle outline */\n"
-"    border-radius: 12px;         /* round the outer border */\n"
+"    border-radius: 8px;         /* round the outer border */\n"
 "    background-color: #3a3a3a;\n"
 "    padding: 3px;\n"
 "}\n"
@@ -139,7 +139,7 @@ public:
         scrollArea->setStyleSheet(QString::fromUtf8("/* ===== ScrollArea & viewport ===== */\n"
 "QScrollArea {\n"
 "    border: 1px solid #3a3a3a;   /* subtle outline */\n"
-"    border-radius: 12px;         /* round the outer border */\n"
+"    border-radius: 8px;         /* round the outer border */\n"
 "    background-color: #3a3a3a;\n"
 "    padding: 3px;\n"
 "}\n"
@@ -180,7 +180,7 @@ public:
         Message_input = new QLineEdit(centralwidget);
         Message_input->setObjectName("Message_input");
         Message_input->setEnabled(true);
-        Message_input->setGeometry(QRect(281, 630, 645, 41));
+        Message_input->setGeometry(QRect(281, 630, 721, 41));
         Message_input->setStyleSheet(QString::fromUtf8("padding: 6px;\n"
 "    border: 1px solid #444;\n"
 "    border-radius: 4px;\n"
@@ -189,15 +189,13 @@ public:
 "    selection-background-color: #0078d7;"));
         sendButton = new QPushButton(centralwidget);
         sendButton->setObjectName("sendButton");
-        sendButton->setGeometry(QRect(930, 630, 131, 41));
+        sendButton->setGeometry(QRect(1005, 630, 55, 41));
         QFont font3;
         font3.setPointSize(12);
         font3.setBold(true);
         sendButton->setFont(font3);
         sendButton->setStyleSheet(QString::fromUtf8("QPushButton#sendButton {\n"
 "    background-color: #0078d7;\n"
-"    color: white;\n"
-"    font-weight: bold;\n"
 "    padding: 3px 7px;\n"
 "    border-radius: 5px;\n"
 "    border: none;\n"
@@ -285,7 +283,7 @@ public:
         currUsers_label->setText(QCoreApplication::translate("ChattingWindow", "Current Users", nullptr));
         title_label->setText(QCoreApplication::translate("ChattingWindow", "SignalSync", nullptr));
         Message_input->setPlaceholderText(QCoreApplication::translate("ChattingWindow", "Type a message...", nullptr));
-        sendButton->setText(QCoreApplication::translate("ChattingWindow", "Send Message", nullptr));
+        sendButton->setText(QString());
         userList->setText(QCoreApplication::translate("ChattingWindow", "User List", nullptr));
         groupChat->setText(QCoreApplication::translate("ChattingWindow", "Group Chat", nullptr));
         addGroup->setText(QCoreApplication::translate("ChattingWindow", "Add Group", nullptr));
