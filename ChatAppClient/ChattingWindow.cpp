@@ -104,6 +104,9 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), ourUserna
     groupMessages = new std::unordered_map<QString, std::vector<std::pair<bool, std::pair<QString, std::string>>>>();
     Users = new std::unordered_map<QString, QPushButton*>();
     Groups = new std::unordered_map<QString, QPushButton*>();
+    encryptMap = new std::unordered_map<QChar, QChar>();
+
+    initEncryptMap();
 
     ui.userLayout->setContentsMargins(10, 5, 10, 0); // 10px left/right margins
 
@@ -341,9 +344,15 @@ void ChattingWindow::on_sendButton_clicked()
 {
     if (UserOrGroup == User) {
         std::string username_to_sendStd = usernameToSend.toStdString();
-        const char* username_to_sendCStr = username_to_sendStd.c_str();;
+        const char* username_to_sendCStr = username_to_sendStd.c_str();
 
-        std::string message_to_sendStd = messageToSend.toStdString();
+        QString messageCopy = messageToSend; // temp copy of the message for user display side
+        std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
+        (*Messages)[usernameToSend].push_back(std::make_pair(CURR_USER, message_to_sendStd));
+
+        //now we can do the message encryption of the message sending to server
+        encrypt(messageToSend);
+        message_to_sendStd = messageToSend.toStdString();
         const char* message_to_sendCStr = message_to_sendStd.c_str();
 
         if (message_to_sendStd.length() >= 128) {
@@ -358,7 +367,7 @@ void ChattingWindow::on_sendButton_clicked()
 
         send_to_user(&impl_->sock, message_to_sendCStr, username_to_sendCStr, UserOrGroup);
 
-        auto* bubble = new MessageWidget_s(messageToSend, this);
+        auto* bubble = new MessageWidget_s(messageCopy, this);
 
         ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
 
@@ -368,14 +377,19 @@ void ChattingWindow::on_sendButton_clicked()
             ui.scrollArea->ensureWidgetVisible(bubble);
             });
 
-        (*Messages)[usernameToSend].push_back(std::make_pair(CURR_USER, message_to_sendStd));
     }
 
     else {
         std::string group_to_sendStd = groupToSend.toStdString();
-        const char* group_to_sendCStr = group_to_sendStd.c_str();;
+        const char* group_to_sendCStr = group_to_sendStd.c_str();
 
-        std::string message_to_sendStd = messageToSend.toStdString();
+        QString messageCopy = messageToSend; // temp copy of the message for user display side
+        std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
+        (*groupMessages)[groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(ourUsername, message_to_sendStd)));
+
+        //now we can do the message encryption of the message sending to server
+        encrypt(messageToSend);
+        message_to_sendStd = messageToSend.toStdString();
         const char* message_to_sendCStr = message_to_sendStd.c_str();
 
         if (message_to_sendStd.length() >= 128) {
@@ -474,7 +488,11 @@ void ChattingWindow::addMessage_group(char message[messageLength], char username
 void ChattingWindow::addMessage(char message[messageLength], char username[usernameLength])
 {
     std::string username_toadd(username);
+
     std::string message_toadd(message);
+    QString message_r = QString::fromStdString(message_toadd);
+    encrypt(message_r); //unencrypt the message
+    message_toadd = message_r.toStdString();
 
     (*Messages)[QString::fromStdString(username_toadd)].push_back(std::make_pair(OTHER_USER, message_toadd));
 
@@ -657,6 +675,46 @@ void ChattingWindow::removeMessagesFromScreen() {
             widget->deleteLater();
         }
         delete item;
+    }
+}
+
+//should only run once
+void ChattingWindow::initEncryptMap()
+{
+    QString uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QString lowercase = "abcdefghijklmnopqrstuvwxyz";
+    QString digits = "0123456789";
+    QString symbols = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
+
+    // Uppercase mapping (A <-> Z, B <-> Y, etc.)
+    for (int i = 0; i < 26; i++) {
+        (*encryptMap)[uppercase[i]] = uppercase[25 - i];
+    }
+
+    // Lowercase mapping (a <-> z, b <-> y, etc.)
+    for (int i = 0; i < 26; i++) {
+        (*encryptMap)[lowercase[i]] = lowercase[25 - i];
+    }
+
+    // Digit mapping (0 <-> 9, 1 <-> 8, etc.)
+    for (int i = 0; i < 10; i++) {
+        (*encryptMap)[digits[i]] = digits[9 - i];
+    }
+
+    // Symbol mapping (reverse order)
+    int symLen = symbols.length();
+    for (int i = 0; i < symLen; i++) {
+        (*encryptMap)[symbols[i]] = symbols[symLen - 1 - i];
+    }
+}
+
+void ChattingWindow::encrypt(QString& message)
+{
+    for (std::size_t i = 0; i < message.length(); i++) {
+        if (message[i] == ' ') {
+            continue;
+        }
+        message[i] = (*encryptMap)[message[i]];
     }
 }
 

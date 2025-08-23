@@ -36,6 +36,7 @@ private:
     std::unordered_map<QString, std::vector<std::pair<bool, std::pair<QString, std::string> > > >* groupMessages; // Name of Group, <Who sent it <The user who sent it, The Message>>
     std::unordered_map<QString, QPushButton*>* Users; // <Name of User, Button addr>
     std::unordered_map<QString, QPushButton*>* Groups;  // <Name of Group, Button addr> 
+    std::unordered_map<QChar, QChar>* encryptMap;
 public:
     explicit ChattingWindow(QWidget* parent = nullptr);
     ~ChattingWindow();
@@ -54,6 +55,8 @@ public:
     void addGroups(char users[maxUsers][usernameLength], uint32_t size);
     void addGrouptoScreen(const QString& user);
     void removeMessagesFromScreen();
+    void initEncryptMap();
+    void encrypt(QString& message);
 private slots:
     void on_sendButton_clicked();
     void on_Message_input_textEdited(const QString& text);
