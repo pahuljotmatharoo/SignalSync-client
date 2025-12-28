@@ -1,11 +1,8 @@
 ﻿#include <winsock2.h>
+#pragma comment(lib, "Ws2_32.lib")
 #include <ws2tcpip.h>
 #include <windows.h>
 #include "ChattingWindow.h"
-#include "thread_functions.h"
-#include "data.h"
-#include "commands.h"
-#include <inital_message.h>
 #include <QHBoxLayout>
 #include <message.h>
 #include <message_s.h>
@@ -13,9 +10,6 @@
 #include <qlayout.h>
 #include <qtimer.h>
 #include <QMessageBox>
-constexpr auto MSG_SEND = 1;
-constexpr auto MSG_LIST = 2;
-constexpr auto MSG_EXIT = 3;
 constexpr auto OTHER_USER = true;
 constexpr auto CURR_USER = false;
 constexpr auto User = true;
@@ -23,140 +17,73 @@ constexpr auto Group = false;
 
 //Add simple resizing
 
-struct ChattingWindow::Impl {
-    SOCKET sock{ INVALID_SOCKET };
-    ~Impl() {
-        if (sock != INVALID_SOCKET)
-            closesocket(sock);
-        //WSACleanup();
-    }
-};
-
-ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), ourUsername{ "" }, impl_(new Impl()), lastPressedUser(nullptr), lastPressedGroup(nullptr), messageFont("Montserrat", 14), titleFont("Montserrat", 25), UserOrGroup(User), button_addGroup_Font("Montserrat", 8), buttonFont("Montserrat", 10)
+ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), ourUsername{ "" }, lastPressedUser(nullptr), 
+                                                    lastPressedGroup(nullptr), messageFont("Montserrat", 14), titleFont("Montserrat", 25), UserOrGroup(User), button_addGroup_Font("Montserrat", 8), buttonFont("Montserrat", 10)
 {
-    ui.setupUi(this);
-    //we're just creating a layout for scrolling and out vertical layout
-    QWidget* contents = ui.scrollArea->takeWidget();
-    QVBoxLayout* layout = new QVBoxLayout(contents);
-
-    layout->setContentsMargins(0, 0, 0, 0);
-    contents->setLayout(layout);
-    ui.scrollArea->setWidget(contents);
-
-    ui.chatLayout = layout;
-    layout->setSpacing(5);
-    layout->setSizeConstraint(QLayout::SetMinimumSize);
-
-    //we're just creating a layout for scrolling and out vertical layout
-    QWidget* contents_users = ui.scrollArea_2->takeWidget();
-    QVBoxLayout* layout_users = new QVBoxLayout(contents_users);
-
-    layout_users->setContentsMargins(0, 0, 0, 0);
-    contents_users->setLayout(layout_users);
-    ui.scrollArea_2->setWidget(contents_users);
-
-    ui.userLayout = layout_users;
-    layout_users->setSpacing(5);
-    layout_users->setSizeConstraint(QLayout::SetMinimumSize);
-
-    defaultButtonStylesheet = 
-        "QPushButton {"
-        " background-color: #4CAF50;"
-        " color: white;"
-        " border: none;"
-        " padding: 10px;"
-        " font-size: 16px;"
-        " border-radius: 5px;"
-        " }"
-        " QPushButton:hover {"
-        " background-color: #45a049;"
-        " }";
-
-    pressedButtonStylesheet = 
-        "QPushButton {"
-        " background-color: #1E90FF;"
-        " color: white;"
-        " border: none;"
-        " padding: 10px;"
-        " font-size: 16px;"
-        " border-radius: 5px;"
-        " }"
-        " QPushButton:hover {"
-        " background-color: #055cb0;"
-        " }";
-
-    sendMessageStylesheet =
-        " background-color: #4CAF50;"
-        " color:#212121;"
-        " border:1px solid #E0E0E0;"
-        " border-radius:12px;"
-        " font-size: 16px;";
-
-    recvMessageStylesheet =
-        " background-color: #555555;"
-        " color:#212121;"
-        " border:1px solid #E0E0E0;"
-        " border-radius:12px;"
-        " font-size: 16px;";
-
-
-    Messages = new std::unordered_map<QString, std::vector<std::pair<bool, std::string>>>();
-    groupMessages = new std::unordered_map<QString, std::vector<std::pair<bool, std::pair<QString, std::string>>>>();
-    Users = new std::unordered_map<QString, QPushButton*>();
-    Groups = new std::unordered_map<QString, QPushButton*>();
-    encryptMap = new std::unordered_map<QChar, QChar>();
+    initUI();
 
     initEncryptMap();
 
-    ui.userLayout->setContentsMargins(10, 5, 10, 0); // 10px left/right margins
-
-    ui.chatLayout->setContentsMargins(10, 10, 10, 10); // 10px left/right margins
-
-    auto* l = static_cast<QVBoxLayout*>(ui.scrollAreaWidgetContents->layout());
-    l->insertStretch(0, 1);
-
-    ui.chatLayout->addStretch(1);  // Push all bubbles to top
-
-    ui.title_label->setFont(titleFont);
-
-    ui.addGroup->setFont(button_addGroup_Font);
-    ui.userList->setFont(buttonFont);
-    ui.groupChat->setFont(buttonFont);
-    ui.Message_input->setFont(buttonFont);
-    ui.sendButton->setIcon(QIcon("icon.png"));
-    ui.sendButton->setIconSize(QSize(45,37));
-
-    ui.chatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
-    ui.addGroup->hide();
+    m_thread = std::thread(&ChattingWindow::threadFunction, this);
+    m_thread.detach();
 }
 
 ChattingWindow::~ChattingWindow()
 {
-    send_inital_msg(impl_->sock, MSG_EXIT);
-
-    delete impl_;
-    impl_ = nullptr;
-
-    delete Messages;
-    Messages = nullptr;
-
-    delete Users;
-    Users = nullptr;
-
-    delete Groups;
-    Groups = nullptr;
+    m_network.sendInitMsg(MSG_EXIT);
+    closesocket(m_network.getSockID());
+    WSACleanup();
 }
 
-
-
+void ChattingWindow::threadFunction()
+{
+    int type = 0;
+    std::size_t recvData;
+    while ( (recvData = recv(m_network.getSockID(), reinterpret_cast<char*>(&type), sizeof(int), 0)) > 0) {
+        switch (type) {
+            case MSG_SEND: {
+                MsgRecvUser* recvStruct = m_network.recvMethod<MsgRecvUser>();;
+                addMessage(recvStruct->message, recvStruct->user_from);
+                delete recvStruct;
+                break;
+            }
+            case MSG_LIST: {
+                List* list = m_network.recvMethod<List>();
+                list->size = ntohl(list->size);
+                addUsers(list->arr, list->size);
+                delete list;
+                break;
+            }
+            case USER_EXIT: {
+                char* username = m_network.recvUser();
+                removeUsers(username, USERNAME_LENGTH);
+                delete[] username;
+                break;
+            }
+            case ROOM_CREATE: {
+                RecvGroupName* groupName = m_network.recvMethod<RecvGroupName>();
+                addGroup(groupName->groupName);
+                delete groupName;
+                break;
+            }
+            case ROOM_MSG: {
+                MsgRecvGroup* recvGrpMsg = m_network.recvMethod<MsgRecvGroup>();
+                addMessage_group(recvGrpMsg->message, recvGrpMsg->user_from, recvGrpMsg->group_name);
+                delete recvGrpMsg;
+                break;
+            }
+            case ROOM_LIST: {
+                List* listGroup = m_network.recvMethod<List>();
+                listGroup->size = ntohl(listGroup->size);
+                addGroups(listGroup->arr, listGroup->size);
+                delete listGroup;
+                break;
+            }
+        }
+    }
+}
 
 //------------------------------------------------ ELEMENTARY FUNCTIONS (SETTERS) ---------------------------------------------------------------------
-void ChattingWindow::setSOCKET(SOCKET newsock) {
-    impl_->sock = newsock;
-    thread_creator();
-    return;
-}
-
 void ChattingWindow::setUsername(const QString& new_user)
 {
     this->ourUsername = new_user;
@@ -170,28 +97,23 @@ void ChattingWindow::on_Message_input_textEdited(const QString& text)
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
-
-
-
 //------------------------------------------------ BUTTON CLICKED FUNCTIONS---------------------------------------------------------------------
 void ChattingWindow::on_addGroup_clicked()
 {
-    if (Groups->size() >= 10) {
+    if (m_Groups.size() >= 10) {
         send_error("Already at a maximum number of Groups!");
         return;
     }
 
     QPushButton* group = new QPushButton(this);
 
-    QString groupName = QString("Group %1").arg(Groups->size() + 1);
+    QString groupName = QString("Group %1").arg(m_Groups.size() + 1);
 
     group->setText(groupName);
     group->setMinimumSize(205, 40);
     group->setStyleSheet(defaultButtonStylesheet);
 
-    Groups->insert(std::make_pair(groupName, group));
+    m_Groups.insert(std::make_pair(groupName, group));
 
     ui.userLayout->addWidget(group, 0, Qt::AlignCenter | Qt::AlignTop);
 
@@ -200,7 +122,7 @@ void ChattingWindow::on_addGroup_clicked()
     std::string name_to_sendStd = groupName.toStdString();
     const char* name_to_sendCStr = name_to_sendStd.c_str();;
 
-    send_chatroom_name(&impl_->sock, name_to_sendCStr);
+    m_network.sendGroupName(name_to_sendStd);
 }
 
 void ChattingWindow::on_groupChat_clicked()
@@ -211,15 +133,15 @@ void ChattingWindow::on_groupChat_clicked()
     ui.currUsers_label->setText("Current Groups");
 
     //hide all the users
-    if (Users->size() != 0) {
-        for (auto itr = Users->begin(); itr != Users->end(); itr++) {
+    if (m_Users.size() != 0) {
+        for (auto itr = m_Users.begin(); itr != m_Users.end(); itr++) {
             itr->second->hide();
         }
     }
 
     //show all the groups
-    if (Groups->size() != 0) {
-        for (auto itr = Groups->begin(); itr != Groups->end(); itr++) {
+    if (m_Groups.size() != 0) {
+        for (auto itr = m_Groups.begin(); itr != m_Groups.end(); itr++) {
             itr->second->show();
         }
     }
@@ -237,14 +159,14 @@ void ChattingWindow::on_userList_clicked()
 
     ui.currUsers_label->setText("Current Users");
 
-    if (Groups->size() != 0) {
-        for (auto itr = Groups->begin(); itr != Groups->end(); itr++) {
+    if (m_Groups.size() != 0) {
+        for (auto itr = m_Groups.begin(); itr != m_Groups.end(); itr++) {
             itr->second->hide();
         }
     }
 
-    if (Users->size() != 0) {
-        for (auto itr = Users->begin(); itr != Users->end(); itr++) {
+    if (m_Users.size() != 0) {
+        for (auto itr = m_Users.begin(); itr != m_Users.end(); itr++) {
             itr->second->show();
         }
     }
@@ -275,7 +197,7 @@ void ChattingWindow::onUserClick()
 
     ui.username_label->setText(clickedButton->text());
     usernameToSend = clickedButton->text();
-    auto& vec_msg = (*Messages)[usernameToSend];
+    auto& vec_msg = (m_Messages)[usernameToSend];
 
     for (std::size_t i = 0; i < vec_msg.size(); i++) {
 
@@ -317,7 +239,7 @@ void ChattingWindow::onGroupClick()
 
     ui.username_label->setText(clickedButton->text());
     groupToSend = clickedButton->text();
-    auto& vec_msg = (*groupMessages)[groupToSend];
+    auto& vec_msg = (m_groupMessages)[groupToSend];
 
     for (std::size_t i = 0; i < vec_msg.size(); i++) {
         auto* bubble = new MessageWidget(vec_msg[i].second.first + ": " + QString::fromStdString(vec_msg[i].second.second), this);
@@ -348,10 +270,10 @@ void ChattingWindow::on_sendButton_clicked()
 
         QString messageCopy = messageToSend; // temp copy of the message for user display side
         std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
-        (*Messages)[usernameToSend].push_back(std::make_pair(CURR_USER, message_to_sendStd));
+        (m_Messages)[usernameToSend].push_back(std::make_pair(CURR_USER, message_to_sendStd));
 
         //now we can do the message encryption of the message sending to server
-        encrypt(messageToSend);
+        //encrypt(messageToSend);
         message_to_sendStd = messageToSend.toStdString();
         const char* message_to_sendCStr = message_to_sendStd.c_str();
 
@@ -365,7 +287,7 @@ void ChattingWindow::on_sendButton_clicked()
             return;
         }
 
-        send_to_user(&impl_->sock, message_to_sendCStr, username_to_sendCStr, UserOrGroup);
+        m_network.sendUserMsg(message_to_sendStd, username_to_sendStd);
 
         auto* bubble = new MessageWidget_s(messageCopy, this);
 
@@ -380,15 +302,15 @@ void ChattingWindow::on_sendButton_clicked()
     }
 
     else {
-        std::string group_to_sendStd = groupToSend.toStdString();
+        std::string group_to_sendStd = groupToSend.toStdString(); // group name not coming correctly
         const char* group_to_sendCStr = group_to_sendStd.c_str();
 
         QString messageCopy = messageToSend; // temp copy of the message for user display side
         std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
-        (*groupMessages)[groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(ourUsername, message_to_sendStd)));
+        (m_groupMessages)[groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(ourUsername, message_to_sendStd)));
 
         //now we can do the message encryption of the message sending to server
-        encrypt(messageToSend);
+        //encrypt(messageToSend);
         message_to_sendStd = messageToSend.toStdString();
         const char* message_to_sendCStr = message_to_sendStd.c_str();
 
@@ -402,7 +324,7 @@ void ChattingWindow::on_sendButton_clicked()
             return;
         }
 
-        send_to_user(&impl_->sock, message_to_sendCStr, group_to_sendCStr, UserOrGroup);
+        m_network.sendGroupMsg(message_to_sendStd, group_to_sendStd);
 
         auto* bubble = new MessageWidget_s(ourUsername + " : " + messageToSend, this);
 
@@ -414,93 +336,53 @@ void ChattingWindow::on_sendButton_clicked()
             ui.scrollArea->ensureWidgetVisible(bubble);
             });
 
-        (*groupMessages)[groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(ourUsername, message_to_sendStd)));
+        (m_groupMessages)[groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(ourUsername, message_to_sendStd)));
     }
     return;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
-
-
-
-
-//------------------------------------------------ C TO C++ FUNCTIONS ---------------------------------------------------------------------
-
-//this is function i use to interact with recieved messages (sort of acts as the middle man)
-extern "C" void handle_message(void* window_ptr, char message[messageLength], char username[usernameLength]) {
-    static_cast<ChattingWindow*>(window_ptr)->addMessage(message, username);
-}
-
-extern "C" void handle_group_message(void* window_ptr, char message[messageLength], char username[usernameLength], char group[usernameLength]) {
-    static_cast<ChattingWindow*>(window_ptr)->addMessage_group(message, username, group);
-}
-
-extern "C" void handle_group_creation(void* window_ptr, char group[usernameLength]) {
-    static_cast<ChattingWindow*>(window_ptr)->addGroup(group);
-}
-
-extern "C" void handle_group_list_update(void* window_ptr, char groups[maxUsers][usernameLength], uint32_t size) {
-    static_cast<ChattingWindow*>(window_ptr)->addGroups(groups, size);
-}
-
-//this is function i use to interact with recieved messages (sort of acts as the middle man)
-extern "C" void handle_list_update(void* window_ptr, char users[maxUsers][usernameLength], uint32_t size) {
-    static_cast<ChattingWindow*>(window_ptr)->addUsers(users, size);
-}
-
-extern "C" void handle_user_update(void* window_ptr, char user[usernameLength], uint32_t size) {
-    static_cast<ChattingWindow*>(window_ptr)->removeUsers(user, size);
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
-
-
 //-------------------------------------------------------------------- ADDING/REMOVING TO DATA STRUCTURE FUNCTIONS ---------------------------------------------------------------------
 
-void ChattingWindow::addGroup(const char group[usernameLength])
+void ChattingWindow::addGroup(const char group[USERNAME_LENGTH])
 {
     std::string group_toadd(group);
 
     QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(QString::fromStdString(group_toadd)); }, Qt::QueuedConnection);
 }
 
-void ChattingWindow::addMessage_group(char message[messageLength], char username[usernameLength], char group[usernameLength])
+void ChattingWindow::addMessage_group(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH], char group[USERNAME_LENGTH])
 {
     std::string username_toadd(username);
     std::string message_toadd(message);
+    QString message_r = QString::fromStdString(message_toadd);
+    //encrypt(message_r); //unencrypt the message
+    message_toadd = message_r.toStdString();
     std::string group_toadd(group);
 
-    (*groupMessages)[QString::fromStdString(group)].push_back(std::make_pair(OTHER_USER, std::make_pair(QString::fromStdString(username_toadd), message_toadd)));
+    (m_groupMessages)[QString::fromStdString(group)].push_back(std::make_pair(OTHER_USER, std::make_pair(QString::fromStdString(username_toadd), message_toadd)));
 
     //we'll be able to display right away to screen, needs to run on the gui thread (main thread)
     QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreen(QString::fromStdString(username_toadd + " : " + message_toadd), group_toadd, false); }, Qt::QueuedConnection);
 }
 
-void ChattingWindow::addMessage(char message[messageLength], char username[usernameLength])
+void ChattingWindow::addMessage(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH])
 {
     std::string username_toadd(username);
 
     std::string message_toadd(message);
     QString message_r = QString::fromStdString(message_toadd);
-    encrypt(message_r); //unencrypt the message
+    //encrypt(message_r); //unencrypt the message
     message_toadd = message_r.toStdString();
 
-    (*Messages)[QString::fromStdString(username_toadd)].push_back(std::make_pair(OTHER_USER, message_toadd));
+    (m_Messages)[QString::fromStdString(username_toadd)].push_back(std::make_pair(OTHER_USER, message_toadd));
 
-    //we'll be able ti display right away to screen, since this function will be called by recv thread, cannot create element here so queue it on main thread
+    //we'll be able to display right away to screen, since this function will be called by recv thread, cannot create element here so queue it on main thread
     QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreen(QString::fromStdString(message_toadd), username_toadd, true); }, Qt::QueuedConnection);
 }
 
-void ChattingWindow::addUsers(char users[maxUsers][usernameLength], uint32_t size) {
+void ChattingWindow::addUsers(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size) {
     //just goes through the list of users when its updated from the server end, and adds any new ones.
     //better logic will be implemented later from server side soon
     for (std::size_t i = 0; i < size; i++) {
@@ -508,14 +390,14 @@ void ChattingWindow::addUsers(char users[maxUsers][usernameLength], uint32_t siz
         QString usernamee = QString::fromStdString(username);
 
         //since this function will be called by recv thread, cannot create element here so queue it on main thread
-        if ((*Users).find(usernamee) == (*Users).end()) {
+        if ((m_Users).find(usernamee) == (m_Users).end()) {
             QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(usernamee); }, Qt::QueuedConnection);
         }
     }
     return;
 }
 
-void ChattingWindow::addGroups(char groups[maxUsers][usernameLength], uint32_t size) {
+void ChattingWindow::addGroups(char groups[MAXUSERS][USERNAME_LENGTH], uint32_t size) {
     //just goes through the list of users when its updated from the server end, and adds any new ones.
     //better logic will be implemented later from server side soon
     for (std::size_t i = 0; i < size; i++) {
@@ -523,14 +405,14 @@ void ChattingWindow::addGroups(char groups[maxUsers][usernameLength], uint32_t s
         QString groupp = QString::fromStdString(group);
 
         //since this function will be called by recv thread, cannot create element here so queue it on main thread
-        if ((*Groups).find(groupp) == (*Groups).end()) {
+        if ((m_Groups).find(groupp) == (m_Groups).end()) {
             QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(groupp); }, Qt::QueuedConnection);
         }
     }
     return;
 }
 
-void ChattingWindow::removeUsers(char user[usernameLength], uint32_t size)
+void ChattingWindow::removeUsers(char user[USERNAME_LENGTH], uint32_t size)
 {
     std::string user_to_remove(user);
     QMetaObject::invokeMethod(this, [=] { this->removeUserfromScreen(QString::fromStdString(user_to_remove)); }, Qt::QueuedConnection);
@@ -539,15 +421,12 @@ void ChattingWindow::removeUsers(char user[usernameLength], uint32_t size)
 
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
-
 //-------------------------------------------------------------------- ADDING/REMOVING TO SCREEN FUNCTIONS ---------------------------------------------------------------------
 void ChattingWindow::addGrouptoScreen(const QString& group_n)
 {
     QPushButton* group = new QPushButton(this);
 
-    Groups->insert(std::make_pair(group_n, group));
+    m_Groups.insert(std::make_pair(group_n, group));
 
     group->setText(group_n);
     group->setMinimumSize(205, 40);
@@ -563,19 +442,19 @@ void ChattingWindow::addGrouptoScreen(const QString& group_n)
 
 void ChattingWindow::removeUserfromScreen(const QString& user)
 {
-    if ((*Users)[user]) {
-        if (lastPressedUser == (*Users)[user]) {
+    if ((m_Users)[user]) {
+        if (lastPressedUser == (m_Users)[user]) {
             lastPressedUser = nullptr;
             //need to remove messages 
             removeMessagesFromScreen();
             ui.username_label->setText("Select a User to talk to!");
         }
-        ui.userLayout->removeWidget((*Users)[user]);
-        (*Users)[user]->hide();
-        (*Users)[user]->deleteLater();
-        (*Users)[user] = nullptr;
-        Users->erase(user);
-        Messages->erase(user);
+        ui.userLayout->removeWidget((m_Users)[user]);
+        (m_Users)[user]->hide();
+        (m_Users)[user]->deleteLater();
+        (m_Users)[user] = nullptr;
+        m_Users.erase(user);
+        m_Messages.erase(user);
         //remove from the map as well
     }
     return;
@@ -630,7 +509,7 @@ void ChattingWindow::sendUserToScreen(QString username) {
         user->hide();
     }
 
-    Users->insert(std::make_pair(username, user));
+    m_Users.insert(std::make_pair(username, user));
 
     connect(user, &QPushButton::clicked, this, &ChattingWindow::onUserClick);
 
@@ -639,23 +518,7 @@ void ChattingWindow::sendUserToScreen(QString username) {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
-
-
-
 //-------------------------------------------------------------------- MISCELLANEOUS ---------------------------------------------------------------------
-
-
-void ChattingWindow::thread_creator()
-{
-    auto* arg = new RecvParams{ &(impl_->sock), this, handle_message, handle_group_message, handle_group_list_update, handle_group_creation, handle_list_update, handle_user_update };
-
-    DWORD pThreadID;
-    HANDLE call_thread = create_thread(recieving, arg, &pThreadID);
-    CloseHandle(call_thread);
-    return;
-}
 
 void ChattingWindow::send_error(const QString& error_message)
 {
@@ -688,23 +551,23 @@ void ChattingWindow::initEncryptMap()
 
     // Uppercase mapping (A <-> Z, B <-> Y, etc.)
     for (int i = 0; i < 26; i++) {
-        (*encryptMap)[uppercase[i]] = uppercase[25 - i];
+        (m_encryptMap)[uppercase[i]] = uppercase[25 - i];
     }
 
     // Lowercase mapping (a <-> z, b <-> y, etc.)
     for (int i = 0; i < 26; i++) {
-        (*encryptMap)[lowercase[i]] = lowercase[25 - i];
+        (m_encryptMap)[lowercase[i]] = lowercase[25 - i];
     }
 
     // Digit mapping (0 <-> 9, 1 <-> 8, etc.)
     for (int i = 0; i < 10; i++) {
-        (*encryptMap)[digits[i]] = digits[9 - i];
+        (m_encryptMap)[digits[i]] = digits[9 - i];
     }
 
     // Symbol mapping (reverse order)
     int symLen = symbols.length();
     for (int i = 0; i < symLen; i++) {
-        (*encryptMap)[symbols[i]] = symbols[symLen - 1 - i];
+        (m_encryptMap)[symbols[i]] = symbols[symLen - 1 - i];
     }
 }
 
@@ -714,8 +577,96 @@ void ChattingWindow::encrypt(QString& message)
         if (message[i] == ' ') {
             continue;
         }
-        message[i] = (*encryptMap)[message[i]];
+        message[i] = (m_encryptMap)[message[i]];
     }
 }
 
+void ChattingWindow::initUI()
+{
+    ui.setupUi(this);
+    //we're just creating a layout for scrolling and out vertical layout
+    QWidget* contents = ui.scrollArea->takeWidget();
+    QVBoxLayout* layout = new QVBoxLayout(contents);
+
+    layout->setContentsMargins(0, 0, 0, 0);
+    contents->setLayout(layout);
+    ui.scrollArea->setWidget(contents);
+
+    ui.chatLayout = layout;
+    layout->setSpacing(5);
+    layout->setSizeConstraint(QLayout::SetMinimumSize);
+
+    //we're just creating a layout for scrolling and out vertical layout
+    QWidget* contents_users = ui.scrollArea_2->takeWidget();
+    QVBoxLayout* layout_users = new QVBoxLayout(contents_users);
+
+    layout_users->setContentsMargins(0, 0, 0, 0);
+    contents_users->setLayout(layout_users);
+    ui.scrollArea_2->setWidget(contents_users);
+
+    ui.userLayout = layout_users;
+    layout_users->setSpacing(5);
+    layout_users->setSizeConstraint(QLayout::SetMinimumSize);
+
+    defaultButtonStylesheet =
+        "QPushButton {"
+        " background-color: #4CAF50;"
+        " color: white;"
+        " border: none;"
+        " padding: 10px;"
+        " font-size: 16px;"
+        " border-radius: 5px;"
+        " }"
+        " QPushButton:hover {"
+        " background-color: #45a049;"
+        " }";
+
+    pressedButtonStylesheet =
+        "QPushButton {"
+        " background-color: #1E90FF;"
+        " color: white;"
+        " border: none;"
+        " padding: 10px;"
+        " font-size: 16px;"
+        " border-radius: 5px;"
+        " }"
+        " QPushButton:hover {"
+        " background-color: #055cb0;"
+        " }";
+
+    sendMessageStylesheet =
+        " background-color: #4CAF50;"
+        " color:#212121;"
+        " border:1px solid #E0E0E0;"
+        " border-radius:12px;"
+        " font-size: 16px;";
+
+    recvMessageStylesheet =
+        " background-color: #555555;"
+        " color:#212121;"
+        " border:1px solid #E0E0E0;"
+        " border-radius:12px;"
+        " font-size: 16px;";
+
+    ui.userLayout->setContentsMargins(10, 5, 10, 0); // 10px left/right margins
+
+    ui.chatLayout->setContentsMargins(10, 10, 10, 10); // 10px left/right margins
+
+    auto* l = static_cast<QVBoxLayout*>(ui.scrollAreaWidgetContents->layout());
+    l->insertStretch(0, 1);
+
+    ui.chatLayout->addStretch(1);  // Push all bubbles to top
+
+    ui.title_label->setFont(titleFont);
+
+    ui.addGroup->setFont(button_addGroup_Font);
+    ui.userList->setFont(buttonFont);
+    ui.groupChat->setFont(buttonFont);
+    ui.Message_input->setFont(buttonFont);
+    ui.sendButton->setIcon(QIcon("icon.png"));
+    ui.sendButton->setIconSize(QSize(45, 37));
+
+    ui.chatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
+    ui.addGroup->hide();
+}
 //----------------------------------------------------------------------------------------------------------------------------------------------
