@@ -31,8 +31,6 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), ourUserna
 ChattingWindow::~ChattingWindow()
 {
     m_network.sendInitMsg(MSG_EXIT);
-    closesocket(m_network.getSockID());
-    WSACleanup();
 }
 
 void ChattingWindow::threadFunction()
@@ -75,6 +73,10 @@ void ChattingWindow::threadFunction()
             case ROOM_LIST: {
                 List* listGroup = m_network.recvMethod<List>();
                 listGroup->size = ntohl(listGroup->size);
+                if (listGroup->size > MAXUSERS) {
+                    delete listGroup;
+                    break;
+                }
                 addGroups(listGroup->arr, listGroup->size);
                 delete listGroup;
                 break;

@@ -46,16 +46,16 @@ public:
         QMetaObject::connectSlotsByName(Message_chat_s);
     } // setupUi
 
-    void retranslateUi(QWidget * Message_chat_s)
+    void retranslateUi(QWidget *Message_chat_s)
     {
-        Message_chat_s->setWindowTitle(QCoreApplication::translate("Message_chat_s", "Message_chat_s", nullptr));
+        Message_chat_s->setWindowTitle(QCoreApplication::translate("Message_chat_s", "Form", nullptr));
         message_recv->setText(QString());
     } // retranslateUi
 
 };
 
 namespace Ui {
-    class Message_chat_s : public Ui_Message_chat_s {};
+    class Message_chat_s: public Ui_Message_chat_s {};
 } // namespace Ui
 
 QT_END_NAMESPACE

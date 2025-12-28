@@ -12,6 +12,7 @@ constexpr auto ROOM_LIST = 7;
 constexpr auto MESSAGE_LENGTH = 128;
 constexpr auto MAX_USERS = 10;
 constexpr auto USERNAME_LENGTH = 50;
+constexpr auto MAXUSERS = 10;
 
 struct MsgHeaderr {
 	uint32_t type;
@@ -49,6 +50,7 @@ private:
 	WSADATA m_wsaData;
 public:
 	Network() : m_sockid{ 0 }, m_wsaData{ 0 } {}
+	~Network();
 	SOCKET getSockID() { return m_sockid; }
 	void setSockID(const SOCKET sockid) { m_sockid = sockid; }
 	void setWsaData(const WSADATA wsadata) { m_wsaData = wsadata; }
@@ -56,6 +58,7 @@ public:
 	int serverConnect(std::string username);
 	int16_t serverConnectHelper(const uint16_t port);
 
+	//im unable to move this to the other file....
 	template <typename T>
 	T* recvMethod() {
 		T* msg = new T;

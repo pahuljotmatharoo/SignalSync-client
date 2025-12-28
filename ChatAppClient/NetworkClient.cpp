@@ -4,6 +4,11 @@
 #include <ws2tcpip.h>
 #include <QMessageBox>
 
+Network::~Network() {
+	closesocket(m_sockid);
+	WSACleanup();
+}
+
 int Network::serverConnect(std::string t_username)
 {
 	WSADATA wsaData;

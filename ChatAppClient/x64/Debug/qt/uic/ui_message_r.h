@@ -40,6 +40,9 @@ public:
 "    min-width: 80px;     /* never get narrower than 80px */\n"
 "    min-height: 24px;    /* never shorter than a line of text */\n"
 "    max-width: 200px;    /* wrap beyond ~200px */"));
+        message_recv->setWordWrap(true);
+
+        retranslateUi(Message_chat);
 
         QMetaObject::connectSlotsByName(Message_chat);
     } // setupUi

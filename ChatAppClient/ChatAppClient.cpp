@@ -6,19 +6,9 @@
 #include <QMessageBox>
 #include "ChattingWindow.h"
 
-struct ChatAppClient::Impl {
-    SOCKET sock {INVALID_SOCKET};
-};
-
-ChatAppClient::ChatAppClient(QWidget *parent): QMainWindow(parent), username{""}, impl_(new Impl())
+ChatAppClient::ChatAppClient(QWidget *parent): QMainWindow(parent), username{""}
 {
     ui.setupUi(this);
-}
-
-ChatAppClient::~ChatAppClient()
-{
-    delete impl_;
-    impl_ = nullptr;
 }
 
 void ChatAppClient::on_lineEdit_textEdited(const QString &text)

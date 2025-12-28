@@ -63,6 +63,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ProjectReference>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -92,18 +97,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="commands.c" />
-    <ClCompile Include="inital_message.c" />
     <ClCompile Include="message.cpp" />
     <ClCompile Include="message_s.cpp" />
-    <ClCompile Include="thread_functions.c" />
+    <ClCompile Include="NetworkClient.cpp" />
     <QtRcc Include="ChatAppClient.qrc" />
     <QtUic Include="ChatAppClient.ui" />
     <QtMoc Include="ChatAppClient.h" />
     <ClCompile Include="ChatAppClient.cpp" />
     <ClCompile Include="ChattingWindow.cpp" />
-    <ClCompile Include="connection.c" />
-    <ClCompile Include="c_main.c" />
     <ClCompile Include="main.cpp" />
     <QtUic Include="ChattingWindow.ui" />
     <QtUic Include="message_r.ui" />
@@ -111,14 +112,9 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ChattingWindow.h" />
-    <ClInclude Include="commands.h" />
-    <ClInclude Include="connection.h" />
-    <ClInclude Include="c_main.h" />
-    <ClInclude Include="data.h" />
-    <ClInclude Include="inital_message.h" />
     <QtMoc Include="message.h" />
     <QtMoc Include="message_s.h" />
-    <ClInclude Include="thread_functions.h" />
+    <ClInclude Include="NetworkClient.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

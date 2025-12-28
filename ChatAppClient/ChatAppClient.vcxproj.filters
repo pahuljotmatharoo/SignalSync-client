@@ -40,22 +40,7 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="c_main.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="connection.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ChattingWindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="thread_functions.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="inital_message.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="commands.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="message.cpp">
@@ -64,24 +49,12 @@
     <ClCompile Include="message_s.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="NetworkClient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="thread_functions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inital_message.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="commands.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="connection.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="c_main.h">
+    <ClInclude Include="NetworkClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

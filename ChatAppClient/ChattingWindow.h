@@ -5,7 +5,6 @@
 #include "ui_ChattingWindow.h"
 #include <NetworkClient.h>
 #include <thread>
-constexpr auto MAXUSERS = 10;
 
 class ChattingWindow : public QMainWindow {
     Q_OBJECT
