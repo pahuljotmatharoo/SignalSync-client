@@ -2,6 +2,7 @@
 
 #include <QtWidgets/QMainWindow>
 #include "ui_ChatAppClient.h"
+#include <NetworkClient.h>
 
 class ChatAppClient : public QMainWindow
 {
@@ -12,6 +13,7 @@ private:
     struct Impl;
     Impl* impl_;
     QString username;
+    Network m_network;
 public:
     ChatAppClient(QWidget* parent = nullptr);
     ~ChatAppClient();

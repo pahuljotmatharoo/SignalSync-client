@@ -3,7 +3,6 @@
 #include <iostream>
 #include <string>
 #include "ChatAppClient.h"
-#include "c_main.h"
 #include <QMessageBox>
 #include "ChattingWindow.h"
 
@@ -46,24 +45,15 @@ void ChatAppClient::on_pushButton_clicked() {
         return;
     }
 
-    const char* userCStr = userStd.c_str();;
+    int status = m_network.serverConnect(userStd);
 
-    SOCKET sock = main_connect(userCStr);
-
-    //if we cannot connect to the server
-    if (sock == SOCKET_ERROR) {
-        this->close();
-        send_error("Couldn't connect to server.");
-        return;
-    }
-
-    this->impl_->sock = sock;
+    if (status == SOCKET_ERROR) { return; }
 
     QMessageBox::information(this,tr("Logged in!"),tr("Logged in as %1").arg(username));
 
     auto* w = new ChattingWindow;
     w->setUsername(this->username);
-    w->setSOCKET((this->impl_->sock));
+    w->setNetwork(this->m_network);
 
     this->close();
 

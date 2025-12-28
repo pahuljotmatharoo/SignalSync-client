@@ -1,14 +1,11 @@
 ﻿#ifndef WIN32_LEAN_AND_MEAN
 #  define WIN32_LEAN_AND_MEAN
 #endif
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <QMainWindow>
+#pragma once
 #include "ui_ChattingWindow.h"
-#include <QHBoxLayout>
-constexpr auto messageLength = 128;
-constexpr auto usernameLength = 50;
-constexpr auto maxUsers = 10;
+#include <NetworkClient.h>
+#include <thread>
+constexpr auto MAXUSERS = 10;
 
 class ChattingWindow : public QMainWindow {
     Q_OBJECT
@@ -30,33 +27,34 @@ private:
     QFont titleFont;
     QFont button_addGroup_Font;
     QFont buttonFont;
-    struct Impl;
-    Impl* impl_;
-    std::unordered_map<QString, std::vector<std::pair<bool, std::string>>>* Messages; // Name of other user, <Who sent it, The Message>
-    std::unordered_map<QString, std::vector<std::pair<bool, std::pair<QString, std::string> > > >* groupMessages; // Name of Group, <Who sent it <The user who sent it, The Message>>
-    std::unordered_map<QString, QPushButton*>* Users; // <Name of User, Button addr>
-    std::unordered_map<QString, QPushButton*>* Groups;  // <Name of Group, Button addr> 
-    std::unordered_map<QChar, QChar>* encryptMap;
+    std::unordered_map<QString, std::vector<std::pair<bool, std::string>>> m_Messages; // Name of other user, <Who sent it, The Message>
+    std::unordered_map<QString, std::vector<std::pair<bool, std::pair<QString, std::string> > > > m_groupMessages; // Name of Group, <Who sent it <The user who sent it, The Message>>
+    std::unordered_map<QString, QPushButton*> m_Users; // <Name of User, Button addr>
+    std::unordered_map<QString, QPushButton*> m_Groups;  // <Name of Group, Button addr> 
+    std::unordered_map<QChar, QChar> m_encryptMap;
+    Network m_network;
+    std::thread m_thread;
 public:
     explicit ChattingWindow(QWidget* parent = nullptr);
     ~ChattingWindow();
     void send_error(const QString& error_message);
-    void thread_creator();
-    void setSOCKET(SOCKET sock);
+    void setNetwork(Network& t_network) { m_network = t_network; };
     void setUsername(const QString& new_user);
-    void addMessage(char message[messageLength], char username[usernameLength]);
-    void addMessage_group(char message[messageLength], char username[usernameLength], char group[usernameLength]);
+    void addMessage(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH]);
+    void addMessage_group(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH], char group[USERNAME_LENGTH]);
     void sendMessageToScreen(const QString& message, const std::string& username, bool user);
     void sendUserToScreen(QString username);
-    void addUsers(char users[maxUsers][usernameLength], uint32_t size);
-    void removeUsers(char user[usernameLength], uint32_t size);
+    void addUsers(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size);
+    void removeUsers(char user[USERNAME_LENGTH], uint32_t size);
     void removeUserfromScreen(const QString& user);
-    void addGroup(const char group[usernameLength]);
-    void addGroups(char users[maxUsers][usernameLength], uint32_t size);
+    void addGroup(const char group[USERNAME_LENGTH]);
+    void addGroups(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size);
     void addGrouptoScreen(const QString& user);
     void removeMessagesFromScreen();
     void initEncryptMap();
+    void initUI();
     void encrypt(QString& message);
+    void threadFunction();
 private slots:
     void on_sendButton_clicked();
     void on_Message_input_textEdited(const QString& text);
