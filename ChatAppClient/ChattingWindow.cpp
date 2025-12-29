@@ -274,6 +274,8 @@ void ChattingWindow::on_sendButton_clicked()
         std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
         (m_Messages)[usernameToSend].push_back(std::make_pair(CURR_USER, message_to_sendStd));
 
+        long size = messageCopy.length();
+
         //now we can do the message encryption of the message sending to server
         //encrypt(messageToSend);
         message_to_sendStd = messageToSend.toStdString();
@@ -289,7 +291,7 @@ void ChattingWindow::on_sendButton_clicked()
             return;
         }
 
-        m_network.sendUserMsg(message_to_sendStd, username_to_sendStd);
+        m_network.sendMsg(message_to_sendStd, username_to_sendStd, MSG_SEND);
 
         auto* bubble = new MessageWidget_s(messageCopy, this);
 
@@ -326,7 +328,7 @@ void ChattingWindow::on_sendButton_clicked()
             return;
         }
 
-        m_network.sendGroupMsg(message_to_sendStd, group_to_sendStd);
+        m_network.sendMsg(message_to_sendStd, group_to_sendStd, ROOM_MSG);
 
         auto* bubble = new MessageWidget_s(ourUsername + " : " + messageToSend, this);
 

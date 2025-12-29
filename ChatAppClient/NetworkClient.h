@@ -22,6 +22,8 @@ struct MsgHeaderr {
 struct MsgSend {
 	char message[128];
 	char user_to_send[50];
+	uint32_t size_m;
+	uint32_t size_u;
 };
 
 struct MsgRecvUser {
@@ -75,7 +77,6 @@ public:
 
 	std::size_t sendInitMsg(int constant);
 	char* recvUser();
-	std::size_t sendUserMsg(std::string message, std::string username);
-	std::size_t sendGroupMsg(std::string t_message, std::string t_groupname);
+	std::size_t sendMsg(std::string message, std::string username, int constant);
 	std::size_t sendGroupName(std::string group_name);
 };

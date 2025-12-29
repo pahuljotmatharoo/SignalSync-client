@@ -45,7 +45,7 @@ int16_t Network::serverConnectHelper(const uint16_t t_port)
 	t_server.sin_port = htons(t_port);
 #pragma warning(push)
 #pragma warning(disable:4996)   // disable this function is deprecated warnings
-	t_server.sin_addr.s_addr = inet_addr("IP ADDRESS");
+	t_server.sin_addr.s_addr = inet_addr("74.12.132.67");
 #pragma warning(pop)
 
 	int status = connect(getSockID(), reinterpret_cast<sockaddr*>(&t_server), sizeof(t_server));
@@ -74,33 +74,22 @@ char* Network::recvUser()
 	return username;
 }
 
-std::size_t Network::sendUserMsg(std::string t_message, std::string t_username)
+std::size_t Network::sendMsg(std::string t_message, std::string t_username, int constant)
 {
-	sendInitMsg(MSG_SEND);
+	sendInitMsg(constant);
 
 	MsgSend message_to_Send{0};
 
 	memcpy(message_to_Send.message, t_message.c_str(), 128);
 	memcpy(message_to_Send.user_to_send, t_username.c_str(), 50);
+	message_to_Send.size_u = htonl(t_username.length());
+	message_to_Send.size_m = htonl(t_message.length());
 
-	int sent = send(getSockID(), reinterpret_cast<char*>(&message_to_Send), MESSAGE_LENGTH + USERNAME_LENGTH, 0);
-
-	return static_cast<std::size_t>(sent);
-}
-
-std::size_t Network::sendGroupMsg(std::string t_message, std::string t_groupname)
-{
-	sendInitMsg(ROOM_MSG);
-
-	MsgSend message_to_Send{ 0 };
-
-	memcpy(message_to_Send.message, t_message.c_str(), 128);
-	memcpy(message_to_Send.user_to_send, t_groupname.c_str(), 50);
-
-	int sent = send(getSockID(), reinterpret_cast<char*>(&message_to_Send), MESSAGE_LENGTH + USERNAME_LENGTH, 0);
+	int sent = send(getSockID(), reinterpret_cast<char*>(&message_to_Send), sizeof(MsgSend), 0);
 
 	return static_cast<std::size_t>(sent);
 }
+
 
 std::size_t Network::sendGroupName(std::string t_group_name)
 {
