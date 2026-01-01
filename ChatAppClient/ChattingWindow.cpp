@@ -2,22 +2,21 @@
 #pragma comment(lib, "Ws2_32.lib")
 #include <ws2tcpip.h>
 #include <windows.h>
-#include "ChattingWindow.h"
 #include <QHBoxLayout>
-#include <message.h>
-#include <message_s.h>
 #include <qscrollbar.h>
 #include <qlayout.h>
 #include <qtimer.h>
 #include <QMessageBox>
+#include "message.h"
+#include "message_s.h"
+#include "ChattingWindow.h"
+
 constexpr auto OTHER_USER = true;
 constexpr auto CURR_USER = false;
 constexpr auto User = true;
 constexpr auto Group = false;
 
-//Add simple resizing
-
-ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), ourUsername{ "" }, lastPressedUser(nullptr), 
+ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), lastPressedUser(nullptr), 
                                                     lastPressedGroup(nullptr), messageFont("Montserrat", 14), titleFont("Montserrat", 25), UserOrGroup(User), button_addGroup_Font("Montserrat", 8), buttonFont("Montserrat", 10)
 {
     initUI();
@@ -86,11 +85,6 @@ void ChattingWindow::threadFunction()
 }
 
 //------------------------------------------------ ELEMENTARY FUNCTIONS (SETTERS) ---------------------------------------------------------------------
-void ChattingWindow::setUsername(const QString& new_user)
-{
-    this->ourUsername = new_user;
-    return;
-}
 
 void ChattingWindow::on_Message_input_textEdited(const QString& text)
 {
@@ -268,6 +262,14 @@ void ChattingWindow::on_sendButton_clicked()
 {
     if (UserOrGroup == User) {
         std::string username_to_sendStd = usernameToSend.toStdString();
+
+        //check to see if sending to ourselves
+        std::string username_copy = username_to_sendStd;
+        username_copy.erase(0, 4);
+        if (username_copy == m_selfUsername) {
+            username_to_sendStd = username_copy;
+        }
+
         const char* username_to_sendCStr = username_to_sendStd.c_str();
 
         QString messageCopy = messageToSend; // temp copy of the message for user display side
@@ -311,7 +313,7 @@ void ChattingWindow::on_sendButton_clicked()
 
         QString messageCopy = messageToSend; // temp copy of the message for user display side
         std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
-        (m_groupMessages)[groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(ourUsername, message_to_sendStd)));
+        (m_groupMessages)[groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(m_selfUsername, message_to_sendStd)));
 
         //now we can do the message encryption of the message sending to server
         //encrypt(messageToSend);
@@ -330,7 +332,7 @@ void ChattingWindow::on_sendButton_clicked()
 
         m_network.sendMsg(message_to_sendStd, group_to_sendStd, ROOM_MSG);
 
-        auto* bubble = new MessageWidget_s(ourUsername + " : " + messageToSend, this);
+        auto* bubble = new MessageWidget_s(m_selfUsername + " : " + messageToSend, this);
 
         ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
 
@@ -340,7 +342,7 @@ void ChattingWindow::on_sendButton_clicked()
             ui.scrollArea->ensureWidgetVisible(bubble);
             });
 
-        (m_groupMessages)[groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(ourUsername, message_to_sendStd)));
+        (m_groupMessages)[groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(m_selfUsername, message_to_sendStd)));
     }
     return;
 }
@@ -498,8 +500,8 @@ void ChattingWindow::sendMessageToScreen(const QString& message, const std::stri
 void ChattingWindow::sendUserToScreen(QString username) {
     QPushButton* user = new QPushButton(this);
 
-    if(username == ourUsername) {
-        user->setText("You: " + username);
+    if(username == m_selfUsername) {
+        user->setText("You:" + username);
     }
     else {
         user->setText(username);

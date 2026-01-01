@@ -15,10 +15,10 @@ private:
     QString pressedButtonStylesheet;
     QString sendMessageStylesheet;
     QString recvMessageStylesheet;
-    QString ourUsername; // username of this instance
     QString usernameToSend;
     QString messageToSend;
     QString groupToSend;
+    QString m_selfUsername;
     //should get deleted itself
     QPushButton* lastPressedUser; // basically current button pressed (last pressed as we need to see if we had pressed a button before, and which)
     QPushButton* lastPressedGroup; // basically current button pressed (last pressed as we need to see if we had pressed a button before, and which)
@@ -36,9 +36,9 @@ private:
 public:
     explicit ChattingWindow(QWidget* parent = nullptr);
     ~ChattingWindow();
-    void send_error(const QString& error_message);
+    void setSelfUser(const QString t_username) { m_selfUsername = t_username; }
     void setNetwork(Network& t_network) { m_network = t_network; };
-    void setUsername(const QString& new_user);
+    void send_error(const QString& error_message);
     void addMessage(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH]);
     void addMessage_group(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH], char group[USERNAME_LENGTH]);
     void sendMessageToScreen(const QString& message, const std::string& username, bool user);

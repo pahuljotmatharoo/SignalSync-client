@@ -42,8 +42,8 @@ void ChatAppClient::on_pushButton_clicked() {
     QMessageBox::information(this,tr("Logged in!"),tr("Logged in as %1").arg(username));
 
     auto* w = new ChattingWindow;
-    w->setUsername(this->username);
     w->setNetwork(this->m_network);
+    w->setSelfUser(username);
 
     this->close();
 
