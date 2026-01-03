@@ -9,23 +9,23 @@
 class ChattingWindow : public QMainWindow {
     Q_OBJECT
 private:
-    Ui::ChattingWindow ui;
-    bool UserOrGroup; // lets us know whether the user is on userlist or grouplist
-    QString defaultButtonStylesheet;
-    QString pressedButtonStylesheet;
-    QString sendMessageStylesheet;
-    QString recvMessageStylesheet;
-    QString usernameToSend;
-    QString messageToSend;
-    QString groupToSend;
+    Ui::ChattingWindow m_ui;
+    bool m_userOrGroup; // lets us know whether the user is on userlist or grouplist
+    QString m_defaultButtonStylesheet;
+    QString m_pressedButtonStylesheet;
+    QString m_sendMessageStylesheet;
+    QString m_recvMessageStylesheet;
+    QString m_usernameToSend;
+    QString m_messageToSend;
+    QString m_groupToSend;
     QString m_selfUsername;
     //should get deleted itself
-    QPushButton* lastPressedUser; // basically current button pressed (last pressed as we need to see if we had pressed a button before, and which)
-    QPushButton* lastPressedGroup; // basically current button pressed (last pressed as we need to see if we had pressed a button before, and which)
-    QFont messageFont;
-    QFont titleFont;
-    QFont button_addGroup_Font;
-    QFont buttonFont;
+    QPushButton* m_lastPressedUser; // basically current button pressed (last pressed as we need to see if we had pressed a button before, and which)
+    QPushButton* m_lastPressedGroup; // basically current button pressed (last pressed as we need to see if we had pressed a button before, and which)
+    QFont m_messageFont;
+    QFont m_titleFont;
+    QFont m_buttonAddGroupFont;
+    QFont m_buttonFont;
     std::unordered_map<QString, std::vector<std::pair<bool, std::string>>> m_Messages; // Name of other user, <Who sent it, The Message>
     std::unordered_map<QString, std::vector<std::pair<bool, std::pair<QString, std::string> > > > m_groupMessages; // Name of Group, <Who sent it <The user who sent it, The Message>>
     std::unordered_map<QString, QPushButton*> m_Users; // <Name of User, Button addr>

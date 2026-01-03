@@ -16,8 +16,8 @@ constexpr auto CURR_USER = false;
 constexpr auto User = true;
 constexpr auto Group = false;
 
-ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), lastPressedUser(nullptr), 
-                                                    lastPressedGroup(nullptr), messageFont("Montserrat", 14), titleFont("Montserrat", 25), UserOrGroup(User), button_addGroup_Font("Montserrat", 8), buttonFont("Montserrat", 10)
+ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), 
+                                                    m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), m_userOrGroup(User), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10)
 {
     initUI();
 
@@ -88,7 +88,7 @@ void ChattingWindow::threadFunction()
 
 void ChattingWindow::on_Message_input_textEdited(const QString& text)
 {
-    messageToSend = text;
+    m_messageToSend = text;
     return;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------
@@ -107,11 +107,11 @@ void ChattingWindow::on_addGroup_clicked()
 
     group->setText(groupName);
     group->setMinimumSize(205, 40);
-    group->setStyleSheet(defaultButtonStylesheet);
+    group->setStyleSheet(m_defaultButtonStylesheet);
 
     m_Groups.insert(std::make_pair(groupName, group));
 
-    ui.userLayout->addWidget(group, 0, Qt::AlignCenter | Qt::AlignTop);
+    m_ui.userLayout->addWidget(group, 0, Qt::AlignCenter | Qt::AlignTop);
 
     connect(group, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
 
@@ -123,10 +123,10 @@ void ChattingWindow::on_addGroup_clicked()
 
 void ChattingWindow::on_groupChat_clicked()
 {
-    ui.addGroup->show();
-    UserOrGroup = Group;
+    m_ui.addGroup->show();
+    m_userOrGroup = Group;
 
-    ui.currUsers_label->setText("Current Groups");
+    m_ui.currUsers_label->setText("Current Groups");
 
     //hide all the users
     if (m_Users.size() != 0) {
@@ -142,18 +142,18 @@ void ChattingWindow::on_groupChat_clicked()
         }
     }
 
-    if (lastPressedUser) {
-        lastPressedUser->setStyleSheet(defaultButtonStylesheet);
-        lastPressedUser = nullptr;
+    if (m_lastPressedUser) {
+        m_lastPressedUser->setStyleSheet(m_defaultButtonStylesheet);
+        m_lastPressedUser = nullptr;
     }
 }
 
 void ChattingWindow::on_userList_clicked()
 {
-    ui.addGroup->hide();
-    UserOrGroup = User;
+    m_ui.addGroup->hide();
+    m_userOrGroup = User;
 
-    ui.currUsers_label->setText("Current Users");
+    m_ui.currUsers_label->setText("Current Users");
 
     if (m_Groups.size() != 0) {
         for (auto itr = m_Groups.begin(); itr != m_Groups.end(); itr++) {
@@ -167,9 +167,9 @@ void ChattingWindow::on_userList_clicked()
         }
     }
 
-    if (lastPressedGroup) {
-        lastPressedGroup->setStyleSheet(defaultButtonStylesheet);
-        lastPressedGroup = nullptr;
+    if (m_lastPressedGroup) {
+        m_lastPressedGroup->setStyleSheet(m_defaultButtonStylesheet);
+        m_lastPressedGroup = nullptr;
     }
 }
 
@@ -178,37 +178,37 @@ void ChattingWindow::onUserClick()
 {
     QPushButton* clickedButton = qobject_cast<QPushButton*>(sender());
 
-    if (lastPressedUser == clickedButton) {
+    if (m_lastPressedUser == clickedButton) {
         return;
     }
 
-    if (lastPressedUser) {
-        lastPressedUser->setStyleSheet(defaultButtonStylesheet);
+    if (m_lastPressedUser) {
+        m_lastPressedUser->setStyleSheet(m_defaultButtonStylesheet);
     }
 
-    clickedButton->setStyleSheet(pressedButtonStylesheet);
-    lastPressedUser = clickedButton;
+    clickedButton->setStyleSheet(m_pressedButtonStylesheet);
+    m_lastPressedUser = clickedButton;
 
     removeMessagesFromScreen();
 
-    ui.username_label->setText(clickedButton->text());
-    usernameToSend = clickedButton->text();
-    auto& vec_msg = (m_Messages)[usernameToSend];
+    m_ui.username_label->setText(clickedButton->text());
+    m_usernameToSend = clickedButton->text();
+    auto& vec_msg = (m_Messages)[m_usernameToSend];
 
     for (std::size_t i = 0; i < vec_msg.size(); i++) {
 
         if (vec_msg[i].first == CURR_USER) {
             auto* bubble = new MessageWidget_s(QString::fromStdString(vec_msg[i].second), this);
-            ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
+            m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
             QTimer::singleShot(0, this, [=]() {
-                ui.scrollArea->ensureWidgetVisible(bubble);
+                m_ui.scrollArea->ensureWidgetVisible(bubble);
                 });
         }
         else {
             auto* bubble = new MessageWidget(QString::fromStdString(vec_msg[i].second), this);
-            ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
+            m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
             QTimer::singleShot(0, this, [=]() {
-                ui.scrollArea->ensureWidgetVisible(bubble);
+                m_ui.scrollArea->ensureWidgetVisible(bubble);
                 });
         }
     }
@@ -219,38 +219,38 @@ void ChattingWindow::onGroupClick()
 {
     QPushButton* clickedButton = qobject_cast<QPushButton*>(sender());
 
-    if (lastPressedGroup == clickedButton) {
+    if (m_lastPressedGroup == clickedButton) {
         return;
     }
 
-    if (lastPressedGroup) {
-        lastPressedGroup->setStyleSheet(defaultButtonStylesheet);
+    if (m_lastPressedGroup) {
+        m_lastPressedGroup->setStyleSheet(m_defaultButtonStylesheet);
     }
-    clickedButton->setStyleSheet(pressedButtonStylesheet);
+    clickedButton->setStyleSheet(m_pressedButtonStylesheet);
 
-    lastPressedGroup = clickedButton;
+    m_lastPressedGroup = clickedButton;
 
     //remove all the items in the current chat layout
     removeMessagesFromScreen();
 
-    ui.username_label->setText(clickedButton->text());
-    groupToSend = clickedButton->text();
-    auto& vec_msg = (m_groupMessages)[groupToSend];
+    m_ui.username_label->setText(clickedButton->text());
+    m_groupToSend = clickedButton->text();
+    auto& vec_msg = (m_groupMessages)[m_groupToSend];
 
     for (std::size_t i = 0; i < vec_msg.size(); i++) {
         auto* bubble = new MessageWidget(vec_msg[i].second.first + ": " + QString::fromStdString(vec_msg[i].second.second), this);
         if(vec_msg[i].first == CURR_USER) {
             auto* bubble = new MessageWidget_s(vec_msg[i].second.first + ": " + QString::fromStdString(vec_msg[i].second.second), this);
-            ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
+            m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
             QTimer::singleShot(0, this, [=]() {
-                ui.scrollArea->ensureWidgetVisible(bubble);
+                m_ui.scrollArea->ensureWidgetVisible(bubble);
                 });
         }
         else {
             auto* bubble = new MessageWidget(vec_msg[i].second.first + ": " + QString::fromStdString(vec_msg[i].second.second), this);
-            ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
+            m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
             QTimer::singleShot(0, this, [=]() {
-                ui.scrollArea->ensureWidgetVisible(bubble);
+                m_ui.scrollArea->ensureWidgetVisible(bubble);
                 });
         }
 
@@ -260,8 +260,8 @@ void ChattingWindow::onGroupClick()
 
 void ChattingWindow::on_sendButton_clicked()
 {
-    if (UserOrGroup == User) {
-        std::string username_to_sendStd = usernameToSend.toStdString();
+    if (m_userOrGroup == User) {
+        std::string username_to_sendStd = m_usernameToSend.toStdString();
 
         //check to see if sending to ourselves
         std::string username_copy = username_to_sendStd;
@@ -272,15 +272,15 @@ void ChattingWindow::on_sendButton_clicked()
 
         const char* username_to_sendCStr = username_to_sendStd.c_str();
 
-        QString messageCopy = messageToSend; // temp copy of the message for user display side
+        QString messageCopy = m_messageToSend; // temp copy of the message for user display side
         std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
-        (m_Messages)[usernameToSend].push_back(std::make_pair(CURR_USER, message_to_sendStd));
+        (m_Messages)[m_usernameToSend].push_back(std::make_pair(CURR_USER, message_to_sendStd));
 
         long size = messageCopy.length();
 
         //now we can do the message encryption of the message sending to server
         //encrypt(messageToSend);
-        message_to_sendStd = messageToSend.toStdString();
+        message_to_sendStd = m_messageToSend.toStdString();
         const char* message_to_sendCStr = message_to_sendStd.c_str();
 
         if (message_to_sendStd.length() >= 128) {
@@ -297,27 +297,27 @@ void ChattingWindow::on_sendButton_clicked()
 
         auto* bubble = new MessageWidget_s(messageCopy, this);
 
-        ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
+        m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
 
-        ui.scrollArea->verticalScrollBar()->setValue(ui.scrollArea->verticalScrollBar()->maximum());
+        m_ui.scrollArea->verticalScrollBar()->setValue(m_ui.scrollArea->verticalScrollBar()->maximum());
 
         QTimer::singleShot(0, this, [=]() {
-            ui.scrollArea->ensureWidgetVisible(bubble);
+            m_ui.scrollArea->ensureWidgetVisible(bubble);
             });
 
     }
 
     else {
-        std::string group_to_sendStd = groupToSend.toStdString(); // group name not coming correctly
+        std::string group_to_sendStd = m_groupToSend.toStdString(); // group name not coming correctly
         const char* group_to_sendCStr = group_to_sendStd.c_str();
 
-        QString messageCopy = messageToSend; // temp copy of the message for user display side
+        QString messageCopy = m_messageToSend; // temp copy of the message for user display side
         std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
-        (m_groupMessages)[groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(m_selfUsername, message_to_sendStd)));
+        (m_groupMessages)[m_groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(m_selfUsername, message_to_sendStd)));
 
         //now we can do the message encryption of the message sending to server
         //encrypt(messageToSend);
-        message_to_sendStd = messageToSend.toStdString();
+        message_to_sendStd = m_messageToSend.toStdString();
         const char* message_to_sendCStr = message_to_sendStd.c_str();
 
         if (message_to_sendStd.length() >= 128) {
@@ -332,17 +332,17 @@ void ChattingWindow::on_sendButton_clicked()
 
         m_network.sendMsg(message_to_sendStd, group_to_sendStd, ROOM_MSG);
 
-        auto* bubble = new MessageWidget_s(m_selfUsername + " : " + messageToSend, this);
+        auto* bubble = new MessageWidget_s(m_selfUsername + " : " + m_messageToSend, this);
 
-        ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
+        m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
 
-        ui.scrollArea->verticalScrollBar()->setValue(ui.scrollArea->verticalScrollBar()->maximum());
+        m_ui.scrollArea->verticalScrollBar()->setValue(m_ui.scrollArea->verticalScrollBar()->maximum());
 
         QTimer::singleShot(0, this, [=]() {
-            ui.scrollArea->ensureWidgetVisible(bubble);
+            m_ui.scrollArea->ensureWidgetVisible(bubble);
             });
 
-        (m_groupMessages)[groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(m_selfUsername, message_to_sendStd)));
+        (m_groupMessages)[m_groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(m_selfUsername, message_to_sendStd)));
     }
     return;
 }
@@ -436,26 +436,26 @@ void ChattingWindow::addGrouptoScreen(const QString& group_n)
 
     group->setText(group_n);
     group->setMinimumSize(205, 40);
-    group->setStyleSheet(defaultButtonStylesheet);
+    group->setStyleSheet(m_defaultButtonStylesheet);
 
-    if (UserOrGroup == User) {
+    if (m_userOrGroup == User) {
         group->hide();
     }
 
-    ui.userLayout->addWidget(group, 0, Qt::AlignCenter | Qt::AlignTop);
+    m_ui.userLayout->addWidget(group, 0, Qt::AlignCenter | Qt::AlignTop);
     connect(group, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
 }
 
 void ChattingWindow::removeUserfromScreen(const QString& user)
 {
     if ((m_Users)[user]) {
-        if (lastPressedUser == (m_Users)[user]) {
-            lastPressedUser = nullptr;
+        if (m_lastPressedUser == (m_Users)[user]) {
+            m_lastPressedUser = nullptr;
             //need to remove messages 
             removeMessagesFromScreen();
-            ui.username_label->setText("Select a User to talk to!");
+            m_ui.username_label->setText("Select a User to talk to!");
         }
-        ui.userLayout->removeWidget((m_Users)[user]);
+        m_ui.userLayout->removeWidget((m_Users)[user]);
         (m_Users)[user]->hide();
         (m_Users)[user]->deleteLater();
         (m_Users)[user] = nullptr;
@@ -468,29 +468,29 @@ void ChattingWindow::removeUserfromScreen(const QString& user)
 
 void ChattingWindow::sendMessageToScreen(const QString& message, const std::string &username, bool user)
 {
-    if (user && lastPressedUser && lastPressedUser->text() == QString::fromStdString(username)) {
+    if (user && m_lastPressedUser && m_lastPressedUser->text() == QString::fromStdString(username)) {
 
         auto* bubble = new MessageWidget (message, this);
 
-        ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
+        m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
 
-        ui.scrollArea->verticalScrollBar()->setValue(ui.scrollArea->verticalScrollBar()->maximum());
+        m_ui.scrollArea->verticalScrollBar()->setValue(m_ui.scrollArea->verticalScrollBar()->maximum());
 
         QTimer::singleShot(0, this, [=]() {
-            ui.scrollArea->ensureWidgetVisible(bubble);
+            m_ui.scrollArea->ensureWidgetVisible(bubble);
             });
 
     }
 
-    else if (!user && lastPressedGroup && lastPressedGroup->text() == QString::fromStdString(username)) {
+    else if (!user && m_lastPressedGroup && m_lastPressedGroup->text() == QString::fromStdString(username)) {
         auto* bubble = new MessageWidget(message, this);
 
-        ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
+        m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
 
-        ui.scrollArea->verticalScrollBar()->setValue(ui.scrollArea->verticalScrollBar()->maximum());
+        m_ui.scrollArea->verticalScrollBar()->setValue(m_ui.scrollArea->verticalScrollBar()->maximum());
 
         QTimer::singleShot(0, this, [=]() {
-            ui.scrollArea->ensureWidgetVisible(bubble);
+            m_ui.scrollArea->ensureWidgetVisible(bubble);
             });
     }
 
@@ -507,11 +507,11 @@ void ChattingWindow::sendUserToScreen(QString username) {
         user->setText(username);
     }
     user->setMinimumSize(205, 40);
-    user->setStyleSheet(defaultButtonStylesheet);
+    user->setStyleSheet(m_defaultButtonStylesheet);
 
-    ui.userLayout->addWidget(user, 0, Qt::AlignCenter | Qt::AlignTop);
+    m_ui.userLayout->addWidget(user, 0, Qt::AlignCenter | Qt::AlignTop);
 
-    if (UserOrGroup == Group) {
+    if (m_userOrGroup == Group) {
         user->hide();
     }
 
@@ -538,7 +538,7 @@ void ChattingWindow::send_error(const QString& error_message)
 
 void ChattingWindow::removeMessagesFromScreen() {
     QLayoutItem* item;
-    while ((item = ui.chatLayout->takeAt(0)) != nullptr) {
+    while ((item = m_ui.chatLayout->takeAt(0)) != nullptr) {
         QWidget* widget = item->widget();
         if (widget != nullptr) {
             widget->deleteLater();
@@ -589,32 +589,32 @@ void ChattingWindow::encrypt(QString& message)
 
 void ChattingWindow::initUI()
 {
-    ui.setupUi(this);
+    m_ui.setupUi(this);
     //we're just creating a layout for scrolling and out vertical layout
-    QWidget* contents = ui.scrollArea->takeWidget();
+    QWidget* contents = m_ui.scrollArea->takeWidget();
     QVBoxLayout* layout = new QVBoxLayout(contents);
 
     layout->setContentsMargins(0, 0, 0, 0);
     contents->setLayout(layout);
-    ui.scrollArea->setWidget(contents);
+    m_ui.scrollArea->setWidget(contents);
 
-    ui.chatLayout = layout;
+    m_ui.chatLayout = layout;
     layout->setSpacing(5);
     layout->setSizeConstraint(QLayout::SetMinimumSize);
 
     //we're just creating a layout for scrolling and out vertical layout
-    QWidget* contents_users = ui.scrollArea_2->takeWidget();
+    QWidget* contents_users = m_ui.scrollArea_2->takeWidget();
     QVBoxLayout* layout_users = new QVBoxLayout(contents_users);
 
     layout_users->setContentsMargins(0, 0, 0, 0);
     contents_users->setLayout(layout_users);
-    ui.scrollArea_2->setWidget(contents_users);
+    m_ui.scrollArea_2->setWidget(contents_users);
 
-    ui.userLayout = layout_users;
+    m_ui.userLayout = layout_users;
     layout_users->setSpacing(5);
     layout_users->setSizeConstraint(QLayout::SetMinimumSize);
 
-    defaultButtonStylesheet =
+    m_defaultButtonStylesheet =
         "QPushButton {"
         " background-color: #4CAF50;"
         " color: white;"
@@ -627,7 +627,7 @@ void ChattingWindow::initUI()
         " background-color: #45a049;"
         " }";
 
-    pressedButtonStylesheet =
+    m_pressedButtonStylesheet =
         "QPushButton {"
         " background-color: #1E90FF;"
         " color: white;"
@@ -640,39 +640,39 @@ void ChattingWindow::initUI()
         " background-color: #055cb0;"
         " }";
 
-    sendMessageStylesheet =
+    m_sendMessageStylesheet =
         " background-color: #4CAF50;"
         " color:#212121;"
         " border:1px solid #E0E0E0;"
         " border-radius:12px;"
         " font-size: 16px;";
 
-    recvMessageStylesheet =
+    m_recvMessageStylesheet =
         " background-color: #555555;"
         " color:#212121;"
         " border:1px solid #E0E0E0;"
         " border-radius:12px;"
         " font-size: 16px;";
 
-    ui.userLayout->setContentsMargins(10, 5, 10, 0); // 10px left/right margins
+    m_ui.userLayout->setContentsMargins(10, 5, 10, 0); // 10px left/right margins
 
-    ui.chatLayout->setContentsMargins(10, 10, 10, 10); // 10px left/right margins
+    m_ui.chatLayout->setContentsMargins(10, 10, 10, 10); // 10px left/right margins
 
-    auto* l = static_cast<QVBoxLayout*>(ui.scrollAreaWidgetContents->layout());
+    auto* l = static_cast<QVBoxLayout*>(m_ui.scrollAreaWidgetContents->layout());
     l->insertStretch(0, 1);
 
-    ui.chatLayout->addStretch(1);  // Push all bubbles to top
+    m_ui.chatLayout->addStretch(1);  // Push all bubbles to top
 
-    ui.title_label->setFont(titleFont);
+    m_ui.title_label->setFont(m_titleFont);
 
-    ui.addGroup->setFont(button_addGroup_Font);
-    ui.userList->setFont(buttonFont);
-    ui.groupChat->setFont(buttonFont);
-    ui.Message_input->setFont(buttonFont);
-    ui.sendButton->setIcon(QIcon("icon.png"));
-    ui.sendButton->setIconSize(QSize(45, 37));
+    m_ui.addGroup->setFont(m_buttonAddGroupFont);
+    m_ui.userList->setFont(m_buttonFont);
+    m_ui.groupChat->setFont(m_buttonFont);
+    m_ui.Message_input->setFont(m_buttonFont);
+    m_ui.sendButton->setIcon(QIcon("icon.png"));
+    m_ui.sendButton->setIconSize(QSize(45, 37));
 
-    ui.chatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
-    ui.addGroup->hide();
+    m_ui.chatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
+    m_ui.addGroup->hide();
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------
