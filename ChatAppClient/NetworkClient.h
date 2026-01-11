@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <WinSock2.h>
+#include <QFileDialog>
 
 constexpr auto MSG_SEND = 1;
 constexpr auto MSG_LIST = 2;
@@ -9,6 +10,7 @@ constexpr auto USER_EXIT = 4;
 constexpr auto ROOM_CREATE = 5;
 constexpr auto ROOM_MSG = 6;
 constexpr auto ROOM_LIST = 7;
+constexpr auto PNG_IMG = 8;
 constexpr auto MESSAGE_LENGTH = 128;
 constexpr auto MAX_USERS = 10;
 constexpr auto USERNAME_LENGTH = 50;
@@ -46,6 +48,13 @@ struct List { // can be User List or Group List
 	char arr[MAX_USERS][USERNAME_LENGTH];
 };
 
+struct PngSend {
+	char* data;
+	char *user_to_send;
+	uint32_t size_m;
+	uint32_t size_u;
+};
+
 class Network {
 private:
 	SOCKET m_sockid;
@@ -53,10 +62,10 @@ private:
 public:
 	Network() : m_sockid{ 0 }, m_wsaData{ 0 } {}
 	~Network();
-	SOCKET getSockID() { return m_sockid; }
+	SOCKET getSockID() const { return m_sockid; }
 	void setSockID(const SOCKET sockid) { m_sockid = sockid; }
 	void setWsaData(const WSADATA wsadata) { m_wsaData = wsadata; }
-	WSADATA getWsaData() { return m_wsaData; }
+	WSADATA getWsaData() const { return m_wsaData; }
 	int serverConnect(std::string username);
 	int16_t serverConnectHelper(const uint16_t port);
 
@@ -74,8 +83,10 @@ public:
 
 		return msg;
 	};
-
-	std::size_t sendInitMsg(int constant);
+	void sendLargeFile(PngSend* t_data, long long size) const;
+	std::size_t sendInitMsg(int constant) const;
+	std::size_t sendPngSize(long long) const;
+	void sendPng(QByteArray* t_pngData, std::string user_to_send) const;
 	char* recvUser();
 	std::size_t sendMsg(std::string message, std::string username, int constant);
 	std::size_t sendGroupName(std::string group_name);

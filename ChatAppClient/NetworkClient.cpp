@@ -45,20 +45,52 @@ int16_t Network::serverConnectHelper(const uint16_t t_port)
 	t_server.sin_port = htons(t_port);
 #pragma warning(push)
 #pragma warning(disable:4996)   // disable this function is deprecated warnings
-	t_server.sin_addr.s_addr = inet_addr("IP ADDRESS");
+	t_server.sin_addr.s_addr = inet_addr("74.12.132.67");
 #pragma warning(pop)
 
 	int status = connect(getSockID(), reinterpret_cast<sockaddr*>(&t_server), sizeof(t_server));
 	return (static_cast<int16_t>(status));
 }
 
-std::size_t Network::sendInitMsg(int t_constant)
+void Network::sendLargeFile(PngSend* t_data, long long size) const
+{
+	long long currentPointer = 0;
+	while (currentPointer < t_data->size_m) {
+		int sent = send(m_sockid, (t_data->data) + currentPointer, t_data->size_m - currentPointer, 0);
+		currentPointer += sent;
+	}
+
+	while (currentPointer < 50) {
+		int sent = send(m_sockid, (t_data->user_to_send) + currentPointer, 50 - currentPointer, 0);
+		currentPointer += sent;
+	}
+}
+
+std::size_t Network::sendInitMsg(int t_constant) const
 {
 	MsgHeaderr msg = {0};
 	msg.type = htonl(t_constant);
 	msg.length = htonl(static_cast<uint32_t>(5));
 
 	return send(getSockID(), reinterpret_cast<char*>(&msg), sizeof(msg), 0);
+}
+
+std::size_t Network::sendPngSize(long long t_pngSize) const
+{
+	return send(m_sockid, reinterpret_cast<const char*>(&t_pngSize), sizeof(long long), 0); // QSize = 8 bytes
+}
+
+void Network::sendPng(QByteArray* t_pngData, std::string user_to_send) const
+{
+	const char* pngData = t_pngData->constData();
+	PngSend png{ 0 };
+	png.user_to_send = const_cast<char*>(user_to_send.c_str());
+	png.size_m = static_cast<uint32_t>(t_pngData->size());
+	png.size_u = 50;
+	png.data = const_cast<char*>(pngData);
+	sendInitMsg(PNG_IMG);
+	sendPngSize(static_cast<long long>(png.size_m));
+	sendLargeFile(&png, static_cast<long long>(png.size_u) + png.size_m);
 }
 
 char* Network::recvUser()

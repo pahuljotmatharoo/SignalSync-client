@@ -5,6 +5,7 @@
 #include "ui_ChattingWindow.h"
 #include <NetworkClient.h>
 #include <thread>
+#include <mutex>
 
 class ChattingWindow : public QMainWindow {
     Q_OBJECT
@@ -33,6 +34,7 @@ private:
     std::unordered_map<QChar, QChar> m_encryptMap;
     Network m_network;
     std::thread m_thread;
+    std::mutex m_mutex;
 public:
     explicit ChattingWindow(QWidget* parent = nullptr);
     ~ChattingWindow();
@@ -56,6 +58,7 @@ public:
     void threadFunction();
 private slots:
     void on_sendButton_clicked();
+    void on_fileButton_clicked();
     void on_Message_input_textEdited(const QString& text);
     void on_groupChat_clicked();
     void on_userList_clicked();

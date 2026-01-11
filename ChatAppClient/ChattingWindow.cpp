@@ -7,6 +7,7 @@
 #include <qlayout.h>
 #include <qtimer.h>
 #include <QMessageBox>
+#include <QFileDialog>
 #include "message.h"
 #include "message_s.h"
 #include "ChattingWindow.h"
@@ -39,33 +40,43 @@ void ChattingWindow::threadFunction()
     while ( (recvData = recv(m_network.getSockID(), reinterpret_cast<char*>(&type), sizeof(int), 0)) > 0) {
         switch (type) {
             case MSG_SEND: {
-                MsgRecvUser* recvStruct = m_network.recvMethod<MsgRecvUser>();;
+                MsgRecvUser* recvStruct = m_network.recvMethod<MsgRecvUser>();
+                m_mutex.lock();
                 addMessage(recvStruct->message, recvStruct->user_from);
+                m_mutex.unlock();
                 delete recvStruct;
                 break;
             }
             case MSG_LIST: {
                 List* list = m_network.recvMethod<List>();
                 list->size = ntohl(list->size);
+                m_mutex.lock();
                 addUsers(list->arr, list->size);
+                m_mutex.unlock();
                 delete list;
                 break;
             }
             case USER_EXIT: {
                 char* username = m_network.recvUser();
+                m_mutex.lock();
                 removeUsers(username, USERNAME_LENGTH);
+                m_mutex.unlock();
                 delete[] username;
                 break;
             }
             case ROOM_CREATE: {
                 RecvGroupName* groupName = m_network.recvMethod<RecvGroupName>();
+                m_mutex.lock();
                 addGroup(groupName->groupName);
+                m_mutex.unlock();
                 delete groupName;
                 break;
             }
             case ROOM_MSG: {
                 MsgRecvGroup* recvGrpMsg = m_network.recvMethod<MsgRecvGroup>();
+                m_mutex.lock();
                 addMessage_group(recvGrpMsg->message, recvGrpMsg->user_from, recvGrpMsg->group_name);
+                m_mutex.unlock();
                 delete recvGrpMsg;
                 break;
             }
@@ -76,14 +87,15 @@ void ChattingWindow::threadFunction()
                     delete listGroup;
                     break;
                 }
+                m_mutex.lock();
                 addGroups(listGroup->arr, listGroup->size);
+                m_mutex.unlock();
                 delete listGroup;
                 break;
             }
         }
     }
 }
-
 //------------------------------------------------ ELEMENTARY FUNCTIONS (SETTERS) ---------------------------------------------------------------------
 
 void ChattingWindow::on_Message_input_textEdited(const QString& text)
@@ -94,6 +106,21 @@ void ChattingWindow::on_Message_input_textEdited(const QString& text)
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
 //------------------------------------------------ BUTTON CLICKED FUNCTIONS---------------------------------------------------------------------
+
+void ChattingWindow::on_fileButton_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, "Select one or more files to open", "/home", "PNG Images (*.png)");
+
+    if (!fileName.isEmpty()) {
+        QFile file(fileName);
+        if (file.open(QIODevice::ReadOnly)) {
+            QByteArray content = file.readAll();
+            m_network.sendPng(&content, m_usernameToSend.toStdString());
+            file.close();
+        }
+    }
+}
+
 void ChattingWindow::on_addGroup_clicked()
 {
     if (m_Groups.size() >= 10) {

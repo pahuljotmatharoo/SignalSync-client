@@ -248,7 +248,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
      <rect>
       <x>281</x>
       <y>630</y>
-      <width>721</width>
+      <width>661</width>
       <height>41</height>
      </rect>
     </property>
@@ -411,6 +411,19 @@ QPushButton:pressed {
     </property>
     <property name="alignment">
      <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="fileButton">
+    <property name="geometry">
+     <rect>
+      <x>950</x>
+      <y>630</y>
+      <width>51</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>B</string>
     </property>
    </widget>
   </widget>
