@@ -45,7 +45,7 @@ int16_t Network::serverConnectHelper(const uint16_t t_port)
 	t_server.sin_port = htons(t_port);
 #pragma warning(push)
 #pragma warning(disable:4996)   // disable this function is deprecated warnings
-	t_server.sin_addr.s_addr = inet_addr("74.12.132.67");
+	t_server.sin_addr.s_addr = inet_addr("");
 #pragma warning(pop)
 
 	int status = connect(getSockID(), reinterpret_cast<sockaddr*>(&t_server), sizeof(t_server));
