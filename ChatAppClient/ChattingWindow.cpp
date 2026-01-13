@@ -18,7 +18,8 @@ constexpr auto User = true;
 constexpr auto Group = false;
 
 ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), 
-                                                    m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), m_userOrGroup(User), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10)
+                                                    m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), 
+                                                    m_userOrGroup(User), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10)
 {
     initUI();
 
@@ -287,19 +288,18 @@ void ChattingWindow::onGroupClick()
 
 void ChattingWindow::on_sendButton_clicked()
 {
+    QString messageCopy = m_messageToSend; // unencrypted message
+    encrypt(m_messageToSend);
+
     if (m_userOrGroup == User) {
         std::string username_to_sendStd = m_usernameToSend.toStdString();
 
-        //check to see if sending to ourselves
-        std::string username_copy = username_to_sendStd;
-        username_copy.erase(0, 4);
-        if (username_copy == m_selfUsername) {
-            username_to_sendStd = username_copy;
+        if (m_selfUsername == username_to_sendStd.substr(4)) {
+            username_to_sendStd = username_to_sendStd.substr(4);
         }
 
         const char* username_to_sendCStr = username_to_sendStd.c_str();
 
-        QString messageCopy = m_messageToSend; // temp copy of the message for user display side
         std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
         (m_Messages)[m_usernameToSend].push_back(std::make_pair(CURR_USER, message_to_sendStd));
 
@@ -331,19 +331,17 @@ void ChattingWindow::on_sendButton_clicked()
         QTimer::singleShot(0, this, [=]() {
             m_ui.scrollArea->ensureWidgetVisible(bubble);
             });
-
     }
 
     else {
         std::string group_to_sendStd = m_groupToSend.toStdString(); // group name not coming correctly
         const char* group_to_sendCStr = group_to_sendStd.c_str();
 
-        QString messageCopy = m_messageToSend; // temp copy of the message for user display side
         std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
         (m_groupMessages)[m_groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(m_selfUsername, message_to_sendStd)));
 
         //now we can do the message encryption of the message sending to server
-        //encrypt(messageToSend);
+
         message_to_sendStd = m_messageToSend.toStdString();
         const char* message_to_sendCStr = message_to_sendStd.c_str();
 
@@ -357,6 +355,8 @@ void ChattingWindow::on_sendButton_clicked()
             return;
         }
 
+        (m_groupMessages)[m_groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(m_selfUsername, message_to_sendStd)));
+
         m_network.sendMsg(message_to_sendStd, group_to_sendStd, ROOM_MSG);
 
         auto* bubble = new MessageWidget_s(m_selfUsername + " : " + m_messageToSend, this);
@@ -368,8 +368,6 @@ void ChattingWindow::on_sendButton_clicked()
         QTimer::singleShot(0, this, [=]() {
             m_ui.scrollArea->ensureWidgetVisible(bubble);
             });
-
-        (m_groupMessages)[m_groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(m_selfUsername, message_to_sendStd)));
     }
     return;
 }
@@ -390,7 +388,7 @@ void ChattingWindow::addMessage_group(char message[MESSAGE_LENGTH], char usernam
     std::string username_toadd(username);
     std::string message_toadd(message);
     QString message_r = QString::fromStdString(message_toadd);
-    //encrypt(message_r); //unencrypt the message
+    encrypt(message_r); //unencrypt the message
     message_toadd = message_r.toStdString();
     std::string group_toadd(group);
 
@@ -406,7 +404,7 @@ void ChattingWindow::addMessage(char message[MESSAGE_LENGTH], char username[USER
 
     std::string message_toadd(message);
     QString message_r = QString::fromStdString(message_toadd);
-    //encrypt(message_r); //unencrypt the message
+    encrypt(message_r); //unencrypt the message
     message_toadd = message_r.toStdString();
 
     (m_Messages)[QString::fromStdString(username_toadd)].push_back(std::make_pair(OTHER_USER, message_toadd));
