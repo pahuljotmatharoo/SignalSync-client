@@ -28,7 +28,7 @@ private:
     QFont m_buttonAddGroupFont;
     QFont m_buttonFont;
     std::unordered_map<QString, std::vector<std::pair<bool, std::string>>> m_Messages; // Name of other user, <Who sent it, The Message>
-    std::unordered_map<QString, std::vector<std::pair<bool, std::pair<QString, std::string> > > > m_groupMessages; // Name of Group, <Who sent it <The user who sent it, The Message>>
+    std::unordered_map<QString, std::vector<std::pair<bool, std::pair<QString, std::string>>>> m_groupMessages; // Name of Group, <Who sent it <The user who sent it, The Message>>
     std::unordered_map<QString, QPushButton*> m_Users; // <Name of User, Button addr>
     std::unordered_map<QString, QPushButton*> m_Groups;  // <Name of Group, Button addr> 
     std::unordered_map<QChar, QChar> m_encryptMap;
@@ -56,6 +56,10 @@ public:
     void initUI();
     void encrypt(QString& message);
     void threadFunction();
+    QPushButton* createAndStyleGroupButton();
+    template <typename T>
+    void displayAllUserMessages(T &vec_msg);
+    void displayMessageOnScreen(int t_align)
 private slots:
     void on_sendButton_clicked();
     void on_fileButton_clicked();

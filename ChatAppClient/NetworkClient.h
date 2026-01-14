@@ -15,6 +15,7 @@ constexpr auto MESSAGE_LENGTH = 128;
 constexpr auto MAX_USERS = 10;
 constexpr auto USERNAME_LENGTH = 50;
 constexpr auto MAXUSERS = 10;
+constexpr auto MAXGROUPS = 10;
 
 struct MsgHeaderr {
 	uint32_t type;
@@ -72,7 +73,12 @@ public:
 	//im unable to move this to the other file....
 	template <typename T>
 	T* recvMethod() {
-		T* msg = new T;
+		try {
+			T* msg = new T;
+		}
+		catch (const std::bad_alloc& e) {
+			return nullptr;
+		}
 		char* ptr = reinterpret_cast<char*>(msg);
 		std::size_t total = 0;
 
