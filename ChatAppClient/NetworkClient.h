@@ -55,6 +55,13 @@ struct PngSend {
 	uint32_t size_u;
 };
 
+struct PngRecv {
+	char* data;
+	char* user_to_send;
+	uint32_t size_m;
+	uint32_t size_u;
+};
+
 class Network {
 private:
 	SOCKET m_sockid;
@@ -83,6 +90,7 @@ public:
 
 		return msg;
 	};
+	char* recvPng(int sizePng) const;
 	void sendLargeFile(PngSend* t_data, long long size) const;
 	std::size_t sendInitMsg(int constant) const;
 	std::size_t sendPngSize(long long) const;

@@ -8,17 +8,14 @@
 #include <qtimer.h>
 #include <QMessageBox>
 #include <QFileDialog>
-#include "message.h"
-#include "message_s.h"
 #include "ChattingWindow.h"
 
-constexpr auto OTHER_USER = true;
-constexpr auto CURR_USER = false;
-constexpr auto User = true;
-constexpr auto Group = false;
+//bugs: encrypt decrypt pattern observed on all message sending
+//saw two of myself in user select?
 
 ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), 
-                                                    m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), m_userOrGroup(User), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10)
+                                                    m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), 
+                                                    m_userOrGroup(User), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10)
 {
     initUI();
 
@@ -41,6 +38,7 @@ void ChattingWindow::threadFunction()
         switch (type) {
             case MSG_SEND: {
                 MsgRecvUser* recvStruct = m_network.recvMethod<MsgRecvUser>();
+                if (recvStruct == nullptr) { continue; }
                 m_mutex.lock();
                 addMessage(recvStruct->message, recvStruct->user_from);
                 m_mutex.unlock();
@@ -49,6 +47,7 @@ void ChattingWindow::threadFunction()
             }
             case MSG_LIST: {
                 List* list = m_network.recvMethod<List>();
+                if (list == nullptr) { continue; }
                 list->size = ntohl(list->size);
                 m_mutex.lock();
                 addUsers(list->arr, list->size);
@@ -58,6 +57,7 @@ void ChattingWindow::threadFunction()
             }
             case USER_EXIT: {
                 char* username = m_network.recvUser();
+                if (username == nullptr) { continue; }
                 m_mutex.lock();
                 removeUsers(username, USERNAME_LENGTH);
                 m_mutex.unlock();
@@ -66,6 +66,7 @@ void ChattingWindow::threadFunction()
             }
             case ROOM_CREATE: {
                 RecvGroupName* groupName = m_network.recvMethod<RecvGroupName>();
+                if (groupName == nullptr) { continue; }
                 m_mutex.lock();
                 addGroup(groupName->groupName);
                 m_mutex.unlock();
@@ -74,6 +75,7 @@ void ChattingWindow::threadFunction()
             }
             case ROOM_MSG: {
                 MsgRecvGroup* recvGrpMsg = m_network.recvMethod<MsgRecvGroup>();
+                if (recvGrpMsg == nullptr) { continue; }
                 m_mutex.lock();
                 addMessage_group(recvGrpMsg->message, recvGrpMsg->user_from, recvGrpMsg->group_name);
                 m_mutex.unlock();
@@ -82,6 +84,7 @@ void ChattingWindow::threadFunction()
             }
             case ROOM_LIST: {
                 List* listGroup = m_network.recvMethod<List>();
+                if (listGroup == nullptr) { continue; }
                 listGroup->size = ntohl(listGroup->size);
                 if (listGroup->size > MAXUSERS) {
                     delete listGroup;
@@ -93,11 +96,40 @@ void ChattingWindow::threadFunction()
                 delete listGroup;
                 break;
             }
+            case PNG_IMG: {
+                uint32_t* sizePng = m_network.recvMethod<uint32_t>();
+                if (sizePng == nullptr) { continue; }
+                char* pngData = m_network.recvPng(*sizePng);
+                if (pngData == nullptr) { continue; }
+                char* userFrom = m_network.recvUser();
+                if (userFrom == nullptr) { continue; }
+            }
         }
     }
 }
-//------------------------------------------------ ELEMENTARY FUNCTIONS (SETTERS) ---------------------------------------------------------------------
 
+std::pair<QPushButton*, QString> ChattingWindow::createAndStyleGroupButton() {
+    if (m_Groups.size() >= 10) {
+        send_error("Already at a maximum number of Groups!");
+        QString empty{ "" };
+        return { nullptr, empty};
+    }
+
+    QPushButton* group = new QPushButton(this);
+
+    QString groupName = QString("Group %1").arg(m_Groups.size() + 1);
+
+    group->setText(groupName);
+    group->setMinimumSize(205, 40);
+    group->setStyleSheet(m_defaultButtonStylesheet);
+
+    m_Groups.insert(std::make_pair(groupName, group));
+
+    m_ui.userLayout->addWidget(group, 0, Qt::AlignCenter | Qt::AlignTop);
+
+    return { group, groupName };
+}
+//------------------------------------------------ ELEMENTARY FUNCTIONS (SETTERS) ---------------------------------------------------------------------
 void ChattingWindow::on_Message_input_textEdited(const QString& text)
 {
     m_messageToSend = text;
@@ -123,31 +155,36 @@ void ChattingWindow::on_fileButton_clicked()
 
 void ChattingWindow::on_addGroup_clicked()
 {
-    if (m_Groups.size() >= 10) {
-        send_error("Already at a maximum number of Groups!");
-        return;
-    }
+    auto buttonAndName = createAndStyleGroupButton(); // its a refernce
 
-    QPushButton* group = new QPushButton(this);
+    if (buttonAndName.first == nullptr) { return; }
 
-    QString groupName = QString("Group %1").arg(m_Groups.size() + 1);
-
-    group->setText(groupName);
-    group->setMinimumSize(205, 40);
-    group->setStyleSheet(m_defaultButtonStylesheet);
-
-    m_Groups.insert(std::make_pair(groupName, group));
-
-    m_ui.userLayout->addWidget(group, 0, Qt::AlignCenter | Qt::AlignTop);
-
-    connect(group, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
-
-    std::string name_to_sendStd = groupName.toStdString();
-    const char* name_to_sendCStr = name_to_sendStd.c_str();;
+    connect(buttonAndName.first, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
+    std::string name_to_sendStd = buttonAndName.second.toStdString();
 
     m_network.sendGroupName(name_to_sendStd);
 }
 
+void ChattingWindow::userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton* lastPressedButton) {
+    if (hide.size() != 0) {
+        for (auto itr = hide.begin(); itr != hide.end(); itr++) {
+            itr->second->hide();
+        }
+    }
+
+    if (show.size() != 0) {
+        for (auto itr = show.begin(); itr != show.end(); itr++) {
+            itr->second->show();
+        }
+    }
+
+    if (lastPressedButton) {
+        lastPressedButton->setStyleSheet(m_defaultButtonStylesheet);
+        lastPressedButton = nullptr;
+    }
+}
+
+//can't really simplify this i think as it is tied to the button itself
 void ChattingWindow::on_groupChat_clicked()
 {
     m_ui.addGroup->show();
@@ -155,26 +192,10 @@ void ChattingWindow::on_groupChat_clicked()
 
     m_ui.currUsers_label->setText("Current Groups");
 
-    //hide all the users
-    if (m_Users.size() != 0) {
-        for (auto itr = m_Users.begin(); itr != m_Users.end(); itr++) {
-            itr->second->hide();
-        }
-    }
-
-    //show all the groups
-    if (m_Groups.size() != 0) {
-        for (auto itr = m_Groups.begin(); itr != m_Groups.end(); itr++) {
-            itr->second->show();
-        }
-    }
-
-    if (m_lastPressedUser) {
-        m_lastPressedUser->setStyleSheet(m_defaultButtonStylesheet);
-        m_lastPressedUser = nullptr;
-    }
+    userOrGroupSelect(m_Users, m_Groups, m_lastPressedUser);
 }
 
+//can't really simplify this i think as it is tied to the button itself
 void ChattingWindow::on_userList_clicked()
 {
     m_ui.addGroup->hide();
@@ -182,25 +203,10 @@ void ChattingWindow::on_userList_clicked()
 
     m_ui.currUsers_label->setText("Current Users");
 
-    if (m_Groups.size() != 0) {
-        for (auto itr = m_Groups.begin(); itr != m_Groups.end(); itr++) {
-            itr->second->hide();
-        }
-    }
-
-    if (m_Users.size() != 0) {
-        for (auto itr = m_Users.begin(); itr != m_Users.end(); itr++) {
-            itr->second->show();
-        }
-    }
-
-    if (m_lastPressedGroup) {
-        m_lastPressedGroup->setStyleSheet(m_defaultButtonStylesheet);
-        m_lastPressedGroup = nullptr;
-    }
+    userOrGroupSelect(m_Groups, m_Users, m_lastPressedGroup);
 }
 
-//onUserClick and onGroupClick are too similar 
+//can't really simplify this i think as it is tied to the button itself
 void ChattingWindow::onUserClick()
 {
     QPushButton* clickedButton = qobject_cast<QPushButton*>(sender());
@@ -222,26 +228,10 @@ void ChattingWindow::onUserClick()
     m_usernameToSend = clickedButton->text();
     auto& vec_msg = (m_Messages)[m_usernameToSend];
 
-    for (std::size_t i = 0; i < vec_msg.size(); i++) {
-
-        if (vec_msg[i].first == CURR_USER) {
-            auto* bubble = new MessageWidget_s(QString::fromStdString(vec_msg[i].second), this);
-            m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
-            QTimer::singleShot(0, this, [=]() {
-                m_ui.scrollArea->ensureWidgetVisible(bubble);
-                });
-        }
-        else {
-            auto* bubble = new MessageWidget(QString::fromStdString(vec_msg[i].second), this);
-            m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
-            QTimer::singleShot(0, this, [=]() {
-                m_ui.scrollArea->ensureWidgetVisible(bubble);
-                });
-        }
-    }
-    return;
+    displayAllUserMessages<std::vector<std::pair<bool, std::string>>>(vec_msg);
 }
 
+//can't really simplify this i think as it is tied to the button itself
 void ChattingWindow::onGroupClick()
 {
     QPushButton* clickedButton = qobject_cast<QPushButton*>(sender());
@@ -253,6 +243,7 @@ void ChattingWindow::onGroupClick()
     if (m_lastPressedGroup) {
         m_lastPressedGroup->setStyleSheet(m_defaultButtonStylesheet);
     }
+
     clickedButton->setStyleSheet(m_pressedButtonStylesheet);
 
     m_lastPressedGroup = clickedButton;
@@ -264,51 +255,18 @@ void ChattingWindow::onGroupClick()
     m_groupToSend = clickedButton->text();
     auto& vec_msg = (m_groupMessages)[m_groupToSend];
 
-    for (std::size_t i = 0; i < vec_msg.size(); i++) {
-        auto* bubble = new MessageWidget(vec_msg[i].second.first + ": " + QString::fromStdString(vec_msg[i].second.second), this);
-        if(vec_msg[i].first == CURR_USER) {
-            auto* bubble = new MessageWidget_s(vec_msg[i].second.first + ": " + QString::fromStdString(vec_msg[i].second.second), this);
-            m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
-            QTimer::singleShot(0, this, [=]() {
-                m_ui.scrollArea->ensureWidgetVisible(bubble);
-                });
-        }
-        else {
-            auto* bubble = new MessageWidget(vec_msg[i].second.first + ": " + QString::fromStdString(vec_msg[i].second.second), this);
-            m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
-            QTimer::singleShot(0, this, [=]() {
-                m_ui.scrollArea->ensureWidgetVisible(bubble);
-                });
-        }
-
-    }
-    return;
+    displayAllUserMessages<std::vector<std::pair<bool, std::pair<QString, std::string>>>>(vec_msg);
 }
-
+// not decrypted on group recv
+//weird behaviour where its encrypted once then unencrypted...
 void ChattingWindow::on_sendButton_clicked()
 {
+    QString messageCopy = m_messageToSend; // unencrypted message
+    encrypt(m_messageToSend);
     if (m_userOrGroup == User) {
         std::string username_to_sendStd = m_usernameToSend.toStdString();
 
-        //check to see if sending to ourselves
-        std::string username_copy = username_to_sendStd;
-        username_copy.erase(0, 4);
-        if (username_copy == m_selfUsername) {
-            username_to_sendStd = username_copy;
-        }
-
-        const char* username_to_sendCStr = username_to_sendStd.c_str();
-
-        QString messageCopy = m_messageToSend; // temp copy of the message for user display side
         std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
-        (m_Messages)[m_usernameToSend].push_back(std::make_pair(CURR_USER, message_to_sendStd));
-
-        long size = messageCopy.length();
-
-        //now we can do the message encryption of the message sending to server
-        //encrypt(messageToSend);
-        message_to_sendStd = m_messageToSend.toStdString();
-        const char* message_to_sendCStr = message_to_sendStd.c_str();
 
         if (message_to_sendStd.length() >= 128) {
             send_error("Message is too long! Cannot be longer than 128 characters.");
@@ -320,32 +278,23 @@ void ChattingWindow::on_sendButton_clicked()
             return;
         }
 
+        if (m_selfUsername == username_to_sendStd.substr(4)) {
+            sendMessageToScreenSend(messageCopy);
+            return;
+        }
+
+        (m_Messages)[m_usernameToSend].push_back(std::make_pair(CURR_USER, message_to_sendStd));
+
+        message_to_sendStd = m_messageToSend.toStdString();
+
         m_network.sendMsg(message_to_sendStd, username_to_sendStd, MSG_SEND);
 
-        auto* bubble = new MessageWidget_s(messageCopy, this);
-
-        m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
-
-        m_ui.scrollArea->verticalScrollBar()->setValue(m_ui.scrollArea->verticalScrollBar()->maximum());
-
-        QTimer::singleShot(0, this, [=]() {
-            m_ui.scrollArea->ensureWidgetVisible(bubble);
-            });
-
+        sendMessageToScreenSend(messageCopy);
     }
 
     else {
         std::string group_to_sendStd = m_groupToSend.toStdString(); // group name not coming correctly
-        const char* group_to_sendCStr = group_to_sendStd.c_str();
-
-        QString messageCopy = m_messageToSend; // temp copy of the message for user display side
         std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
-        (m_groupMessages)[m_groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(m_selfUsername, message_to_sendStd)));
-
-        //now we can do the message encryption of the message sending to server
-        //encrypt(messageToSend);
-        message_to_sendStd = m_messageToSend.toStdString();
-        const char* message_to_sendCStr = message_to_sendStd.c_str();
 
         if (message_to_sendStd.length() >= 128) {
             send_error("Message is too long! Cannot be longer than 128 characters.");
@@ -357,26 +306,15 @@ void ChattingWindow::on_sendButton_clicked()
             return;
         }
 
+        (m_groupMessages)[m_groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(m_selfUsername, message_to_sendStd)));
+
+        message_to_sendStd = m_messageToSend.toStdString();
+
         m_network.sendMsg(message_to_sendStd, group_to_sendStd, ROOM_MSG);
 
-        auto* bubble = new MessageWidget_s(m_selfUsername + " : " + m_messageToSend, this);
-
-        m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
-
-        m_ui.scrollArea->verticalScrollBar()->setValue(m_ui.scrollArea->verticalScrollBar()->maximum());
-
-        QTimer::singleShot(0, this, [=]() {
-            m_ui.scrollArea->ensureWidgetVisible(bubble);
-            });
-
-        (m_groupMessages)[m_groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(m_selfUsername, message_to_sendStd)));
+        sendMessageToScreenSend(m_selfUsername + " : " + m_messageToSend);
     }
-    return;
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------- ADDING/REMOVING TO DATA STRUCTURE FUNCTIONS ---------------------------------------------------------------------
 
 void ChattingWindow::addGroup(const char group[USERNAME_LENGTH])
 {
@@ -390,14 +328,14 @@ void ChattingWindow::addMessage_group(char message[MESSAGE_LENGTH], char usernam
     std::string username_toadd(username);
     std::string message_toadd(message);
     QString message_r = QString::fromStdString(message_toadd);
-    //encrypt(message_r); //unencrypt the message
+    encrypt(message_r); //unencrypt the message
     message_toadd = message_r.toStdString();
     std::string group_toadd(group);
 
     (m_groupMessages)[QString::fromStdString(group)].push_back(std::make_pair(OTHER_USER, std::make_pair(QString::fromStdString(username_toadd), message_toadd)));
 
     //we'll be able to display right away to screen, needs to run on the gui thread (main thread)
-    QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreen(QString::fromStdString(username_toadd + " : " + message_toadd), group_toadd, false); }, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(username_toadd + " : " + message_toadd)); }, Qt::QueuedConnection);
 }
 
 void ChattingWindow::addMessage(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH])
@@ -406,13 +344,13 @@ void ChattingWindow::addMessage(char message[MESSAGE_LENGTH], char username[USER
 
     std::string message_toadd(message);
     QString message_r = QString::fromStdString(message_toadd);
-    //encrypt(message_r); //unencrypt the message
+    encrypt(message_r); //unencrypt the message
     message_toadd = message_r.toStdString();
 
     (m_Messages)[QString::fromStdString(username_toadd)].push_back(std::make_pair(OTHER_USER, message_toadd));
 
     //we'll be able to display right away to screen, since this function will be called by recv thread, cannot create element here so queue it on main thread
-    QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreen(QString::fromStdString(message_toadd), username_toadd, true); }, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(message_toadd)); }, Qt::QueuedConnection);
 }
 
 void ChattingWindow::addUsers(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size) {
@@ -452,9 +390,6 @@ void ChattingWindow::removeUsers(char user[USERNAME_LENGTH], uint32_t size)
     return;
 }
 
-//----------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------- ADDING/REMOVING TO SCREEN FUNCTIONS ---------------------------------------------------------------------
 void ChattingWindow::addGrouptoScreen(const QString& group_n)
 {
     QPushButton* group = new QPushButton(this);
@@ -493,35 +428,30 @@ void ChattingWindow::removeUserfromScreen(const QString& user)
     return;
 }
 
-void ChattingWindow::sendMessageToScreen(const QString& message, const std::string &username, bool user)
+void ChattingWindow::sendMessageToScreenRecv(const QString& message)
 {
-    if (user && m_lastPressedUser && m_lastPressedUser->text() == QString::fromStdString(username)) {
+    auto* bubble = new MessageWidget (message, this);
 
-        auto* bubble = new MessageWidget (message, this);
+    m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
 
-        m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
+    m_ui.scrollArea->verticalScrollBar()->setValue(m_ui.scrollArea->verticalScrollBar()->maximum());
 
-        m_ui.scrollArea->verticalScrollBar()->setValue(m_ui.scrollArea->verticalScrollBar()->maximum());
+    QTimer::singleShot(0, this, [=]() {
+       m_ui.scrollArea->ensureWidgetVisible(bubble);
+    });
+}
 
-        QTimer::singleShot(0, this, [=]() {
-            m_ui.scrollArea->ensureWidgetVisible(bubble);
-            });
+void ChattingWindow::sendMessageToScreenSend(const QString& message)
+{
+    auto* bubble = new MessageWidget_s(message, this);
 
-    }
+    m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);
 
-    else if (!user && m_lastPressedGroup && m_lastPressedGroup->text() == QString::fromStdString(username)) {
-        auto* bubble = new MessageWidget(message, this);
+    m_ui.scrollArea->verticalScrollBar()->setValue(m_ui.scrollArea->verticalScrollBar()->maximum());
 
-        m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
-
-        m_ui.scrollArea->verticalScrollBar()->setValue(m_ui.scrollArea->verticalScrollBar()->maximum());
-
-        QTimer::singleShot(0, this, [=]() {
-            m_ui.scrollArea->ensureWidgetVisible(bubble);
-            });
-    }
-
-    return;
+    QTimer::singleShot(0, this, [=]() {
+        m_ui.scrollArea->ensureWidgetVisible(bubble);
+        });
 }
 
 void ChattingWindow::sendUserToScreen(QString username) {
@@ -549,12 +479,7 @@ void ChattingWindow::sendUserToScreen(QString username) {
     return;
 }
 
-//----------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------- MISCELLANEOUS ---------------------------------------------------------------------
-
-void ChattingWindow::send_error(const QString& error_message)
-{
+void ChattingWindow::send_error(const QString& error_message) {
     QMessageBox msgBox;
     msgBox.setText(error_message);
     msgBox.setStandardButtons(QMessageBox::Ok);
@@ -575,8 +500,7 @@ void ChattingWindow::removeMessagesFromScreen() {
 }
 
 //should only run once
-void ChattingWindow::initEncryptMap()
-{
+void ChattingWindow::initEncryptMap() {
     QString uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     QString lowercase = "abcdefghijklmnopqrstuvwxyz";
     QString digits = "0123456789";
@@ -604,8 +528,7 @@ void ChattingWindow::initEncryptMap()
     }
 }
 
-void ChattingWindow::encrypt(QString& message)
-{
+void ChattingWindow::encrypt(QString& message) {
     for (std::size_t i = 0; i < message.length(); i++) {
         if (message[i] == ' ') {
             continue;
@@ -614,8 +537,7 @@ void ChattingWindow::encrypt(QString& message)
     }
 }
 
-void ChattingWindow::initUI()
-{
+void ChattingWindow::initUI() {
     m_ui.setupUi(this);
     //we're just creating a layout for scrolling and out vertical layout
     QWidget* contents = m_ui.scrollArea->takeWidget();
@@ -702,4 +624,3 @@ void ChattingWindow::initUI()
     m_ui.chatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
     m_ui.addGroup->hide();
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------

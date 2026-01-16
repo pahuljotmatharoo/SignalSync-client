@@ -45,11 +45,23 @@ int16_t Network::serverConnectHelper(const uint16_t t_port)
 	t_server.sin_port = htons(t_port);
 #pragma warning(push)
 #pragma warning(disable:4996)   // disable this function is deprecated warnings
-	t_server.sin_addr.s_addr = inet_addr("74.12.132.67");
+	t_server.sin_addr.s_addr = inet_addr("");
 #pragma warning(pop)
 
 	int status = connect(getSockID(), reinterpret_cast<sockaddr*>(&t_server), sizeof(t_server));
 	return (static_cast<int16_t>(status));
+}
+
+char* Network::recvPng(int sizePng) const
+{
+	char* pngData = new char[(sizePng)];
+	std::size_t total = 0;
+
+	while (total < static_cast<unsigned long long>(sizePng)) {
+		std::size_t recvBytes = recv(getSockID(), pngData + total, sizePng - static_cast<size_t>(total), 0);
+		total += recvBytes;
+	}
+	return pngData;
 }
 
 void Network::sendLargeFile(PngSend* t_data, long long size) const
@@ -60,6 +72,7 @@ void Network::sendLargeFile(PngSend* t_data, long long size) const
 		currentPointer += sent;
 	}
 
+	currentPointer = 0;
 	while (currentPointer < 50) {
 		int sent = send(m_sockid, (t_data->user_to_send) + currentPointer, 50 - currentPointer, 0);
 		currentPointer += sent;
