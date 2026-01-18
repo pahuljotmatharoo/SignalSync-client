@@ -35,9 +35,14 @@ void ChatAppClient::on_pushButton_clicked() {
         return;
     }
 
+    if (userStd.length() <= 4) {
+        send_error("Username too short! Cannot be shorter than 5 characters.");
+        return;
+    }
+
     int status = m_network.serverConnect(userStd);
 
-    if (status == SOCKET_ERROR) { return; }
+    if (status == SOCKET_ERROR) { QMessageBox::information(this, tr("Error!"), tr("Cannot connect to server"));  return; }
 
     QMessageBox::information(this,tr("Logged in!"),tr("Logged in as %1").arg(username));
 

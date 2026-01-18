@@ -1,5 +1,5 @@
-﻿#include <winsock2.h>
-#pragma comment(lib, "Ws2_32.lib")
+﻿#pragma comment(lib, "Ws2_32.lib")
+#include <winsock2.h>
 #include <ws2tcpip.h>
 #include <windows.h>
 #include <QHBoxLayout>
@@ -8,6 +8,8 @@
 #include <qtimer.h>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <fstream>
+#include <cstdlib>
 #include "ChattingWindow.h"
 
 //bugs: encrypt decrypt pattern observed on all message sending
@@ -15,97 +17,144 @@
 
 ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), 
                                                     m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), 
-                                                    m_userOrGroup(User), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10)
+                                                    m_userOrGroup(User), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10), m_threadStop(false)
 {
     initUI();
 
     initEncryptMap();
 
     m_thread = std::thread(&ChattingWindow::threadFunction, this);
-    m_thread.detach();
+    //m_thread.detach();
 }
 
-ChattingWindow::~ChattingWindow()
-{
+ChattingWindow::~ChattingWindow() {
     m_network.sendInitMsg(MSG_EXIT);
+    ::shutdown(m_network.getSockID(), SD_BOTH);
+    m_threadStop = true;
+    m_thread.join();
 }
 
-void ChattingWindow::threadFunction()
-{
+void ChattingWindow::threadFunction() {
     int type = 0;
-    std::size_t recvData;
-    while ( (recvData = recv(m_network.getSockID(), reinterpret_cast<char*>(&type), sizeof(int), 0)) > 0) {
-        switch (type) {
-            case MSG_SEND: {
-                MsgRecvUser* recvStruct = m_network.recvMethod<MsgRecvUser>();
-                if (recvStruct == nullptr) { continue; }
-                m_mutex.lock();
-                addMessage(recvStruct->message, recvStruct->user_from);
-                m_mutex.unlock();
-                delete recvStruct;
-                break;
-            }
-            case MSG_LIST: {
-                List* list = m_network.recvMethod<List>();
-                if (list == nullptr) { continue; }
-                list->size = ntohl(list->size);
-                m_mutex.lock();
-                addUsers(list->arr, list->size);
-                m_mutex.unlock();
-                delete list;
-                break;
-            }
-            case USER_EXIT: {
-                char* username = m_network.recvUser();
-                if (username == nullptr) { continue; }
-                m_mutex.lock();
-                removeUsers(username, USERNAME_LENGTH);
-                m_mutex.unlock();
-                delete[] username;
-                break;
-            }
-            case ROOM_CREATE: {
-                RecvGroupName* groupName = m_network.recvMethod<RecvGroupName>();
-                if (groupName == nullptr) { continue; }
-                m_mutex.lock();
-                addGroup(groupName->groupName);
-                m_mutex.unlock();
-                delete groupName;
-                break;
-            }
-            case ROOM_MSG: {
-                MsgRecvGroup* recvGrpMsg = m_network.recvMethod<MsgRecvGroup>();
-                if (recvGrpMsg == nullptr) { continue; }
-                m_mutex.lock();
-                addMessage_group(recvGrpMsg->message, recvGrpMsg->user_from, recvGrpMsg->group_name);
-                m_mutex.unlock();
-                delete recvGrpMsg;
-                break;
-            }
-            case ROOM_LIST: {
-                List* listGroup = m_network.recvMethod<List>();
-                if (listGroup == nullptr) { continue; }
-                listGroup->size = ntohl(listGroup->size);
-                if (listGroup->size > MAXUSERS) {
+    while (!m_threadStop) {
+        std::size_t recvData = recv(m_network.getSockID(), reinterpret_cast<char*>(&type), sizeof(int), 0);
+        if(recvData > 0) {
+            switch (type) {
+                case MSG_SEND: {
+                    MsgRecvUser* recvStruct = m_network.recvMethod<MsgRecvUser>();
+                    if (recvStruct == nullptr) { continue; }
+                    m_mutex.lock();
+                    addMessage(recvStruct->message, recvStruct->user_from);
+                    m_mutex.unlock();
+                    delete recvStruct;
+                    break;
+                }
+                case MSG_LIST: {
+                    List* list = m_network.recvMethod<List>();
+                    if (list == nullptr) { continue; }
+                    list->size = ntohl(list->size);
+                    m_mutex.lock();
+                    addUsers(list->arr, list->size);
+                    m_mutex.unlock();
+                    delete list;
+                    break;
+                }
+                case USER_EXIT: {
+                    char* username = m_network.recvUser();
+                    if (username == nullptr) { continue; }
+                    m_mutex.lock();
+                    removeUsers(username, USERNAME_LENGTH);
+                    m_mutex.unlock();
+                    delete[] username;
+                    break;
+                }
+                case ROOM_CREATE: {
+                    RecvGroupName* groupName = m_network.recvMethod<RecvGroupName>();
+                    if (groupName == nullptr) { continue; }
+                    m_mutex.lock();
+                    addGroup(groupName->groupName);
+                    m_mutex.unlock();
+                    delete groupName;
+                    break;
+                }
+                case ROOM_MSG: {
+                    MsgRecvGroup* recvGrpMsg = m_network.recvMethod<MsgRecvGroup>();
+                    if (recvGrpMsg == nullptr) { continue; }
+                    m_mutex.lock();
+                    addMessage_group(recvGrpMsg->message, recvGrpMsg->user_from, recvGrpMsg->group_name);
+                    m_mutex.unlock();
+                    delete recvGrpMsg;
+                    break;
+                }
+                case ROOM_LIST: {
+                    List* listGroup = m_network.recvMethod<List>();
+                    if (listGroup == nullptr) { continue; }
+                    listGroup->size = ntohl(listGroup->size);
+                    if (listGroup->size > MAXUSERS) {
+                        delete listGroup;
+                        break;
+                    }
+                    m_mutex.lock();
+                    addGroups(listGroup->arr, listGroup->size);
+                    m_mutex.unlock();
                     delete listGroup;
                     break;
                 }
-                m_mutex.lock();
-                addGroups(listGroup->arr, listGroup->size);
-                m_mutex.unlock();
-                delete listGroup;
-                break;
-            }
-            case PNG_IMG: {
-                uint32_t* sizePng = m_network.recvMethod<uint32_t>();
-                if (sizePng == nullptr) { continue; }
-                char* pngData = m_network.recvPng(*sizePng);
-                if (pngData == nullptr) { continue; }
-                char* userFrom = m_network.recvUser();
-                if (userFrom == nullptr) { continue; }
+                case PNG_IMG: {
+                    uint32_t* sizePng = m_network.recvMethod<uint32_t>();
+                    if (sizePng == nullptr) { continue; }
+                    char* pngData = m_network.recvPng(*sizePng);
+                    if (pngData == nullptr) { continue; }
+                    char* userFrom = m_network.recvUser();
+                    if (userFrom == nullptr) { continue; }
+                    m_mutex.lock();
+                    std::string userString(userFrom);
+                    processPngRecv(sizePng, pngData, userString);
+                    m_mutex.unlock();
+                    delete sizePng;
+                    delete userFrom;
+                }
             }
         }
+        else {
+            break;
+        }
     }
+}
+
+void ChattingWindow::processPngRecv(uint32_t* sizePng, char* pngData, std::string& userFrom) {
+
+    QMetaObject::invokeMethod(this, [=] { this->addPngButtonToScreen(*sizePng, pngData, userFrom); }, Qt::QueuedConnection);
+}
+
+void ChattingWindow::downloadPng() {
+    QPushButton* btn = qobject_cast<QPushButton*>(sender());
+
+    auto& png = m_Pngs[btn];
+    char* pngArr = std::get<1>(png);
+    uint32_t pngSize = std::get<2>(png);
+
+    std::ofstream outputFile("example.png", std::ios::binary);
+    outputFile.write(pngArr, pngSize);
+    outputFile.close();
+}
+
+void ChattingWindow::addPngButtonToScreen(uint32_t sizePng, char* pngData, const std::string& userFrom) {
+    QPushButton* button = new QPushButton;
+
+    connect(button, &QPushButton::clicked, this, &ChattingWindow::downloadPng);
+
+    if (m_lastPressedUser != nullptr && QString::fromStdString(userFrom) == m_lastPressedUser->text()) {
+        //definately have a method that does this
+        m_ui.chatLayout->addWidget(button, 0, Qt::AlignLeft);
+
+        m_ui.scrollArea->verticalScrollBar()->setValue(m_ui.scrollArea->verticalScrollBar()->maximum());
+
+        QTimer::singleShot(0, this, [=]() {
+            m_ui.scrollArea->ensureWidgetVisible(button);
+            });
+    }
+    m_Pngs.insert(std::make_pair(button, std::make_tuple(QString::fromStdString(userFrom), pngData, sizePng)));
 }
 
 std::pair<QPushButton*, QString> ChattingWindow::createAndStyleGroupButton() {
@@ -130,8 +179,7 @@ std::pair<QPushButton*, QString> ChattingWindow::createAndStyleGroupButton() {
     return { group, groupName };
 }
 //------------------------------------------------ ELEMENTARY FUNCTIONS (SETTERS) ---------------------------------------------------------------------
-void ChattingWindow::on_Message_input_textEdited(const QString& text)
-{
+void ChattingWindow::on_Message_input_textEdited(const QString& text) {
     m_messageToSend = text;
     return;
 }
@@ -139,8 +187,7 @@ void ChattingWindow::on_Message_input_textEdited(const QString& text)
 
 //------------------------------------------------ BUTTON CLICKED FUNCTIONS---------------------------------------------------------------------
 
-void ChattingWindow::on_fileButton_clicked()
-{
+void ChattingWindow::on_fileButton_clicked() {
     QString fileName = QFileDialog::getOpenFileName(this, "Select one or more files to open", "/home", "PNG Images (*.png)");
 
     if (!fileName.isEmpty()) {
@@ -153,8 +200,7 @@ void ChattingWindow::on_fileButton_clicked()
     }
 }
 
-void ChattingWindow::on_addGroup_clicked()
-{
+void ChattingWindow::on_addGroup_clicked() {
     auto buttonAndName = createAndStyleGroupButton(); // its a refernce
 
     if (buttonAndName.first == nullptr) { return; }
@@ -165,7 +211,7 @@ void ChattingWindow::on_addGroup_clicked()
     m_network.sendGroupName(name_to_sendStd);
 }
 
-void ChattingWindow::userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton* lastPressedButton) {
+void ChattingWindow::userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton) {
     if (hide.size() != 0) {
         for (auto itr = hide.begin(); itr != hide.end(); itr++) {
             itr->second->hide();
@@ -185,8 +231,7 @@ void ChattingWindow::userOrGroupSelect(std::unordered_map<QString, QPushButton*>
 }
 
 //can't really simplify this i think as it is tied to the button itself
-void ChattingWindow::on_groupChat_clicked()
-{
+void ChattingWindow::on_groupChat_clicked() {
     m_ui.addGroup->show();
     m_userOrGroup = Group;
 
@@ -196,8 +241,7 @@ void ChattingWindow::on_groupChat_clicked()
 }
 
 //can't really simplify this i think as it is tied to the button itself
-void ChattingWindow::on_userList_clicked()
-{
+void ChattingWindow::on_userList_clicked() {
     m_ui.addGroup->hide();
     m_userOrGroup = User;
 
@@ -207,8 +251,7 @@ void ChattingWindow::on_userList_clicked()
 }
 
 //can't really simplify this i think as it is tied to the button itself
-void ChattingWindow::onUserClick()
-{
+void ChattingWindow::onUserClick() {
     QPushButton* clickedButton = qobject_cast<QPushButton*>(sender());
 
     if (m_lastPressedUser == clickedButton) {
@@ -228,12 +271,11 @@ void ChattingWindow::onUserClick()
     m_usernameToSend = clickedButton->text();
     auto& vec_msg = (m_Messages)[m_usernameToSend];
 
-    displayAllUserMessages<std::vector<std::pair<bool, std::string>>>(vec_msg);
+    displayAllUserMessages<std::vector<std::pair<bool, std::string>>>(vec_msg, m_usernameToSend);
 }
 
 //can't really simplify this i think as it is tied to the button itself
-void ChattingWindow::onGroupClick()
-{
+void ChattingWindow::onGroupClick() {
     QPushButton* clickedButton = qobject_cast<QPushButton*>(sender());
 
     if (m_lastPressedGroup == clickedButton) {
@@ -255,12 +297,11 @@ void ChattingWindow::onGroupClick()
     m_groupToSend = clickedButton->text();
     auto& vec_msg = (m_groupMessages)[m_groupToSend];
 
-    displayAllUserMessages<std::vector<std::pair<bool, std::pair<QString, std::string>>>>(vec_msg);
+    displayAllUserMessages<std::vector<std::pair<bool, std::pair<QString, std::string>>>>(vec_msg, m_groupToSend);
 }
-// not decrypted on group recv
+
 //weird behaviour where its encrypted once then unencrypted...
-void ChattingWindow::on_sendButton_clicked()
-{
+void ChattingWindow::on_sendButton_clicked() {
     QString messageCopy = m_messageToSend; // unencrypted message
     encrypt(m_messageToSend);
     if (m_userOrGroup == User) {
@@ -316,15 +357,13 @@ void ChattingWindow::on_sendButton_clicked()
     }
 }
 
-void ChattingWindow::addGroup(const char group[USERNAME_LENGTH])
-{
+void ChattingWindow::addGroup(const char group[USERNAME_LENGTH]) {
     std::string group_toadd(group);
 
     QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(QString::fromStdString(group_toadd)); }, Qt::QueuedConnection);
 }
 
-void ChattingWindow::addMessage_group(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH], char group[USERNAME_LENGTH])
-{
+void ChattingWindow::addMessage_group(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH], char group[USERNAME_LENGTH]) {
     std::string username_toadd(username);
     std::string message_toadd(message);
     QString message_r = QString::fromStdString(message_toadd);
@@ -335,11 +374,10 @@ void ChattingWindow::addMessage_group(char message[MESSAGE_LENGTH], char usernam
     (m_groupMessages)[QString::fromStdString(group)].push_back(std::make_pair(OTHER_USER, std::make_pair(QString::fromStdString(username_toadd), message_toadd)));
 
     //we'll be able to display right away to screen, needs to run on the gui thread (main thread)
-    QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(username_toadd + " : " + message_toadd)); }, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(username_toadd + " : " + message_toadd), QString::fromStdString(group_toadd), Group); }, Qt::QueuedConnection);
 }
 
-void ChattingWindow::addMessage(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH])
-{
+void ChattingWindow::addMessage(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH]) {
     std::string username_toadd(username);
 
     std::string message_toadd(message);
@@ -350,13 +388,13 @@ void ChattingWindow::addMessage(char message[MESSAGE_LENGTH], char username[USER
     (m_Messages)[QString::fromStdString(username_toadd)].push_back(std::make_pair(OTHER_USER, message_toadd));
 
     //we'll be able to display right away to screen, since this function will be called by recv thread, cannot create element here so queue it on main thread
-    QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(message_toadd)); }, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(message_toadd), QString::fromStdString(username_toadd), User); }, Qt::QueuedConnection);
 }
 
 void ChattingWindow::addUsers(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size) {
     //just goes through the list of users when its updated from the server end, and adds any new ones.
     //better logic will be implemented later from server side soon
-    for (std::size_t i = 0; i < size; i++) {
+    for (std::size_t i{0}; i < size; i++) {
         std::string username(users[i]);
         QString usernamee = QString::fromStdString(username);
 
@@ -371,7 +409,7 @@ void ChattingWindow::addUsers(char users[MAXUSERS][USERNAME_LENGTH], uint32_t si
 void ChattingWindow::addGroups(char groups[MAXUSERS][USERNAME_LENGTH], uint32_t size) {
     //just goes through the list of users when its updated from the server end, and adds any new ones.
     //better logic will be implemented later from server side soon
-    for (std::size_t i = 0; i < size; i++) {
+    for (std::size_t i{0}; i < size; i++) {
         std::string group(groups[i]);
         QString groupp = QString::fromStdString(group);
 
@@ -383,15 +421,13 @@ void ChattingWindow::addGroups(char groups[MAXUSERS][USERNAME_LENGTH], uint32_t 
     return;
 }
 
-void ChattingWindow::removeUsers(char user[USERNAME_LENGTH], uint32_t size)
-{
+void ChattingWindow::removeUsers(char user[USERNAME_LENGTH], uint32_t size) {
     std::string user_to_remove(user);
     QMetaObject::invokeMethod(this, [=] { this->removeUserfromScreen(QString::fromStdString(user_to_remove)); }, Qt::QueuedConnection);
     return;
 }
 
-void ChattingWindow::addGrouptoScreen(const QString& group_n)
-{
+void ChattingWindow::addGrouptoScreen(const QString& group_n) {
     QPushButton* group = new QPushButton(this);
 
     m_Groups.insert(std::make_pair(group_n, group));
@@ -408,8 +444,7 @@ void ChattingWindow::addGrouptoScreen(const QString& group_n)
     connect(group, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
 }
 
-void ChattingWindow::removeUserfromScreen(const QString& user)
-{
+void ChattingWindow::removeUserfromScreen(const QString& user) {
     if ((m_Users)[user]) {
         if (m_lastPressedUser == (m_Users)[user]) {
             m_lastPressedUser = nullptr;
@@ -428,8 +463,17 @@ void ChattingWindow::removeUserfromScreen(const QString& user)
     return;
 }
 
-void ChattingWindow::sendMessageToScreenRecv(const QString& message)
-{
+//check check where we check if we are on the correct person, only then send to screen
+void ChattingWindow::sendMessageToScreenRecv(const QString& message, const QString& user, bool type) {
+    if (type == User) {
+        if (m_lastPressedGroup) { return; }
+        else if (m_lastPressedUser && m_lastPressedUser->text() != user) { return; }
+    }
+    if (type == Group) {
+        if (m_lastPressedUser) { return; }
+        else if (m_lastPressedGroup && m_lastPressedGroup->text() != user) { return; }
+    }
+
     auto* bubble = new MessageWidget (message, this);
 
     m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignLeft);
@@ -441,8 +485,7 @@ void ChattingWindow::sendMessageToScreenRecv(const QString& message)
     });
 }
 
-void ChattingWindow::sendMessageToScreenSend(const QString& message)
-{
+void ChattingWindow::sendMessageToScreenSend(const QString& message) {
     auto* bubble = new MessageWidget_s(message, this);
 
     m_ui.chatLayout->addWidget(bubble, 0, Qt::AlignRight);

@@ -40,9 +40,11 @@ private:
     std::unordered_map<QString, QPushButton*> m_Users; // <Name of User, Button addr>
     std::unordered_map<QString, QPushButton*> m_Groups;  // <Name of Group, Button addr> 
     std::unordered_map<QChar, QChar> m_encryptMap;
+    std::unordered_map<QPushButton*, std::tuple<QString, char*, uint32_t>> m_Pngs;
     Network m_network;
     std::thread m_thread;
     std::mutex m_mutex;
+    std::atomic<bool> m_threadStop;
 public:
     explicit ChattingWindow(QWidget* parent = nullptr);
     ~ChattingWindow();
@@ -51,7 +53,7 @@ public:
     void send_error(const QString& error_message);
     void addMessage(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH]);
     void addMessage_group(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH], char group[USERNAME_LENGTH]);
-    void sendMessageToScreenRecv(const QString& message);
+    void sendMessageToScreenRecv(const QString& message, const QString& user, bool type);
     void sendMessageToScreenSend(const QString& message);
     void sendUserToScreen(QString username);
     void addUsers(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size);
@@ -66,21 +68,24 @@ public:
     void encrypt(QString& message);
     void threadFunction();
     std::pair<QPushButton*, QString> createAndStyleGroupButton();
-    void userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton* lastPressedButton);
+    void userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton);
+    void addPngButtonToScreen(uint32_t sizePng, char* pngData, const std::string& userFrom);
+    void downloadPng();
+    void processPngRecv(uint32_t* sizePng, char* pngData, std::string& userFrom);
 
     template <typename T>
-    void displayAllUserMessages(T& vec_msg)
+    void displayAllUserMessages(T& vec_msg, const QString& user_or_group_name)
     {
         for (std::size_t i = 0; i < vec_msg.size(); ++i) {
 
             if constexpr (std::is_same_v<T, std::vector<std::pair<bool, std::pair<QString, std::string>>>>) {
                 if (vec_msg[i].first == CURR_USER) { sendMessageToScreenSend(m_selfUsername + ": " + QString::fromStdString(vec_msg[i].second.second)); }
-                else { sendMessageToScreenRecv(vec_msg[i].second.first + ": " + QString::fromStdString(vec_msg[i].second.second)); };
+                else { sendMessageToScreenRecv(vec_msg[i].second.first + ": " + QString::fromStdString(vec_msg[i].second.second), user_or_group_name, Group); };
             }
 
             else if constexpr (std::is_same_v< T, std::vector<std::pair<bool, std::string>>>) {
                 if (vec_msg[i].first == CURR_USER) { sendMessageToScreenSend(QString::fromStdString(vec_msg[i].second)); }
-                else { sendMessageToScreenRecv(QString::fromStdString(vec_msg[i].second)); };
+                else { sendMessageToScreenRecv(QString::fromStdString(vec_msg[i].second), user_or_group_name, User); };
             }
         }
     };
