@@ -62,7 +62,7 @@ public:
     void addGroup(const char group[USERNAME_LENGTH]);
     void addGroups(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size);
     void addGrouptoScreen(const QString& user);
-    void removeMessagesFromScreen();
+    void removeAllChatItemsFromScreen();
     void initEncryptMap();
     void initUI();
     void encrypt(QString& message);
@@ -71,7 +71,8 @@ public:
     void userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton);
     void addPngButtonToScreen(uint32_t sizePng, char* pngData, const std::string& userFrom);
     void downloadPng();
-    void processPngRecv(uint32_t* sizePng, char* pngData, std::string& userFrom);
+    void processPngRecv(uint32_t sizePng, char* pngData, std::string& userFrom);
+    void destroyPngs();
 
     template <typename T>
     void displayAllUserMessages(T& vec_msg, const QString& user_or_group_name)
@@ -87,6 +88,12 @@ public:
                 if (vec_msg[i].first == CURR_USER) { sendMessageToScreenSend(QString::fromStdString(vec_msg[i].second)); }
                 else { sendMessageToScreenRecv(QString::fromStdString(vec_msg[i].second), user_or_group_name, User); };
             }
+        }
+        auto itr = m_Pngs.begin();
+        for (std::size_t i{ 0 }; i < m_Pngs.size() && itr != m_Pngs.end(); i++) {
+            //if constexpr (std::is_same_v<T, std::vector<std::pair<bool, std::pair<QString, std::string>>>>) {
+                if (std::get<0>(itr->second) == user_or_group_name) { itr->first->show(); itr++; }
+            //}
         }
     };
 private slots:

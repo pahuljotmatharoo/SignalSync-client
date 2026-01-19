@@ -73,8 +73,11 @@ void Network::sendLargeFile(PngSend* t_data, long long size) const
 	}
 
 	currentPointer = 0;
+	char userbuf[50];
+	memset(userbuf, 0, sizeof(userbuf));
+	strncpy_s(userbuf, t_data->user_to_send, sizeof(userbuf) - 1);
 	while (currentPointer < 50) {
-		int sent = send(m_sockid, (t_data->user_to_send) + currentPointer, 50 - currentPointer, 0);
+		int sent = send(m_sockid, (userbuf) + currentPointer, 50 - currentPointer, 0);
 		currentPointer += sent;
 	}
 }

@@ -15,22 +15,24 @@
 //bugs: encrypt decrypt pattern observed on all message sending
 //saw two of myself in user select?
 
-ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), 
+// case where when we have none selected, messages still show up
+
+ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false),
                                                     m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), 
-                                                    m_userOrGroup(User), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10), m_threadStop(false)
+                                                    m_userOrGroup(User), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10)
 {
     initUI();
 
     initEncryptMap();
 
     m_thread = std::thread(&ChattingWindow::threadFunction, this);
-    //m_thread.detach();
 }
 
 ChattingWindow::~ChattingWindow() {
+    destroyPngs();
     m_network.sendInitMsg(MSG_EXIT);
-    ::shutdown(m_network.getSockID(), SD_BOTH);
-    m_threadStop = true;
+    ::shutdown(m_network.getSockID(), SD_BOTH); // send shut down to socket, should get us out of the while loop
+    m_threadStop = true; // thread safe atomic
     m_thread.join();
 }
 
@@ -109,7 +111,7 @@ void ChattingWindow::threadFunction() {
                     if (userFrom == nullptr) { continue; }
                     m_mutex.lock();
                     std::string userString(userFrom);
-                    processPngRecv(sizePng, pngData, userString);
+                    processPngRecv(*sizePng, pngData, userString);
                     m_mutex.unlock();
                     delete sizePng;
                     delete userFrom;
@@ -122,9 +124,15 @@ void ChattingWindow::threadFunction() {
     }
 }
 
-void ChattingWindow::processPngRecv(uint32_t* sizePng, char* pngData, std::string& userFrom) {
+void ChattingWindow::destroyPngs() {
+    for (auto itr = m_Pngs.begin(); itr != m_Pngs.end(); ++itr) {
+        char* pngData = std::get<1>(itr->second);
+        delete pngData;
+    }
+}
 
-    QMetaObject::invokeMethod(this, [=] { this->addPngButtonToScreen(*sizePng, pngData, userFrom); }, Qt::QueuedConnection);
+void ChattingWindow::processPngRecv(uint32_t sizePng, char* pngData, std::string& userFrom) {
+    QMetaObject::invokeMethod(this, [=] { this->addPngButtonToScreen(sizePng, pngData, userFrom); }, Qt::QueuedConnection);
 }
 
 void ChattingWindow::downloadPng() {
@@ -140,7 +148,12 @@ void ChattingWindow::downloadPng() {
 }
 
 void ChattingWindow::addPngButtonToScreen(uint32_t sizePng, char* pngData, const std::string& userFrom) {
-    QPushButton* button = new QPushButton;
+    QPushButton* button = new QPushButton(this);
+
+    button->setText("PNG File");
+    button->setMinimumSize(205, 40);
+    button->setStyleSheet(m_defaultButtonStylesheet);
+    button->setIcon(QIcon("download.png"));
 
     connect(button, &QPushButton::clicked, this, &ChattingWindow::downloadPng);
 
@@ -265,7 +278,7 @@ void ChattingWindow::onUserClick() {
     clickedButton->setStyleSheet(m_pressedButtonStylesheet);
     m_lastPressedUser = clickedButton;
 
-    removeMessagesFromScreen();
+    removeAllChatItemsFromScreen();
 
     m_ui.username_label->setText(clickedButton->text());
     m_usernameToSend = clickedButton->text();
@@ -291,7 +304,7 @@ void ChattingWindow::onGroupClick() {
     m_lastPressedGroup = clickedButton;
 
     //remove all the items in the current chat layout
-    removeMessagesFromScreen();
+    removeAllChatItemsFromScreen();
 
     m_ui.username_label->setText(clickedButton->text());
     m_groupToSend = clickedButton->text();
@@ -449,7 +462,7 @@ void ChattingWindow::removeUserfromScreen(const QString& user) {
         if (m_lastPressedUser == (m_Users)[user]) {
             m_lastPressedUser = nullptr;
             //need to remove messages 
-            removeMessagesFromScreen();
+            removeAllChatItemsFromScreen();
             m_ui.username_label->setText("Select a User to talk to!");
         }
         m_ui.userLayout->removeWidget((m_Users)[user]);
@@ -465,6 +478,7 @@ void ChattingWindow::removeUserfromScreen(const QString& user) {
 
 //check check where we check if we are on the correct person, only then send to screen
 void ChattingWindow::sendMessageToScreenRecv(const QString& message, const QString& user, bool type) {
+    if (!m_lastPressedGroup && !m_lastPressedUser) { return; }
     if (type == User) {
         if (m_lastPressedGroup) { return; }
         else if (m_lastPressedUser && m_lastPressedUser->text() != user) { return; }
@@ -531,16 +545,25 @@ void ChattingWindow::send_error(const QString& error_message) {
     return;
 }
 
-void ChattingWindow::removeMessagesFromScreen() {
-    QLayoutItem* item;
-    while ((item = m_ui.chatLayout->takeAt(0)) != nullptr) {
-        QWidget* widget = item->widget();
-        if (widget != nullptr) {
-            widget->deleteLater();
+void ChattingWindow::removeAllChatItemsFromScreen() {
+    for (int i = 0; i < m_ui.chatLayout->count(); ++i) {
+        QLayoutItem* item = m_ui.chatLayout->itemAt(i);
+        QWidget* w = nullptr;
+        if (item != nullptr) { w = item->widget(); }
+        if (!w) continue;
+
+        if (qobject_cast<QPushButton*>(w)) {
+            w->hide();              // stays in layout, can be shown later
         }
-        delete item;
+        else {
+            m_ui.chatLayout->removeWidget(w);
+            w->deleteLater();
+            --i;
+        }
     }
 }
+
+
 
 //should only run once
 void ChattingWindow::initEncryptMap() {
