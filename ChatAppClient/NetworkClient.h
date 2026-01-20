@@ -68,6 +68,7 @@ private:
 	WSADATA m_wsaData;
 public:
 	Network() : m_sockid{ 0 }, m_wsaData{ 0 } {}
+	Network(SOCKET t_sockid, WSADATA t_wsaData) : m_sockid{ t_sockid }, m_wsaData{ t_wsaData } {}
 	~Network();
 	SOCKET getSockID() const { return m_sockid; }
 	void setSockID(const SOCKET sockid) { m_sockid = sockid; }
@@ -83,19 +84,20 @@ public:
 		char* ptr = reinterpret_cast<char*>(msg);
 		std::size_t total = 0;
 
-		while (total < static_cast<unsigned long long>(sizeof(T))) {
-			std::size_t recvBytes = recv(getSockID(), ptr + total, sizeof(T) - static_cast<size_t>(total), 0);
+		while (total < static_cast<std::size_t>(sizeof(T))) {
+			std::size_t recvBytes = recv(getSockID(), ptr + total, sizeof(T) - (total), 0);
 			total += recvBytes;
 		}
 
 		return msg;
 	};
-	char* recvPng(int sizePng) const;
-	void sendLargeFile(PngSend* t_data, long long size) const;
-	std::size_t sendInitMsg(int constant) const;
-	std::size_t sendPngSize(long long) const;
-	void sendPng(QByteArray* t_pngData, std::string user_to_send) const;
-	char* recvUser();
-	std::size_t sendMsg(std::string message, std::string username, int constant);
-	std::size_t sendGroupName(std::string group_name);
+	char* recvPng(const size_t t_sizePng) const;
+	uint32_t sendPngData(const PngSend* t_data) const;
+	uint32_t sendUsername(const std::string& t_username, const std::size_t t_length) const;
+	std::size_t sendInitMsg(const int& constant) const;
+	std::size_t sendPngSize(const uint32_t& t_pngSize) const;
+	void sendPng(const QByteArray* t_pngData, const std::string& t_user_to_send) const;
+	char* recvUser() const;
+	std::size_t sendMsg(const std::string& t_message, const std::string& t_username, const int& t_constant) const;
+	std::size_t sendGroupName(const std::string& group_name) const;
 };

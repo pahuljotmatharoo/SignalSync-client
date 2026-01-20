@@ -68,6 +68,7 @@ public:
     void encrypt(QString& message);
     void threadFunction();
     std::pair<QPushButton*, QString> createAndStyleGroupButton();
+    QPushButton* createAndStylePngButton();
     void userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton);
     void addPngButtonToScreen(uint32_t sizePng, char* pngData, const std::string& userFrom);
     void downloadPng();

@@ -11,11 +11,8 @@
 #include <fstream>
 #include <cstdlib>
 #include "ChattingWindow.h"
-
-//bugs: encrypt decrypt pattern observed on all message sending
-//saw two of myself in user select?
-
-// case where when we have none selected, messages still show up
+// BUG: Fix name sending of custom size instead of 50 byte cap
+// feature: custom png name sending
 
 ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false),
                                                     m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), 
@@ -147,7 +144,7 @@ void ChattingWindow::downloadPng() {
     outputFile.close();
 }
 
-void ChattingWindow::addPngButtonToScreen(uint32_t sizePng, char* pngData, const std::string& userFrom) {
+QPushButton* ChattingWindow::createAndStylePngButton() {
     QPushButton* button = new QPushButton(this);
 
     button->setText("PNG File");
@@ -155,18 +152,30 @@ void ChattingWindow::addPngButtonToScreen(uint32_t sizePng, char* pngData, const
     button->setStyleSheet(m_defaultButtonStylesheet);
     button->setIcon(QIcon("download.png"));
 
+    button->hide();
+
     connect(button, &QPushButton::clicked, this, &ChattingWindow::downloadPng);
 
+    return button;
+}
+
+
+void ChattingWindow::addPngButtonToScreen(uint32_t sizePng, char* pngData, const std::string& userFrom) {
+    QPushButton* button = createAndStylePngButton();
+
+    //definately have a method that does this
+    m_ui.chatLayout->addWidget(button, 0, Qt::AlignLeft);
+
+    m_ui.scrollArea->verticalScrollBar()->setValue(m_ui.scrollArea->verticalScrollBar()->maximum());
+
+    QTimer::singleShot(0, this, [=]() {
+        m_ui.scrollArea->ensureWidgetVisible(button);
+        });
+
     if (m_lastPressedUser != nullptr && QString::fromStdString(userFrom) == m_lastPressedUser->text()) {
-        //definately have a method that does this
-        m_ui.chatLayout->addWidget(button, 0, Qt::AlignLeft);
-
-        m_ui.scrollArea->verticalScrollBar()->setValue(m_ui.scrollArea->verticalScrollBar()->maximum());
-
-        QTimer::singleShot(0, this, [=]() {
-            m_ui.scrollArea->ensureWidgetVisible(button);
-            });
+        button->show();
     }
+
     m_Pngs.insert(std::make_pair(button, std::make_tuple(QString::fromStdString(userFrom), pngData, sizePng)));
 }
 
@@ -316,7 +325,7 @@ void ChattingWindow::onGroupClick() {
 //weird behaviour where its encrypted once then unencrypted...
 void ChattingWindow::on_sendButton_clicked() {
     QString messageCopy = m_messageToSend; // unencrypted message
-    encrypt(m_messageToSend);
+    encrypt(messageCopy);
     if (m_userOrGroup == User) {
         std::string username_to_sendStd = m_usernameToSend.toStdString();
 
@@ -333,17 +342,15 @@ void ChattingWindow::on_sendButton_clicked() {
         }
 
         if (m_selfUsername == username_to_sendStd.substr(4)) {
-            sendMessageToScreenSend(messageCopy);
+            sendMessageToScreenSend(m_messageToSend);
             return;
         }
 
-        (m_Messages)[m_usernameToSend].push_back(std::make_pair(CURR_USER, message_to_sendStd));
-
-        message_to_sendStd = m_messageToSend.toStdString();
+        (m_Messages)[m_usernameToSend].push_back(std::make_pair(CURR_USER, m_messageToSend.toStdString()));
 
         m_network.sendMsg(message_to_sendStd, username_to_sendStd, MSG_SEND);
 
-        sendMessageToScreenSend(messageCopy);
+        sendMessageToScreenSend(m_messageToSend);
     }
 
     else {
@@ -360,9 +367,7 @@ void ChattingWindow::on_sendButton_clicked() {
             return;
         }
 
-        (m_groupMessages)[m_groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(m_selfUsername, message_to_sendStd)));
-
-        message_to_sendStd = m_messageToSend.toStdString();
+        (m_groupMessages)[m_groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(m_selfUsername, m_messageToSend.toStdString())));
 
         m_network.sendMsg(message_to_sendStd, group_to_sendStd, ROOM_MSG);
 

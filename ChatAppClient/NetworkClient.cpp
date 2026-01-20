@@ -9,8 +9,7 @@ Network::~Network() {
 	WSACleanup();
 }
 
-int Network::serverConnect(std::string t_username)
-{
+int Network::serverConnect(std::string t_username) {
 	WSADATA wsaData;
 	int r = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (r != 0) {
@@ -38,8 +37,7 @@ int Network::serverConnect(std::string t_username)
 	return 0;
 }
 
-int16_t Network::serverConnectHelper(const uint16_t t_port)
-{
+int16_t Network::serverConnectHelper(const uint16_t t_port) {
 	sockaddr_in t_server{};
 	t_server.sin_family = AF_INET; //specify to use IPV4
 	t_server.sin_port = htons(t_port);
@@ -52,38 +50,37 @@ int16_t Network::serverConnectHelper(const uint16_t t_port)
 	return (static_cast<int16_t>(status));
 }
 
-char* Network::recvPng(int sizePng) const
-{
-	char* pngData = new char[(sizePng)];
+char* Network::recvPng(const size_t t_sizePng) const {
+	char* pngData = new char[t_sizePng];
 	std::size_t total = 0;
 
-	while (total < static_cast<unsigned long long>(sizePng)) {
-		std::size_t recvBytes = recv(getSockID(), pngData + total, sizePng - static_cast<size_t>(total), 0);
+	while (total < t_sizePng) {
+		std::size_t recvBytes = recv(getSockID(), pngData + total, t_sizePng - (total), 0);
 		total += recvBytes;
 	}
 	return pngData;
 }
 
-void Network::sendLargeFile(PngSend* t_data, long long size) const
-{
-	long long currentPointer = 0;
+uint32_t Network::sendPngData(const PngSend* t_data) const {
+	uint32_t currentPointer {0};
 	while (currentPointer < t_data->size_m) {
 		int sent = send(m_sockid, (t_data->data) + currentPointer, t_data->size_m - currentPointer, 0);
 		currentPointer += sent;
 	}
-
-	currentPointer = 0;
-	char userbuf[50];
-	memset(userbuf, 0, sizeof(userbuf));
-	strncpy_s(userbuf, t_data->user_to_send, sizeof(userbuf) - 1);
-	while (currentPointer < 50) {
-		int sent = send(m_sockid, (userbuf) + currentPointer, 50 - currentPointer, 0);
-		currentPointer += sent;
-	}
+	return currentPointer;
 }
 
-std::size_t Network::sendInitMsg(int t_constant) const
-{
+uint32_t Network::sendUsername(const std::string& t_username, const std::size_t t_length) const {
+	uint32_t currentPointer{ 0 };
+	const char* userbuf = t_username.c_str();
+	while (currentPointer < t_length) {
+		int sent = send(m_sockid, (userbuf)+currentPointer, t_length - currentPointer, 0);
+		currentPointer += sent;
+	}
+	return currentPointer;
+}
+
+std::size_t Network::sendInitMsg(const int& t_constant) const {
 	MsgHeaderr msg = {0};
 	msg.type = htonl(t_constant);
 	msg.length = htonl(static_cast<uint32_t>(5));
@@ -91,26 +88,24 @@ std::size_t Network::sendInitMsg(int t_constant) const
 	return send(getSockID(), reinterpret_cast<char*>(&msg), sizeof(msg), 0);
 }
 
-std::size_t Network::sendPngSize(long long t_pngSize) const
-{
-	return send(m_sockid, reinterpret_cast<const char*>(&t_pngSize), sizeof(long long), 0); // QSize = 8 bytes
+std::size_t Network::sendPngSize(const uint32_t& t_pngSize) const {
+	return send(m_sockid, reinterpret_cast<const char*>(&t_pngSize), sizeof(uint32_t), 0); // QSize = 8 bytes
 }
 
-void Network::sendPng(QByteArray* t_pngData, std::string user_to_send) const
-{
+void Network::sendPng(const QByteArray* t_pngData, const std::string& t_user_to_send) const {
 	const char* pngData = t_pngData->constData();
 	PngSend png{ 0 };
-	png.user_to_send = const_cast<char*>(user_to_send.c_str());
+	png.user_to_send = const_cast<char*>(t_user_to_send.c_str());
 	png.size_m = static_cast<uint32_t>(t_pngData->size());
-	png.size_u = 50;
+	png.size_u = t_user_to_send.length();
 	png.data = const_cast<char*>(pngData);
 	sendInitMsg(PNG_IMG);
-	sendPngSize(static_cast<long long>(png.size_m));
-	sendLargeFile(&png, static_cast<long long>(png.size_u) + png.size_m);
+	sendPngSize(png.size_m);
+	sendPngData(&png);
+	sendUsername(t_user_to_send, USERNAME_LENGTH);
 }
 
-char* Network::recvUser()
-{
+char* Network::recvUser() const {
 	char* username = new char[USERNAME_LENGTH];
 	std::size_t total = 0;
 
@@ -122,9 +117,8 @@ char* Network::recvUser()
 	return username;
 }
 
-std::size_t Network::sendMsg(std::string t_message, std::string t_username, int constant)
-{
-	sendInitMsg(constant);
+std::size_t Network::sendMsg(const std::string& t_message, const std::string& t_username, const int& t_constant) const {
+	sendInitMsg(t_constant);
 
 	MsgSend message_to_Send{0};
 
@@ -139,8 +133,7 @@ std::size_t Network::sendMsg(std::string t_message, std::string t_username, int 
 }
 
 
-std::size_t Network::sendGroupName(std::string t_group_name)
-{
+std::size_t Network::sendGroupName(const std::string& t_group_name) const {
 	sendInitMsg(ROOM_CREATE);
 
 	char grpName[USERNAME_LENGTH];
