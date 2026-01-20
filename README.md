@@ -1,3 +1,36 @@
+# SignalSync (C++ / Qt)
+
+A lightweight C++/Qt messaging app that supports **direct messages**, **group chats**, and **sending PNG images** to other connected users.
+
+## Features
+
+- **Direct messaging:** send text messages to any connected user
+- **Group chats:** create/join group chats with any users and message everyone in the group
+- **PNG image sharing:** send `.png` images directly to a user
+- **Live UI updates:** chat view updates as messages/images arrive
+
+## Tech Stack
+
+- **C++**
+- **Qt (Widgets)**
+- **Sockets networking** (client/server style)
+
+## Project Structure (example)
+
+- `exe/` — Executeable with all required dll's
+- `ChatAppClient/` — server logic (routing messages/images to users/groups)
+
+## Build Requirements
+
+- Qt (Qt 5 or Qt 6) with Widgets
+- C++ compiler (MSVC / clang / g++)
+- CMake **or** qmake (depending on how the project is set up)
+
+## Build & Run
+
+- Simply run ChatAppClient.exe in exe folder
+
+
 <img width="636" height="452" alt="image" src="https://github.com/user-attachments/assets/b78f761f-91dc-47a1-a931-b037c64e54d2" />
 <img width="637" height="444" alt="image" src="https://github.com/user-attachments/assets/e365df67-94e2-4be0-8faf-131f69304c72" />
 <img width="637" height="445" alt="image" src="https://github.com/user-attachments/assets/bcbc20a6-3bb8-43e1-90a0-d1e8fbf31df0" />
