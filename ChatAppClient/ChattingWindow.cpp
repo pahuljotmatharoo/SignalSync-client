@@ -106,9 +106,12 @@ void ChattingWindow::threadFunction() {
                     if (pngData == nullptr) { continue; }
                     char* userFrom = m_network.recvUser();
                     if (userFrom == nullptr) { continue; }
+                    char* fileName = m_network.recvUser();
+                    if (fileName == nullptr) { continue; }
                     m_mutex.lock();
                     std::string userString(userFrom);
-                    processPngRecv(*sizePng, pngData, userString);
+                    std::string filenameString(fileName);
+                    processPngRecv(*sizePng, pngData, userString, filenameString);
                     m_mutex.unlock();
                     delete sizePng;
                     delete userFrom;
@@ -128,26 +131,26 @@ void ChattingWindow::destroyPngs() {
     }
 }
 
-void ChattingWindow::processPngRecv(uint32_t sizePng, char* pngData, std::string& userFrom) {
-    QMetaObject::invokeMethod(this, [=] { this->addPngButtonToScreen(sizePng, pngData, userFrom); }, Qt::QueuedConnection);
+void ChattingWindow::processPngRecv(uint32_t sizePng, char* pngData, std::string userFrom, std::string fileName) {
+    QMetaObject::invokeMethod(this, [=] { this->addPngButtonToScreen(sizePng, pngData, userFrom, fileName); }, Qt::QueuedConnection);
 }
 
 void ChattingWindow::downloadPng() {
     QPushButton* btn = qobject_cast<QPushButton*>(sender());
-
+    std::string fileName = btn->text().toStdString();
     auto& png = m_Pngs[btn];
     char* pngArr = std::get<1>(png);
     uint32_t pngSize = std::get<2>(png);
 
-    std::ofstream outputFile("example.png", std::ios::binary);
+    std::ofstream outputFile(fileName, std::ios::binary);
     outputFile.write(pngArr, pngSize);
     outputFile.close();
 }
 
-QPushButton* ChattingWindow::createAndStylePngButton() {
+QPushButton* ChattingWindow::createAndStylePngButton(std::string& fileName) {
     QPushButton* button = new QPushButton(this);
 
-    button->setText("PNG File");
+    button->setText(QString::fromStdString(fileName));
     button->setMinimumSize(205, 40);
     button->setStyleSheet(m_defaultButtonStylesheet);
     button->setIcon(QIcon("download.png"));
@@ -156,12 +159,13 @@ QPushButton* ChattingWindow::createAndStylePngButton() {
 
     connect(button, &QPushButton::clicked, this, &ChattingWindow::downloadPng);
 
+
     return button;
 }
 
 
-void ChattingWindow::addPngButtonToScreen(uint32_t sizePng, char* pngData, const std::string& userFrom) {
-    QPushButton* button = createAndStylePngButton();
+void ChattingWindow::addPngButtonToScreen(uint32_t sizePng, char* pngData, const std::string userFrom, std::string fileName) {
+    QPushButton* button = createAndStylePngButton(fileName);
 
     //definately have a method that does this
     m_ui.chatLayout->addWidget(button, 0, Qt::AlignLeft);
@@ -216,7 +220,9 @@ void ChattingWindow::on_fileButton_clicked() {
         QFile file(fileName);
         if (file.open(QIODevice::ReadOnly)) {
             QByteArray content = file.readAll();
-            m_network.sendPng(&content, m_usernameToSend.toStdString());
+            QFileInfo fileInfo(file);
+            QString fileName = fileInfo.fileName();
+            m_network.sendPng(&content, m_usernameToSend.toStdString(), fileName.toStdString());
             file.close();
         }
     }

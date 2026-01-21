@@ -92,7 +92,7 @@ std::size_t Network::sendPngSize(const uint32_t& t_pngSize) const {
 	return send(m_sockid, reinterpret_cast<const char*>(&t_pngSize), sizeof(uint32_t), 0); // QSize = 8 bytes
 }
 
-void Network::sendPng(const QByteArray* t_pngData, const std::string& t_user_to_send) const {
+void Network::sendPng(const QByteArray* t_pngData, const std::string& t_user_to_send, const std::string& t_filename_to_send) const {
 	const char* pngData = t_pngData->constData();
 	PngSend png{ 0 };
 	png.user_to_send = const_cast<char*>(t_user_to_send.c_str());
@@ -103,6 +103,7 @@ void Network::sendPng(const QByteArray* t_pngData, const std::string& t_user_to_
 	sendPngSize(png.size_m);
 	sendPngData(&png);
 	sendUsername(t_user_to_send, USERNAME_LENGTH);
+	sendUsername(t_filename_to_send, USERNAME_LENGTH);
 }
 
 char* Network::recvUser() const {

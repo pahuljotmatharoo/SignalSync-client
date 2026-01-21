@@ -68,11 +68,11 @@ public:
     void encrypt(QString& message);
     void threadFunction();
     std::pair<QPushButton*, QString> createAndStyleGroupButton();
-    QPushButton* createAndStylePngButton();
+    QPushButton* createAndStylePngButton(std::string& fileName);
     void userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton);
-    void addPngButtonToScreen(uint32_t sizePng, char* pngData, const std::string& userFrom);
+    void addPngButtonToScreen(uint32_t sizePng, char* pngData, const std::string userFrom, std::string fileName);
     void downloadPng();
-    void processPngRecv(uint32_t sizePng, char* pngData, std::string& userFrom);
+    void processPngRecv(uint32_t sizePng, char* pngData, std::string userFrom, std::string fileName);
     void destroyPngs();
 
     template <typename T>

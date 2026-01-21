@@ -58,6 +58,7 @@ struct PngSend {
 struct PngRecv {
 	char* data;
 	char* user_to_send;
+	char* filename_to_send;
 	uint32_t size_m;
 	uint32_t size_u;
 };
@@ -96,7 +97,7 @@ public:
 	uint32_t sendUsername(const std::string& t_username, const std::size_t t_length) const;
 	std::size_t sendInitMsg(const int& constant) const;
 	std::size_t sendPngSize(const uint32_t& t_pngSize) const;
-	void sendPng(const QByteArray* t_pngData, const std::string& t_user_to_send) const;
+	void sendPng(const QByteArray* t_pngData, const std::string& t_user_to_send, const std::string& t_filename_to_send) const;
 	char* recvUser() const;
 	std::size_t sendMsg(const std::string& t_message, const std::string& t_username, const int& t_constant) const;
 	std::size_t sendGroupName(const std::string& group_name) const;
