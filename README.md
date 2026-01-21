@@ -18,7 +18,7 @@ A lightweight C++/Qt messaging app that supports **direct messages**, **group ch
 ## Project Structure (example)
 
 - `exe/` — Executeable with all required dll's
-- `ChatAppClient/` — server logic (routing messages/images to users/groups)
+- `ChatAppClient/` — client logic (routing messages/images to users/groups), and UI
 
 ## Build Requirements
 
