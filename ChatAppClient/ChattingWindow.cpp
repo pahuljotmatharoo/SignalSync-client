@@ -15,6 +15,8 @@
 //BUGS: File sending to self not working
 //      Group messages not sending
 
+//IMPROVEMENTS: Make classes for User & Group to improve architecture
+
 
 ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::threadFunction, this),
                                                     m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), 
@@ -221,7 +223,13 @@ void ChattingWindow::on_fileButton_clicked() {
             }
 
             QString fileName = fileInfo.fileName();
-            m_network.sendFile(&content, m_usernameToSend.toStdString(), fileName.toStdString());
+
+            if (m_selfUsername == m_usernameToSend.toStdString().substr(4)) {
+                m_network.sendFile(&content, m_selfUsername.toStdString(), fileName.toStdString());
+            }   
+            else {
+                m_network.sendFile(&content, m_usernameToSend.toStdString(), fileName.toStdString());
+            }
             file.close();
         }
     }
