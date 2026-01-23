@@ -10,11 +10,12 @@ constexpr auto USER_EXIT = 4;
 constexpr auto ROOM_CREATE = 5;
 constexpr auto ROOM_MSG = 6;
 constexpr auto ROOM_LIST = 7;
-constexpr auto PNG_IMG = 8;
+constexpr auto FILE_C = 8;
 constexpr auto MESSAGE_LENGTH = 128;
 constexpr auto MAX_USERS = 10;
 constexpr auto USERNAME_LENGTH = 50;
 constexpr auto MAXUSERS = 10;
+constexpr auto MAX_FILE_SIZE = 5000000;
 
 struct MsgHeaderr {
 	uint32_t type;
@@ -48,14 +49,14 @@ struct List { // can be User List or Group List
 	char arr[MAX_USERS][USERNAME_LENGTH];
 };
 
-struct PngSend {
+struct FileSend {
 	char* data;
 	char *user_to_send;
 	uint32_t size_m;
 	uint32_t size_u;
 };
 
-struct PngRecv {
+struct FileRecv {
 	char* data;
 	char* user_to_send;
 	char* filename_to_send;
@@ -92,12 +93,12 @@ public:
 
 		return msg;
 	};
-	char* recvPng(const size_t t_sizePng) const;
-	uint32_t sendPngData(const PngSend* t_data) const;
+	char* recvFile(const size_t t_sizeFile) const;
+	uint32_t sendFileData(const FileSend* t_data) const;
 	uint32_t sendUsername(const std::string& t_username, const std::size_t t_length) const;
 	std::size_t sendInitMsg(const int& constant) const;
-	std::size_t sendPngSize(const uint32_t& t_pngSize) const;
-	void sendPng(const QByteArray* t_pngData, const std::string& t_user_to_send, const std::string& t_filename_to_send) const;
+	std::size_t sendFileSize(const uint32_t& t_fileSize) const;
+	void sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send) const;
 	char* recvUser() const;
 	std::size_t sendMsg(const std::string& t_message, const std::string& t_username, const int& t_constant) const;
 	std::size_t sendGroupName(const std::string& group_name) const;

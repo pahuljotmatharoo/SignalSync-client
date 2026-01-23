@@ -50,18 +50,18 @@ int16_t Network::serverConnectHelper(const uint16_t t_port) {
 	return (static_cast<int16_t>(status));
 }
 
-char* Network::recvPng(const size_t t_sizePng) const {
-	char* pngData = new char[t_sizePng];
+char* Network::recvFile(const size_t t_sizeFile) const {
+	char* pngData = new char[t_sizeFile];
 	std::size_t total = 0;
 
-	while (total < t_sizePng) {
-		std::size_t recvBytes = recv(getSockID(), pngData + total, t_sizePng - (total), 0);
+	while (total < t_sizeFile) {
+		std::size_t recvBytes = recv(getSockID(), pngData + total, t_sizeFile - (total), 0);
 		total += recvBytes;
 	}
 	return pngData;
 }
 
-uint32_t Network::sendPngData(const PngSend* t_data) const {
+uint32_t Network::sendFileData(const FileSend* t_data) const {
 	uint32_t currentPointer {0};
 	while (currentPointer < t_data->size_m) {
 		int sent = send(m_sockid, (t_data->data) + currentPointer, t_data->size_m - currentPointer, 0);
@@ -88,20 +88,20 @@ std::size_t Network::sendInitMsg(const int& t_constant) const {
 	return send(getSockID(), reinterpret_cast<char*>(&msg), sizeof(msg), 0);
 }
 
-std::size_t Network::sendPngSize(const uint32_t& t_pngSize) const {
-	return send(m_sockid, reinterpret_cast<const char*>(&t_pngSize), sizeof(uint32_t), 0); // QSize = 8 bytes
+std::size_t Network::sendFileSize(const uint32_t& t_fileSize) const {
+	return send(m_sockid, reinterpret_cast<const char*>(&t_fileSize), sizeof(uint32_t), 0); // QSize = 8 bytes
 }
 
-void Network::sendPng(const QByteArray* t_pngData, const std::string& t_user_to_send, const std::string& t_filename_to_send) const {
-	const char* pngData = t_pngData->constData();
-	PngSend png{ 0 };
+void Network::sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send) const {
+	const char* pngData = t_fileData->constData();
+	FileSend png{ 0 };
 	png.user_to_send = const_cast<char*>(t_user_to_send.c_str());
-	png.size_m = static_cast<uint32_t>(t_pngData->size());
+	png.size_m = static_cast<uint32_t>(t_fileData->size());
 	png.size_u = t_user_to_send.length();
 	png.data = const_cast<char*>(pngData);
-	sendInitMsg(PNG_IMG);
-	sendPngSize(png.size_m);
-	sendPngData(&png);
+	sendInitMsg(FILE_C);
+	sendFileSize(png.size_m);
+	sendFileData(&png);
 	sendUsername(t_user_to_send, USERNAME_LENGTH);
 	sendUsername(t_filename_to_send, USERNAME_LENGTH);
 }

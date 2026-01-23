@@ -11,22 +11,22 @@
 #include <fstream>
 #include <cstdlib>
 #include "ChattingWindow.h"
-// BUG: Fix name sending of custom size instead of 50 byte cap
-// feature: custom png name sending
 
-ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false),
+//BUGS: File sending to self not working
+//      Group messages not sending
+
+
+ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::threadFunction, this),
                                                     m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), 
                                                     m_userOrGroup(User), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10)
 {
     initUI();
 
     initEncryptMap();
-
-    m_thread = std::thread(&ChattingWindow::threadFunction, this);
 }
 
 ChattingWindow::~ChattingWindow() {
-    destroyPngs();
+    destroyFiles();
     m_network.sendInitMsg(MSG_EXIT);
     ::shutdown(m_network.getSockID(), SD_BOTH); // send shut down to socket, should get us out of the while loop
     m_threadStop = true; // thread safe atomic
@@ -99,11 +99,11 @@ void ChattingWindow::threadFunction() {
                     delete listGroup;
                     break;
                 }
-                case PNG_IMG: {
-                    uint32_t* sizePng = m_network.recvMethod<uint32_t>();
-                    if (sizePng == nullptr) { continue; }
-                    char* pngData = m_network.recvPng(*sizePng);
-                    if (pngData == nullptr) { continue; }
+                case FILE_C: {
+                    uint32_t* sizeFile = m_network.recvMethod<uint32_t>();
+                    if (sizeFile == nullptr) { continue; }
+                    char* fileData = m_network.recvFile(*sizeFile);
+                    if (fileData == nullptr) { continue; }
                     char* userFrom = m_network.recvUser();
                     if (userFrom == nullptr) { continue; }
                     char* fileName = m_network.recvUser();
@@ -111,9 +111,10 @@ void ChattingWindow::threadFunction() {
                     m_mutex.lock();
                     std::string userString(userFrom);
                     std::string filenameString(fileName);
-                    processPngRecv(*sizePng, pngData, userString, filenameString);
+                    File* recvFile = new File(QString::fromStdString(userString), fileData, *sizeFile);
+                    processFileRecv(recvFile, filenameString);
                     m_mutex.unlock();
-                    delete sizePng;
+                    delete sizeFile;
                     delete userFrom;
                 }
             }
@@ -124,30 +125,22 @@ void ChattingWindow::threadFunction() {
     }
 }
 
-void ChattingWindow::destroyPngs() {
-    for (auto itr = m_Pngs.begin(); itr != m_Pngs.end(); ++itr) {
-        char* pngData = std::get<1>(itr->second);
-        delete pngData;
+void ChattingWindow::destroyFiles() {
+    for (auto itr = m_files.begin(); itr != m_files.end(); ++itr) {
+        delete itr->second;
     }
 }
 
-void ChattingWindow::processPngRecv(uint32_t sizePng, char* pngData, std::string userFrom, std::string fileName) {
-    QMetaObject::invokeMethod(this, [=] { this->addPngButtonToScreen(sizePng, pngData, userFrom, fileName); }, Qt::QueuedConnection);
+void ChattingWindow::processFileRecv(File* recvFile, std::string fileName) {
+    QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreen(recvFile, fileName); }, Qt::QueuedConnection);
 }
 
-void ChattingWindow::downloadPng() {
+void ChattingWindow::downloadFile() {
     QPushButton* btn = qobject_cast<QPushButton*>(sender());
-    std::string fileName = btn->text().toStdString();
-    auto& png = m_Pngs[btn];
-    char* pngArr = std::get<1>(png);
-    uint32_t pngSize = std::get<2>(png);
-
-    std::ofstream outputFile(fileName, std::ios::binary);
-    outputFile.write(pngArr, pngSize);
-    outputFile.close();
+    m_files[btn]->downloadFile(btn->text().toStdString());
 }
 
-QPushButton* ChattingWindow::createAndStylePngButton(std::string& fileName) {
+QPushButton* ChattingWindow::createAndStyleFileButton(std::string& fileName) {
     QPushButton* button = new QPushButton(this);
 
     button->setText(QString::fromStdString(fileName));
@@ -157,15 +150,15 @@ QPushButton* ChattingWindow::createAndStylePngButton(std::string& fileName) {
 
     button->hide();
 
-    connect(button, &QPushButton::clicked, this, &ChattingWindow::downloadPng);
+    connect(button, &QPushButton::clicked, this, &ChattingWindow::downloadFile);
 
 
     return button;
 }
 
 
-void ChattingWindow::addPngButtonToScreen(uint32_t sizePng, char* pngData, const std::string userFrom, std::string fileName) {
-    QPushButton* button = createAndStylePngButton(fileName);
+void ChattingWindow::addFileButtonToScreen(File* recvFile, std::string fileName) {
+    QPushButton* button = createAndStyleFileButton(fileName);
 
     //definately have a method that does this
     m_ui.chatLayout->addWidget(button, 0, Qt::AlignLeft);
@@ -176,11 +169,11 @@ void ChattingWindow::addPngButtonToScreen(uint32_t sizePng, char* pngData, const
         m_ui.scrollArea->ensureWidgetVisible(button);
         });
 
-    if (m_lastPressedUser != nullptr && QString::fromStdString(userFrom) == m_lastPressedUser->text()) {
+    if (m_lastPressedUser != nullptr && recvFile->getUserFrom() == m_lastPressedUser->text()) {
         button->show();
     }
 
-    m_Pngs.insert(std::make_pair(button, std::make_tuple(QString::fromStdString(userFrom), pngData, sizePng)));
+    m_files.insert(std::make_pair(button, recvFile));
 }
 
 std::pair<QPushButton*, QString> ChattingWindow::createAndStyleGroupButton() {
@@ -214,15 +207,21 @@ void ChattingWindow::on_Message_input_textEdited(const QString& text) {
 //------------------------------------------------ BUTTON CLICKED FUNCTIONS---------------------------------------------------------------------
 
 void ChattingWindow::on_fileButton_clicked() {
-    QString fileName = QFileDialog::getOpenFileName(this, "Select one or more files to open", "/home", "PNG Images (*.png)");
+    QString fileName = QFileDialog::getOpenFileName(this, "Select one or more files to open", "/home");
 
     if (!fileName.isEmpty()) {
         QFile file(fileName);
         if (file.open(QIODevice::ReadOnly)) {
             QByteArray content = file.readAll();
             QFileInfo fileInfo(file);
+
+            if (fileInfo.size() > MAX_FILE_SIZE) {
+                send_error("File too large! Must be less than 5 MB");
+                return;
+            }
+
             QString fileName = fileInfo.fileName();
-            m_network.sendPng(&content, m_usernameToSend.toStdString(), fileName.toStdString());
+            m_network.sendFile(&content, m_usernameToSend.toStdString(), fileName.toStdString());
             file.close();
         }
     }

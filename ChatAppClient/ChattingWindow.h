@@ -9,6 +9,7 @@
 #include "message_s.h"
 #include "ui_ChattingWindow.h"
 #include "NetworkClient.h"
+#include "File.h"
 
 constexpr auto OTHER_USER = true;
 constexpr auto CURR_USER = false;
@@ -40,7 +41,7 @@ private:
     std::unordered_map<QString, QPushButton*> m_Users; // <Name of User, Button addr>
     std::unordered_map<QString, QPushButton*> m_Groups;  // <Name of Group, Button addr> 
     std::unordered_map<QChar, QChar> m_encryptMap;
-    std::unordered_map<QPushButton*, std::tuple<QString, char*, uint32_t>> m_Pngs;
+    std::unordered_map<QPushButton*, File*> m_files;
     Network m_network;
     std::thread m_thread;
     std::mutex m_mutex;
@@ -68,12 +69,12 @@ public:
     void encrypt(QString& message);
     void threadFunction();
     std::pair<QPushButton*, QString> createAndStyleGroupButton();
-    QPushButton* createAndStylePngButton(std::string& fileName);
+    QPushButton* createAndStyleFileButton(std::string& fileName);
     void userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton);
-    void addPngButtonToScreen(uint32_t sizePng, char* pngData, const std::string userFrom, std::string fileName);
-    void downloadPng();
-    void processPngRecv(uint32_t sizePng, char* pngData, std::string userFrom, std::string fileName);
-    void destroyPngs();
+    void addFileButtonToScreen(File* recvFile, std::string fileName);
+    void downloadFile();
+    void processFileRecv(File* recvFile, std::string fileName);
+    void destroyFiles();
 
     template <typename T>
     void displayAllUserMessages(T& vec_msg, const QString& user_or_group_name)
@@ -90,10 +91,10 @@ public:
                 else { sendMessageToScreenRecv(QString::fromStdString(vec_msg[i].second), user_or_group_name, User); };
             }
         }
-        auto itr = m_Pngs.begin();
-        for (std::size_t i{ 0 }; i < m_Pngs.size() && itr != m_Pngs.end(); i++) {
+        auto itr = m_files.begin();
+        for (std::size_t i{ 0 }; i < m_files.size() && itr != m_files.end(); i++) {
             //if constexpr (std::is_same_v<T, std::vector<std::pair<bool, std::pair<QString, std::string>>>>) {
-                if (std::get<0>(itr->second) == user_or_group_name) { itr->first->show(); itr++; }
+                if (itr->second->getUserFrom() == user_or_group_name) { itr->first->show(); itr++; }
             //}
         }
     };
