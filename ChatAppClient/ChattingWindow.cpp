@@ -12,8 +12,7 @@
 #include <cstdlib>
 #include "ChattingWindow.h"
 
-//BUGS: File sending to self not working
-//      Group messages not sending
+//BUGS: Group messages not sending (might just be a front end issue tbh)
 
 //IMPROVEMENTS: Make classes for User & Group to improve architecture
 
@@ -29,6 +28,7 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPre
 
 ChattingWindow::~ChattingWindow() {
     destroyFiles();
+    destroyUserMessages();
     m_network.sendInitMsg(MSG_EXIT);
     ::shutdown(m_network.getSockID(), SD_BOTH); // send shut down to socket, should get us out of the while loop
     m_threadStop = true; // thread safe atomic
@@ -133,6 +133,12 @@ void ChattingWindow::destroyFiles() {
     }
 }
 
+void ChattingWindow::destroyUserMessages() {
+    for (auto itr = m_messages.begin(); itr != m_messages.end(); ++itr) {
+        delete itr->second;
+    }
+}
+
 void ChattingWindow::processFileRecv(File* recvFile, std::string fileName) {
     QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreen(recvFile, fileName); }, Qt::QueuedConnection);
 }
@@ -217,15 +223,16 @@ void ChattingWindow::on_fileButton_clicked() {
             QByteArray content = file.readAll();
             QFileInfo fileInfo(file);
 
+            QString fileName = fileInfo.fileName();
+
             if (fileInfo.size() > MAX_FILE_SIZE) {
                 send_error("File too large! Must be less than 5 MB");
                 return;
             }
 
-            QString fileName = fileInfo.fileName();
-
             if (m_selfUsername == m_usernameToSend.toStdString().substr(4)) {
-                m_network.sendFile(&content, m_selfUsername.toStdString(), fileName.toStdString());
+                file.close();
+                return;
             }   
             else {
                 m_network.sendFile(&content, m_usernameToSend.toStdString(), fileName.toStdString());
@@ -304,9 +311,9 @@ void ChattingWindow::onUserClick() {
 
     m_ui.username_label->setText(clickedButton->text());
     m_usernameToSend = clickedButton->text();
-    auto& vec_msg = (m_Messages)[m_usernameToSend];
+    auto& vec_msg = (m_messages)[m_usernameToSend];
 
-    displayAllUserMessages<std::vector<std::pair<bool, std::string>>>(vec_msg, m_usernameToSend);
+    displayUserMessages(m_usernameToSend);
 }
 
 //can't really simplify this i think as it is tied to the button itself
@@ -335,6 +342,18 @@ void ChattingWindow::onGroupClick() {
     displayAllUserMessages<std::vector<std::pair<bool, std::pair<QString, std::string>>>>(vec_msg, m_groupToSend);
 }
 
+void ChattingWindow::displayUserMessages(const QString& t_user_name) {
+    UserMessage* user_messages = m_messages[t_user_name];
+    if (user_messages == nullptr) { return; }
+
+    auto &vec = user_messages->getMessages();
+
+    for (int i{ 0 }; i < vec.size(); i++) {
+        if (vec[i].first == CURR_USER) { sendMessageToScreenSend(QString::fromStdString(vec[i].second)); }
+        else { sendMessageToScreenRecv(QString::fromStdString(vec[i].second), t_user_name, User); };
+    }
+}
+
 //weird behaviour where its encrypted once then unencrypted...
 void ChattingWindow::on_sendButton_clicked() {
     QString messageCopy = m_messageToSend; // unencrypted message
@@ -359,7 +378,12 @@ void ChattingWindow::on_sendButton_clicked() {
             return;
         }
 
-        (m_Messages)[m_usernameToSend].push_back(std::make_pair(CURR_USER, m_messageToSend.toStdString()));
+        if ((m_messages).find(m_usernameToSend) == m_messages.end() || m_messages[m_usernameToSend] == nullptr) {
+            UserMessage* userMsg = new UserMessage(QString::fromStdString(username_to_sendStd));
+            m_messages[m_usernameToSend] = userMsg;
+        }
+
+        (m_messages)[m_usernameToSend]->addMessage((std::make_pair(CURR_USER, m_messageToSend.toStdString())));
 
         m_network.sendMsg(message_to_sendStd, username_to_sendStd, MSG_SEND);
 
@@ -416,7 +440,15 @@ void ChattingWindow::addMessage(char message[MESSAGE_LENGTH], char username[USER
     encrypt(message_r); //unencrypt the message
     message_toadd = message_r.toStdString();
 
-    (m_Messages)[QString::fromStdString(username_toadd)].push_back(std::make_pair(OTHER_USER, message_toadd));
+    if (m_messages.find(QString::fromStdString(username_toadd)) != m_messages.end()) {
+        m_messages[QString::fromStdString(username_toadd)]->addMessage(std::make_pair(OTHER_USER, message_toadd));
+    }
+
+    else {
+        UserMessage* user_msg = new UserMessage(QString::fromStdString(username_toadd));
+        m_messages[QString::fromStdString(username_toadd)] = user_msg;
+        user_msg->addMessage(std::make_pair(OTHER_USER, message_toadd));
+    }
 
     //we'll be able to display right away to screen, since this function will be called by recv thread, cannot create element here so queue it on main thread
     QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(message_toadd), QString::fromStdString(username_toadd), User); }, Qt::QueuedConnection);
@@ -488,7 +520,8 @@ void ChattingWindow::removeUserfromScreen(const QString& user) {
         (m_Users)[user]->deleteLater();
         (m_Users)[user] = nullptr;
         m_Users.erase(user);
-        m_Messages.erase(user);
+        delete m_messages[user];
+        m_messages.erase(user);
         //remove from the map as well
     }
     return;
@@ -546,7 +579,7 @@ void ChattingWindow::sendUserToScreen(QString username) {
     if (m_userOrGroup == Group) {
         user->hide();
     }
-
+    m_messages[username] = new UserMessage(username);
     m_Users.insert(std::make_pair(username, user));
 
     connect(user, &QPushButton::clicked, this, &ChattingWindow::onUserClick);

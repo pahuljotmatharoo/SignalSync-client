@@ -10,6 +10,7 @@
 #include "ui_ChattingWindow.h"
 #include "NetworkClient.h"
 #include "File.h"
+#include "UserMessage.h"
 
 constexpr auto OTHER_USER = true;
 constexpr auto CURR_USER = false;
@@ -36,7 +37,7 @@ private:
     QFont m_titleFont;
     QFont m_buttonAddGroupFont;
     QFont m_buttonFont;
-    std::unordered_map<QString, std::vector<std::pair<bool, std::string>>> m_Messages; // Name of other user, <Who sent it, The Message>
+    std::unordered_map<QString, UserMessage*> m_messages; // Name of other user, <Who sent it, The Message>
     std::unordered_map<QString, std::vector<std::pair<bool, std::pair<QString, std::string>>>> m_groupMessages; // Name of Group, <Who sent it <The user who sent it, The Message>>
     std::unordered_map<QString, QPushButton*> m_Users; // <Name of User, Button addr>
     std::unordered_map<QString, QPushButton*> m_Groups;  // <Name of Group, Button addr> 
@@ -75,7 +76,9 @@ public:
     void downloadFile();
     void processFileRecv(File* recvFile, std::string fileName);
     void destroyFiles();
+    void destroyUserMessages();
 
+    //this function will be updated
     template <typename T>
     void displayAllUserMessages(T& vec_msg, const QString& user_or_group_name)
     {
@@ -86,7 +89,7 @@ public:
                 else { sendMessageToScreenRecv(vec_msg[i].second.first + ": " + QString::fromStdString(vec_msg[i].second.second), user_or_group_name, Group); };
             }
 
-            else if constexpr (std::is_same_v< T, std::vector<std::pair<bool, std::string>>>) {
+            else if constexpr (std::is_same_v< T, UserMessage*>) {
                 if (vec_msg[i].first == CURR_USER) { sendMessageToScreenSend(QString::fromStdString(vec_msg[i].second)); }
                 else { sendMessageToScreenRecv(QString::fromStdString(vec_msg[i].second), user_or_group_name, User); };
             }
@@ -98,6 +101,9 @@ public:
             //}
         }
     };
+
+    //we will remove this once we change group messages to a class as well
+    void displayUserMessages(const QString& t_user_name);
 private slots:
     void on_sendButton_clicked();
     void on_fileButton_clicked();
