@@ -19,7 +19,7 @@
 
 ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::threadFunction, this),
                                                     m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), 
-                                                    m_userOrGroup(User), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10)
+                                                    m_userOrGroup(UserB), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10)
 {
     initUI();
 
@@ -29,6 +29,7 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPre
 ChattingWindow::~ChattingWindow() {
     destroyFiles();
     destroyUserMessages();
+    destroyGroupMessages();
     m_network.sendInitMsg(MSG_EXIT);
     ::shutdown(m_network.getSockID(), SD_BOTH); // send shut down to socket, should get us out of the while loop
     m_threadStop = true; // thread safe atomic
@@ -135,6 +136,12 @@ void ChattingWindow::destroyFiles() {
 
 void ChattingWindow::destroyUserMessages() {
     for (auto itr = m_messages.begin(); itr != m_messages.end(); ++itr) {
+        delete itr->second;
+    }
+}
+
+void ChattingWindow::destroyGroupMessages() {
+    for (auto itr = m_groupMessages.begin(); itr != m_groupMessages.end(); ++itr) {
         delete itr->second;
     }
 }
@@ -248,6 +255,11 @@ void ChattingWindow::on_addGroup_clicked() {
     if (buttonAndName.first == nullptr) { return; }
 
     connect(buttonAndName.first, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
+
+    GroupMessage* groupMsg = new GroupMessage(buttonAndName.second);
+
+    m_groupMessages.insert(std::make_pair(buttonAndName.second, groupMsg));
+
     std::string name_to_sendStd = buttonAndName.second.toStdString();
 
     m_network.sendGroupName(name_to_sendStd);
@@ -275,7 +287,7 @@ void ChattingWindow::userOrGroupSelect(std::unordered_map<QString, QPushButton*>
 //can't really simplify this i think as it is tied to the button itself
 void ChattingWindow::on_groupChat_clicked() {
     m_ui.addGroup->show();
-    m_userOrGroup = Group;
+    m_userOrGroup = GroupB;
 
     m_ui.currUsers_label->setText("Current Groups");
 
@@ -285,7 +297,7 @@ void ChattingWindow::on_groupChat_clicked() {
 //can't really simplify this i think as it is tied to the button itself
 void ChattingWindow::on_userList_clicked() {
     m_ui.addGroup->hide();
-    m_userOrGroup = User;
+    m_userOrGroup = UserB;
 
     m_ui.currUsers_label->setText("Current Users");
 
@@ -337,20 +349,42 @@ void ChattingWindow::onGroupClick() {
 
     m_ui.username_label->setText(clickedButton->text());
     m_groupToSend = clickedButton->text();
-    auto& vec_msg = (m_groupMessages)[m_groupToSend];
 
-    displayAllUserMessages<std::vector<std::pair<bool, std::pair<QString, std::string>>>>(vec_msg, m_groupToSend);
+    displayGroupMessages(m_groupToSend);
 }
 
 void ChattingWindow::displayUserMessages(const QString& t_user_name) {
     UserMessage* user_messages = m_messages[t_user_name];
     if (user_messages == nullptr) { return; }
 
-    auto &vec = user_messages->getMessages();
+    displayMessages(user_messages, t_user_name, UserB);
+
+    displayFileButtons(t_user_name);
+}
+
+void ChattingWindow::displayGroupMessages(const QString& t_group_name) {
+    GroupMessage* group_messages = m_groupMessages[t_group_name];
+
+    auto& vec_m = group_messages->getMessages();
+
+    for (auto itr = vec_m.begin(); itr != vec_m.end(); ++itr) {
+        displayMessages(itr->second, t_group_name, GroupB);
+    }
+}
+
+void ChattingWindow::displayFileButtons(const QString& user_or_group_name) {
+    auto itr = m_files.begin();
+    for (std::size_t i{ 0 }; i < m_files.size() && itr != m_files.end(); i++) {
+        if (itr->second->getUserFrom() == user_or_group_name) { itr->first->show(); itr++; }
+    }
+}
+
+void ChattingWindow::displayMessages(UserMessage* t_messages, const QString& user_or_group_name, bool user_or_group) {
+    auto& vec = t_messages->getMessages();
 
     for (int i{ 0 }; i < vec.size(); i++) {
         if (vec[i].first == CURR_USER) { sendMessageToScreenSend(QString::fromStdString(vec[i].second)); }
-        else { sendMessageToScreenRecv(QString::fromStdString(vec[i].second), t_user_name, User); };
+        else { sendMessageToScreenRecv(QString::fromStdString(vec[i].second), user_or_group_name, user_or_group); };
     }
 }
 
@@ -358,7 +392,7 @@ void ChattingWindow::displayUserMessages(const QString& t_user_name) {
 void ChattingWindow::on_sendButton_clicked() {
     QString messageCopy = m_messageToSend; // unencrypted message
     encrypt(messageCopy);
-    if (m_userOrGroup == User) {
+    if (m_userOrGroup == UserB) {
         std::string username_to_sendStd = m_usernameToSend.toStdString();
 
         std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
@@ -403,8 +437,7 @@ void ChattingWindow::on_sendButton_clicked() {
             send_error("Message is empty! Cannot send empty message!.");
             return;
         }
-
-        (m_groupMessages)[m_groupToSend].push_back(std::make_pair(CURR_USER, std::make_pair(m_selfUsername, m_messageToSend.toStdString())));
+        m_groupMessages[m_groupToSend]->addMessage(m_selfUsername, CURR_USER, m_selfUsername + " : " + m_messageToSend);
 
         m_network.sendMsg(message_to_sendStd, group_to_sendStd, ROOM_MSG);
 
@@ -426,10 +459,10 @@ void ChattingWindow::addMessage_group(char message[MESSAGE_LENGTH], char usernam
     message_toadd = message_r.toStdString();
     std::string group_toadd(group);
 
-    (m_groupMessages)[QString::fromStdString(group)].push_back(std::make_pair(OTHER_USER, std::make_pair(QString::fromStdString(username_toadd), message_toadd)));
+    m_groupMessages[QString::fromStdString(group_toadd)]->addMessage(QString::fromStdString(username_toadd), OTHER_USER, QString::fromStdString(username_toadd) + ":" + message_r);
 
     //we'll be able to display right away to screen, needs to run on the gui thread (main thread)
-    QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(username_toadd + " : " + message_toadd), QString::fromStdString(group_toadd), Group); }, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(username_toadd + " : " + message_toadd), QString::fromStdString(group_toadd), GroupB); }, Qt::QueuedConnection);
 }
 
 void ChattingWindow::addMessage(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH]) {
@@ -451,7 +484,7 @@ void ChattingWindow::addMessage(char message[MESSAGE_LENGTH], char username[USER
     }
 
     //we'll be able to display right away to screen, since this function will be called by recv thread, cannot create element here so queue it on main thread
-    QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(message_toadd), QString::fromStdString(username_toadd), User); }, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(message_toadd), QString::fromStdString(username_toadd), UserB); }, Qt::QueuedConnection);
 }
 
 void ChattingWindow::addUsers(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size) {
@@ -493,13 +526,16 @@ void ChattingWindow::removeUsers(char user[USERNAME_LENGTH], uint32_t size) {
 void ChattingWindow::addGrouptoScreen(const QString& group_n) {
     QPushButton* group = new QPushButton(this);
 
+    GroupMessage* groupMsg = new GroupMessage(group_n);
+
     m_Groups.insert(std::make_pair(group_n, group));
+    m_groupMessages.insert(std::make_pair(group_n, groupMsg));
 
     group->setText(group_n);
     group->setMinimumSize(205, 40);
     group->setStyleSheet(m_defaultButtonStylesheet);
 
-    if (m_userOrGroup == User) {
+    if (m_userOrGroup == UserB) {
         group->hide();
     }
 
@@ -530,11 +566,11 @@ void ChattingWindow::removeUserfromScreen(const QString& user) {
 //check check where we check if we are on the correct person, only then send to screen
 void ChattingWindow::sendMessageToScreenRecv(const QString& message, const QString& user, bool type) {
     if (!m_lastPressedGroup && !m_lastPressedUser) { return; }
-    if (type == User) {
+    if (type == UserB) {
         if (m_lastPressedGroup) { return; }
         else if (m_lastPressedUser && m_lastPressedUser->text() != user) { return; }
     }
-    if (type == Group) {
+    if (type == GroupB) {
         if (m_lastPressedUser) { return; }
         else if (m_lastPressedGroup && m_lastPressedGroup->text() != user) { return; }
     }
@@ -576,7 +612,7 @@ void ChattingWindow::sendUserToScreen(QString username) {
 
     m_ui.userLayout->addWidget(user, 0, Qt::AlignCenter | Qt::AlignTop);
 
-    if (m_userOrGroup == Group) {
+    if (m_userOrGroup == GroupB) {
         user->hide();
     }
     m_messages[username] = new UserMessage(username);
