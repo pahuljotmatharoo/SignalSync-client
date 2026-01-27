@@ -53,7 +53,7 @@ public:
     ~ChattingWindow();
     void setSelfUser(const QString t_username) { m_selfUsername = t_username; }
     void setNetwork(Network& t_network) { m_network = t_network; };
-    void send_error(const QString& error_message);
+    void sendError(const QString& error_message);
     void addMessage(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH]);
     void addMessage_group(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH], char group[USERNAME_LENGTH]);
     void sendMessageToScreenRecv(const QString& message, const QString& user, bool type);
@@ -64,7 +64,7 @@ public:
     void removeUserfromScreen(const QString& user);
     void addGroup(const char group[USERNAME_LENGTH]);
     void addGroups(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size);
-    void addGrouptoScreen(const QString& user);
+    void addGrouptoScreen(const QString user);
     void removeAllChatItemsFromScreen();
     void initEncryptMap();
     void initUI();
@@ -72,7 +72,7 @@ public:
     void threadFunction();
     std::pair<QPushButton*, QString> createAndStyleGroupButton();
     QPushButton* createAndStyleFileButton(std::string& fileName);
-    void userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton);
+    void userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton) const;
     void addFileButtonToScreen(File* recvFile, std::string fileName);
     void downloadFile();
     void processFileRecv(File* recvFile, std::string fileName);

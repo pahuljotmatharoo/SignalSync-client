@@ -16,5 +16,5 @@ public:
 	void setSize(const uint32_t& t_size) { m_size = t_size; }
 	char* getData() const { return m_data; }
 	void setData(char* t_data) { m_data = t_data; }
-	void downloadFile(const std::string t_fileName) const;
+	bool downloadFile(const std::string t_fileName, const std::string t_directory_path) const;
 };

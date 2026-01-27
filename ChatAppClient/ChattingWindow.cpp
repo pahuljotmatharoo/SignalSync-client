@@ -12,9 +12,7 @@
 #include <cstdlib>
 #include "ChattingWindow.h"
 
-//BUGS: Group messages not sending (might just be a front end issue tbh)
-
-//IMPROVEMENTS: Make classes for User & Group to improve architecture
+//BUGS: Not selecting a user before sending file leads to a crash
 
 
 ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::threadFunction, this),
@@ -43,52 +41,48 @@ void ChattingWindow::threadFunction() {
         if(recvData > 0) {
             switch (type) {
                 case MSG_SEND: {
+                    std::lock_guard<std::mutex> lock(m_mutex);
                     MsgRecvUser* recvStruct = m_network.recvMethod<MsgRecvUser>();
                     if (recvStruct == nullptr) { continue; }
-                    m_mutex.lock();
                     addMessage(recvStruct->message, recvStruct->user_from);
-                    m_mutex.unlock();
                     delete recvStruct;
                     break;
                 }
                 case MSG_LIST: {
+                    std::lock_guard<std::mutex> lock(m_mutex);
                     List* list = m_network.recvMethod<List>();
                     if (list == nullptr) { continue; }
                     list->size = ntohl(list->size);
-                    m_mutex.lock();
                     addUsers(list->arr, list->size);
-                    m_mutex.unlock();
                     delete list;
                     break;
                 }
                 case USER_EXIT: {
+                    std::lock_guard<std::mutex> lock(m_mutex);
                     char* username = m_network.recvUser();
                     if (username == nullptr) { continue; }
-                    m_mutex.lock();
                     removeUsers(username, USERNAME_LENGTH);
-                    m_mutex.unlock();
                     delete[] username;
                     break;
                 }
                 case ROOM_CREATE: {
+                    std::lock_guard<std::mutex> lock(m_mutex);
                     RecvGroupName* groupName = m_network.recvMethod<RecvGroupName>();
                     if (groupName == nullptr) { continue; }
-                    m_mutex.lock();
                     addGroup(groupName->groupName);
-                    m_mutex.unlock();
                     delete groupName;
                     break;
                 }
                 case ROOM_MSG: {
+                    std::lock_guard<std::mutex> lock(m_mutex);
                     MsgRecvGroup* recvGrpMsg = m_network.recvMethod<MsgRecvGroup>();
                     if (recvGrpMsg == nullptr) { continue; }
-                    m_mutex.lock();
                     addMessage_group(recvGrpMsg->message, recvGrpMsg->user_from, recvGrpMsg->group_name);
-                    m_mutex.unlock();
                     delete recvGrpMsg;
                     break;
                 }
                 case ROOM_LIST: {
+                    std::lock_guard<std::mutex> lock(m_mutex);
                     List* listGroup = m_network.recvMethod<List>();
                     if (listGroup == nullptr) { continue; }
                     listGroup->size = ntohl(listGroup->size);
@@ -96,13 +90,11 @@ void ChattingWindow::threadFunction() {
                         delete listGroup;
                         break;
                     }
-                    m_mutex.lock();
-                    addGroups(listGroup->arr, listGroup->size);
-                    m_mutex.unlock();
                     delete listGroup;
                     break;
                 }
                 case FILE_C: {
+                    std::lock_guard<std::mutex> lock(m_mutex);
                     uint32_t* sizeFile = m_network.recvMethod<uint32_t>();
                     if (sizeFile == nullptr) { continue; }
                     char* fileData = m_network.recvFile(*sizeFile);
@@ -111,12 +103,10 @@ void ChattingWindow::threadFunction() {
                     if (userFrom == nullptr) { continue; }
                     char* fileName = m_network.recvUser();
                     if (fileName == nullptr) { continue; }
-                    m_mutex.lock();
                     std::string userString(userFrom);
                     std::string filenameString(fileName);
                     File* recvFile = new File(QString::fromStdString(userString), fileData, *sizeFile);
                     processFileRecv(recvFile, filenameString);
-                    m_mutex.unlock();
                     delete sizeFile;
                     delete userFrom;
                 }
@@ -151,8 +141,15 @@ void ChattingWindow::processFileRecv(File* recvFile, std::string fileName) {
 }
 
 void ChattingWindow::downloadFile() {
+    QString dirName = QFileDialog::getExistingDirectory(this, tr("Select a directory"), "/home",QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
     QPushButton* btn = qobject_cast<QPushButton*>(sender());
-    m_files[btn]->downloadFile(btn->text().toStdString());
+    if (m_files[btn]->downloadFile(btn->text().toStdString(), dirName.toStdString())) {
+        sendError("File download successfully!");
+    }
+    else {
+        sendError("Unable to download file!");
+    }
 }
 
 QPushButton* ChattingWindow::createAndStyleFileButton(std::string& fileName) {
@@ -175,6 +172,8 @@ QPushButton* ChattingWindow::createAndStyleFileButton(std::string& fileName) {
 void ChattingWindow::addFileButtonToScreen(File* recvFile, std::string fileName) {
     QPushButton* button = createAndStyleFileButton(fileName);
 
+    if (button == nullptr) { return; }
+
     //definately have a method that does this
     m_ui.chatLayout->addWidget(button, 0, Qt::AlignLeft);
 
@@ -193,7 +192,7 @@ void ChattingWindow::addFileButtonToScreen(File* recvFile, std::string fileName)
 
 std::pair<QPushButton*, QString> ChattingWindow::createAndStyleGroupButton() {
     if (m_Groups.size() >= 10) {
-        send_error("Already at a maximum number of Groups!");
+        sendError("Already at a maximum number of Groups!");
         QString empty{ "" };
         return { nullptr, empty};
     }
@@ -212,14 +211,10 @@ std::pair<QPushButton*, QString> ChattingWindow::createAndStyleGroupButton() {
 
     return { group, groupName };
 }
-//------------------------------------------------ ELEMENTARY FUNCTIONS (SETTERS) ---------------------------------------------------------------------
+
 void ChattingWindow::on_Message_input_textEdited(const QString& text) {
     m_messageToSend = text;
-    return;
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------
-
-//------------------------------------------------ BUTTON CLICKED FUNCTIONS---------------------------------------------------------------------
 
 void ChattingWindow::on_fileButton_clicked() {
     QString fileName = QFileDialog::getOpenFileName(this, "Select one or more files to open", "/home");
@@ -233,7 +228,7 @@ void ChattingWindow::on_fileButton_clicked() {
             QString fileName = fileInfo.fileName();
 
             if (fileInfo.size() > MAX_FILE_SIZE) {
-                send_error("File too large! Must be less than 5 MB");
+                sendError("File too large! Must be less than 5 MB");
                 return;
             }
 
@@ -250,7 +245,7 @@ void ChattingWindow::on_fileButton_clicked() {
 }
 
 void ChattingWindow::on_addGroup_clicked() {
-    auto buttonAndName = createAndStyleGroupButton(); // its a refernce
+    auto buttonAndName = createAndStyleGroupButton();
 
     if (buttonAndName.first == nullptr) { return; }
 
@@ -260,12 +255,10 @@ void ChattingWindow::on_addGroup_clicked() {
 
     m_groupMessages.insert(std::make_pair(buttonAndName.second, groupMsg));
 
-    std::string name_to_sendStd = buttonAndName.second.toStdString();
-
-    m_network.sendGroupName(name_to_sendStd);
+    m_network.sendGroupName(buttonAndName.second.toStdString());
 }
 
-void ChattingWindow::userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton) {
+void ChattingWindow::userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton) const {
     if (hide.size() != 0) {
         for (auto itr = hide.begin(); itr != hide.end(); itr++) {
             itr->second->hide();
@@ -388,9 +381,8 @@ void ChattingWindow::displayMessages(UserMessage* t_messages, const QString& use
     }
 }
 
-//weird behaviour where its encrypted once then unencrypted...
 void ChattingWindow::on_sendButton_clicked() {
-    QString messageCopy = m_messageToSend; // unencrypted message
+    QString messageCopy = m_messageToSend;
     encrypt(messageCopy);
     if (m_userOrGroup == UserB) {
         std::string username_to_sendStd = m_usernameToSend.toStdString();
@@ -398,12 +390,12 @@ void ChattingWindow::on_sendButton_clicked() {
         std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
 
         if (message_to_sendStd.length() >= 128) {
-            send_error("Message is too long! Cannot be longer than 128 characters.");
+            sendError("Message is too long! Cannot be longer than 128 characters.");
             return;
         }
 
         if (message_to_sendStd.length() == 0) {
-            send_error("Message is empty! Cannot send empty message!.");
+            sendError("Message is empty! Cannot send empty message!.");
             return;
         }
 
@@ -429,12 +421,12 @@ void ChattingWindow::on_sendButton_clicked() {
         std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
 
         if (message_to_sendStd.length() >= 128) {
-            send_error("Message is too long! Cannot be longer than 128 characters.");
+            sendError("Message is too long! Cannot be longer than 128 characters.");
             return;
         }
 
         if (message_to_sendStd.length() == 0) {
-            send_error("Message is empty! Cannot send empty message!.");
+            sendError("Message is empty! Cannot send empty message!.");
             return;
         }
         m_groupMessages[m_groupToSend]->addMessage(m_selfUsername, CURR_USER, m_selfUsername + " : " + m_messageToSend);
@@ -523,7 +515,7 @@ void ChattingWindow::removeUsers(char user[USERNAME_LENGTH], uint32_t size) {
     return;
 }
 
-void ChattingWindow::addGrouptoScreen(const QString& group_n) {
+void ChattingWindow::addGrouptoScreen(const QString group_n) {
     QPushButton* group = new QPushButton(this);
 
     GroupMessage* groupMsg = new GroupMessage(group_n);
@@ -623,7 +615,7 @@ void ChattingWindow::sendUserToScreen(QString username) {
     return;
 }
 
-void ChattingWindow::send_error(const QString& error_message) {
+void ChattingWindow::sendError(const QString& error_message) {
     QMessageBox msgBox;
     msgBox.setText(error_message);
     msgBox.setStandardButtons(QMessageBox::Ok);
@@ -773,6 +765,9 @@ void ChattingWindow::initUI() {
     m_ui.Message_input->setFont(m_buttonFont);
     m_ui.sendButton->setIcon(QIcon("icon.png"));
     m_ui.sendButton->setIconSize(QSize(45, 37));
+
+    m_ui.fileButton->setIcon(QIcon("fileupload.png"));
+    m_ui.fileButton->setIconSize(QSize(45, 37));
 
     m_ui.chatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
     m_ui.addGroup->hide();
