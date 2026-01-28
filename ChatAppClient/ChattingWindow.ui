@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1063</width>
+    <width>1077</width>
     <height>680</height>
    </rect>
   </property>
@@ -422,8 +422,25 @@ QPushButton:pressed {
       <height>41</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton#fileButton {
+    background-color: #0078d7;
+    padding: 3px 7px;
+    border-radius: 5px;
+    border: none;
+}
+
+QPushButton#fileButton:hover {
+    background-color: #2892ff;
+}
+
+QPushButton#fileButton:pressed {
+    background-color: #005fa3;
+}
+</string>
+    </property>
     <property name="text">
-     <string>B</string>
+     <string/>
     </property>
    </widget>
   </widget>

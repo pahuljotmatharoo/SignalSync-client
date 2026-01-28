@@ -98,7 +98,7 @@ public:
 	uint32_t sendUsername(const std::string& t_username, const std::size_t t_length) const;
 	std::size_t sendInitMsg(const int& constant) const;
 	std::size_t sendFileSize(const uint32_t& t_fileSize) const;
-	void sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send) const;
+	int sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send) const;
 	char* recvUser() const;
 	std::size_t sendMsg(const std::string& t_message, const std::string& t_username, const int& t_constant) const;
 	std::size_t sendGroupName(const std::string& group_name) const;

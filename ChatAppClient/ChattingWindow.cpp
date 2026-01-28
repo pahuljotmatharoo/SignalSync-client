@@ -17,7 +17,7 @@
 
 ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::threadFunction, this),
                                                     m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), 
-                                                    m_userOrGroup(UserB), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10)
+                                                    m_userOrGroup(UserB), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10), m_usernameToSend("")
 {
     initUI();
 
@@ -227,17 +227,24 @@ void ChattingWindow::on_fileButton_clicked() {
 
             QString fileName = fileInfo.fileName();
 
+            if (m_usernameToSend == "") { 
+                sendError("Select a user!");
+                file.close(); 
+                return; 
+            }
+
             if (fileInfo.size() > MAX_FILE_SIZE) {
                 sendError("File too large! Must be less than 5 MB");
                 return;
             }
-
             if (m_selfUsername == m_usernameToSend.toStdString().substr(4)) {
                 file.close();
                 return;
             }   
             else {
-                m_network.sendFile(&content, m_usernameToSend.toStdString(), fileName.toStdString());
+                if (m_network.sendFile(&content, m_usernameToSend.toStdString(), fileName.toStdString()) == -1) {
+                    sendError("Cannot send file successfully");
+                }
             }
             file.close();
         }
@@ -255,7 +262,9 @@ void ChattingWindow::on_addGroup_clicked() {
 
     m_groupMessages.insert(std::make_pair(buttonAndName.second, groupMsg));
 
-    m_network.sendGroupName(buttonAndName.second.toStdString());
+    if (m_network.sendGroupName(buttonAndName.second.toStdString()) == -1) {
+        sendError("Cannot add group successfully");
+    };
 }
 
 void ChattingWindow::userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton) const {
@@ -411,7 +420,10 @@ void ChattingWindow::on_sendButton_clicked() {
 
         (m_messages)[m_usernameToSend]->addMessage((std::make_pair(CURR_USER, m_messageToSend.toStdString())));
 
-        m_network.sendMsg(message_to_sendStd, username_to_sendStd, MSG_SEND);
+        if (m_network.sendMsg(message_to_sendStd, username_to_sendStd, MSG_SEND) == -1) {
+            sendError("Connection Lost! Please reconnect!");
+            std::exit(1);
+        }
 
         sendMessageToScreenSend(m_messageToSend);
     }
@@ -431,7 +443,10 @@ void ChattingWindow::on_sendButton_clicked() {
         }
         m_groupMessages[m_groupToSend]->addMessage(m_selfUsername, CURR_USER, m_selfUsername + " : " + m_messageToSend);
 
-        m_network.sendMsg(message_to_sendStd, group_to_sendStd, ROOM_MSG);
+        if (m_network.sendMsg(message_to_sendStd, group_to_sendStd, ROOM_MSG) == -1) {
+            sendError("Connection Lost! Please reconnect!");
+            std::exit(1);
+        }
 
         sendMessageToScreenSend(m_selfUsername + " : " + m_messageToSend);
     }
