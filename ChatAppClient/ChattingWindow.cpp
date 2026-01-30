@@ -45,6 +45,8 @@ void ChattingWindow::threadFunction() {
                     MsgRecvUser* recvStruct = m_network.recvMethod<MsgRecvUser>();
                     if (recvStruct == nullptr) { continue; }
                     addMessage(recvStruct->message, recvStruct->user_from);
+                    std::string user_from(recvStruct->user_from);
+                    notificationPassUser(QString::fromStdString(user_from));
                     delete recvStruct;
                     break;
                 }
@@ -78,6 +80,8 @@ void ChattingWindow::threadFunction() {
                     MsgRecvGroup* recvGrpMsg = m_network.recvMethod<MsgRecvGroup>();
                     if (recvGrpMsg == nullptr) { continue; }
                     addMessage_group(recvGrpMsg->message, recvGrpMsg->user_from, recvGrpMsg->group_name);
+                    std::string group_name(recvGrpMsg->group_name);
+                    notificationPassGroup(QString::fromStdString(group_name));
                     delete recvGrpMsg;
                     break;
                 }
@@ -388,6 +392,30 @@ void ChattingWindow::displayMessages(UserMessage* t_messages, const QString& use
         if (vec[i].first == CURR_USER) { sendMessageToScreenSend(QString::fromStdString(vec[i].second)); }
         else { sendMessageToScreenRecv(QString::fromStdString(vec[i].second), user_or_group_name, user_or_group); };
     }
+}
+
+void ChattingWindow::notificationPassUser(const QString& user_from)
+{
+    QMetaObject::invokeMethod(this, [=] { this->notificationUser(user_from); }, Qt::QueuedConnection);
+}
+
+void ChattingWindow::notificationPassGroup(const QString& group_from)
+{
+    QMetaObject::invokeMethod(this, [=] { this->notificationGroup(group_from); }, Qt::QueuedConnection);
+}
+
+void ChattingWindow::notificationUser(const QString& user_from) {
+    if (m_Users.find(user_from) == m_Users.end() || m_lastPressedUser == m_Users[user_from]) {
+        return;
+    }
+    m_Users[user_from]->setStyleSheet(m_recvNotificationStylesheet);
+}
+
+void ChattingWindow::notificationGroup(const QString& group_from) {
+    if (m_Groups.find(group_from) == m_Groups.end() || m_lastPressedGroup == m_Groups[group_from]) {
+        return;
+    }
+    m_Groups[group_from]->setStyleSheet(m_recvNotificationStylesheet);
 }
 
 void ChattingWindow::on_sendButton_clicked() {
@@ -739,6 +767,19 @@ void ChattingWindow::initUI() {
     m_pressedButtonStylesheet =
         "QPushButton {"
         " background-color: #1E90FF;"
+        " color: white;"
+        " border: none;"
+        " padding: 10px;"
+        " font-size: 16px;"
+        " border-radius: 5px;"
+        " }"
+        " QPushButton:hover {"
+        " background-color: #055cb0;"
+        " }";
+
+    m_recvNotificationStylesheet =
+        "QPushButton {"
+        " background-color: #FF6B6B;"
         " color: white;"
         " border: none;"
         " padding: 10px;"

@@ -27,6 +27,7 @@ private:
     QString m_pressedButtonStylesheet;
     QString m_sendMessageStylesheet;
     QString m_recvMessageStylesheet;
+    QString m_recvNotificationStylesheet;
     QString m_usernameToSend;
     QString m_messageToSend;
     QString m_groupToSend;
@@ -83,6 +84,10 @@ public:
     void displayGroupMessages(const QString& t_group_name);
     void displayFileButtons(const QString& user_or_group_name);
     void displayMessages(UserMessage* t_messages, const QString& user_or_group_name, bool user_or_group);
+    void notificationPassUser(const QString& user_from);
+    void notificationPassGroup(const QString& user_from);
+    void notificationUser(const QString& user_from);
+    void notificationGroup(const QString& group_from);
 private slots:
     void on_sendButton_clicked();
     void on_fileButton_clicked();
