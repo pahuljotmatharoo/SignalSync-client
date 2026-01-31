@@ -93,6 +93,17 @@ public:
     void notificationUser(const QString& user_from);
     void notificationGroup(const QString& group_from);
     void createIfGroupMissing(const QString& group_name);
+    template <typename T>
+    void addWidgetToLayout(const T& widget, Qt::Alignment alignment) {
+        m_ui.chatLayout->addWidget(widget, 0, alignment);
+
+        m_ui.scrollArea->verticalScrollBar()->setValue(m_ui.scrollArea->verticalScrollBar()->maximum());
+
+        QTimer::singleShot(0, this, [=]() {
+            m_ui.scrollArea->ensureWidgetVisible(widget);
+            });
+    }
+    QString findNewGroupName();
 private slots:
     void on_sendButton_clicked();
     void on_fileButton_clicked();
