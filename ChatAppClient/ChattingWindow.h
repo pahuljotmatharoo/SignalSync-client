@@ -49,7 +49,8 @@ private:
     Network m_network;
     std::thread m_thread;
     std::mutex m_mutex;
-    std::counting_semaphore<1> m_groupSemaphore;
+    std::binary_semaphore m_groupSemaphore;
+    std::binary_semaphore m_generalSemaphore;
     std::atomic<bool> m_threadStop;
 public:
     explicit ChattingWindow(QWidget* parent = nullptr);
