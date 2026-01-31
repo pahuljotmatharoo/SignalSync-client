@@ -17,7 +17,7 @@
 
 ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::threadFunction, this),
                                                     m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), 
-                                                    m_userOrGroup(UserB), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10), m_usernameToSend("")
+                                                    m_userOrGroup(UserB), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10), m_usernameToSend(""), m_groupSemaphore(1)
 {
     initUI();
 
@@ -194,6 +194,14 @@ void ChattingWindow::addFileButtonToScreen(File* recvFile, std::string fileName)
     m_files.insert(std::make_pair(button, recvFile));
 }
 
+QPushButton* ChattingWindow::createAndStyleButton(const QString& name) {
+    QPushButton* button = new QPushButton(this);
+    button->setText(name);
+    button->setMinimumSize(205, 40);
+    button->setStyleSheet(m_defaultButtonStylesheet);
+    return button;
+}
+
 std::pair<QPushButton*, QString> ChattingWindow::createAndStyleGroupButton() {
     if (m_Groups.size() >= 10) {
         sendError("Already at a maximum number of Groups!");
@@ -201,19 +209,15 @@ std::pair<QPushButton*, QString> ChattingWindow::createAndStyleGroupButton() {
         return { nullptr, empty};
     }
 
-    QPushButton* group = new QPushButton(this);
+    QString group_name = QString("Group %1").arg(m_Groups.size() + 1);
 
-    QString groupName = QString("Group %1").arg(m_Groups.size() + 1);
+    QPushButton* group = createAndStyleButton(group_name);
 
-    group->setText(groupName);
-    group->setMinimumSize(205, 40);
-    group->setStyleSheet(m_defaultButtonStylesheet);
-
-    m_Groups.insert(std::make_pair(groupName, group));
+    m_Groups.insert(std::make_pair(group_name, group));
 
     m_ui.userLayout->addWidget(group, 0, Qt::AlignCenter | Qt::AlignTop);
 
-    return { group, groupName };
+    return { group, group_name };
 }
 
 void ChattingWindow::on_Message_input_textEdited(const QString& text) {
@@ -418,6 +422,18 @@ void ChattingWindow::notificationGroup(const QString& group_from) {
     m_Groups[group_from]->setStyleSheet(m_recvNotificationStylesheet);
 }
 
+void ChattingWindow::createIfGroupMissing(const QString& group_name) {
+    QPushButton* group_button = createAndStyleButton(group_name);
+    m_Groups.insert(std::make_pair(group_name, group_button));
+
+    if (m_userOrGroup == UserB) {
+        group_button->hide();
+    }
+
+    m_ui.userLayout->addWidget(group_button, 0, Qt::AlignCenter | Qt::AlignTop);
+    connect(group_button, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
+}
+
 void ChattingWindow::on_sendButton_clicked() {
     QString messageCopy = m_messageToSend;
     encrypt(messageCopy);
@@ -494,7 +510,15 @@ void ChattingWindow::addMessage_group(char message[MESSAGE_LENGTH], char usernam
     message_toadd = message_r.toStdString();
     std::string group_toadd(group);
 
-    m_groupMessages[QString::fromStdString(group_toadd)]->addMessage(QString::fromStdString(username_toadd), OTHER_USER, QString::fromStdString(username_toadd) + ":" + message_r);
+    if (m_groupMessages.find(QString::fromStdString(group_toadd)) == m_groupMessages.end()) {
+        m_groupMessages[QString::fromStdString(group_toadd)] = new GroupMessage(QString::fromStdString(group_toadd));
+    }
+
+    if (m_Groups.find(QString::fromStdString(group_toadd)) == m_Groups.end()) {
+        QMetaObject::invokeMethod(this, [=] { this->createIfGroupMissing(QString::fromStdString(group_toadd)); }, Qt::QueuedConnection);
+    }
+
+    m_groupMessages[QString::fromStdString(group_toadd)]->addMessage(QString::fromStdString(username_toadd), OTHER_USER, QString::fromStdString(username_toadd) + ":" + message_r); // group is null when we initally recieve it
 
     //we'll be able to display right away to screen, needs to run on the gui thread (main thread)
     QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(username_toadd + " : " + message_toadd), QString::fromStdString(group_toadd), GroupB); }, Qt::QueuedConnection);

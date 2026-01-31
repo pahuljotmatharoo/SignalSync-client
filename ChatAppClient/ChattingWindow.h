@@ -5,6 +5,7 @@
 #include <thread>
 #include <mutex>
 #include <type_traits>
+#include <semaphore>
 #include "message.h"
 #include "message_s.h"
 #include "ui_ChattingWindow.h"
@@ -48,6 +49,7 @@ private:
     Network m_network;
     std::thread m_thread;
     std::mutex m_mutex;
+    std::counting_semaphore<1> m_groupSemaphore;
     std::atomic<bool> m_threadStop;
 public:
     explicit ChattingWindow(QWidget* parent = nullptr);
@@ -72,6 +74,7 @@ public:
     void encrypt(QString& message);
     void threadFunction();
     std::pair<QPushButton*, QString> createAndStyleGroupButton();
+    QPushButton* createAndStyleButton(const QString& name);
     QPushButton* createAndStyleFileButton(std::string& fileName);
     void userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton) const;
     void addFileButtonToScreen(File* recvFile, std::string fileName);
@@ -88,6 +91,7 @@ public:
     void notificationPassGroup(const QString& user_from);
     void notificationUser(const QString& user_from);
     void notificationGroup(const QString& group_from);
+    void createIfGroupMissing(const QString& group_name);
 private slots:
     void on_sendButton_clicked();
     void on_fileButton_clicked();
