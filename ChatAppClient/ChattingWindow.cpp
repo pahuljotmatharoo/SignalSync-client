@@ -25,10 +25,7 @@ ChattingWindow::~ChattingWindow() {
     destroyFiles();
     destroyUserMessages();
     destroyGroupMessages();
-    m_network.sendInitMsg(MSG_EXIT);
-    ::shutdown(m_network.getSockID(), SD_BOTH); // send shut down to socket, should get us out of the while loop
-    m_threadStop = true; // thread safe atomic
-    m_thread.join();
+    threadShutdown();
 }
 
 void ChattingWindow::threadFunction() {
@@ -137,7 +134,14 @@ void ChattingWindow::destroyGroupMessages() {
     }
 }
 
-void ChattingWindow::processFileRecv(File* recvFile, std::string fileName) {
+void ChattingWindow::threadShutdown() {
+    m_network.sendInitMsg(MSG_EXIT);
+    ::shutdown(m_network.getSockID(), SD_BOTH); // send shut down to socket, should get us out of the while loop
+    m_threadStop = true; // thread safe atomic
+    m_thread.join();
+}
+
+void ChattingWindow::processFileRecv(File* recvFile, const std::string& fileName) {
     QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreen(recvFile, fileName); }, Qt::QueuedConnection);
 }
 
@@ -153,7 +157,7 @@ void ChattingWindow::downloadFile() {
     }
 }
 
-QPushButton* ChattingWindow::createAndStyleFileButton(std::string& fileName) {
+QPushButton* ChattingWindow::createAndStyleFileButton(const std::string& fileName) {
     QPushButton* button = new QPushButton(this);
 
     button->setText(QString::fromStdString(fileName));
@@ -165,12 +169,11 @@ QPushButton* ChattingWindow::createAndStyleFileButton(std::string& fileName) {
 
     connect(button, &QPushButton::clicked, this, &ChattingWindow::downloadFile);
 
-
     return button;
 }
 
 
-void ChattingWindow::addFileButtonToScreen(File* recvFile, std::string fileName) {
+void ChattingWindow::addFileButtonToScreen(File* recvFile, const std::string& fileName) {
     QPushButton* button = createAndStyleFileButton(fileName);
 
     if (button == nullptr) { return; }
@@ -199,8 +202,7 @@ QPushButton* ChattingWindow::createAndStyleButton(const QString& name) {
 std::pair<QPushButton*, QString> ChattingWindow::createAndStyleGroupButton() {
     if (m_Groups.size() >= 10) {
         sendError("Already at a maximum number of Groups!");
-        QString empty{ "" };
-        return { nullptr, empty};
+        return { nullptr, ""};
     }
 
     QString group_name = findNewGroupName();
@@ -516,9 +518,8 @@ void ChattingWindow::on_sendButton_clicked() {
 }
 
 void ChattingWindow::addGroup(const char group[USERNAME_LENGTH]) {
-    std::string group_toadd(group);
 
-    QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(QString::fromStdString(group_toadd)); }, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(QString::fromStdString(std::string(group))); }, Qt::QueuedConnection);
 }
 
 void ChattingWindow::addMessage_group(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH], char group[USERNAME_LENGTH]) {
@@ -576,12 +577,11 @@ void ChattingWindow::addUsers(char users[MAXUSERS][USERNAME_LENGTH], uint32_t si
     //just goes through the list of users when its updated from the server end, and adds any new ones.
     //better logic will be implemented later from server side soon
     for (std::size_t i{0}; i < size; i++) {
-        std::string username(users[i]);
-        QString usernamee = QString::fromStdString(username);
+        QString username = QString::fromStdString(std::string(users[i]));
 
         //since this function will be called by recv thread, cannot create element here so queue it on main thread
-        if ((m_Users).find(usernamee) == (m_Users).end()) {
-            QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(usernamee); }, Qt::QueuedConnection);
+        if ((m_Users).find(username) == (m_Users).end()) {
+            QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(username); }, Qt::QueuedConnection);
         }
     }
     return;
@@ -591,31 +591,28 @@ void ChattingWindow::addGroups(char groups[MAXUSERS][USERNAME_LENGTH], uint32_t 
     //just goes through the list of users when its updated from the server end, and adds any new ones.
     //better logic will be implemented later from server side soon
     for (std::size_t i{0}; i < size; i++) {
-        std::string group(groups[i]);
-        QString groupp = QString::fromStdString(group);
+        QString group = QString::fromStdString(std::string(groups[i]));
 
         //since this function will be called by recv thread, cannot create element here so queue it on main thread
-        if ((m_Groups).find(groupp) == (m_Groups).end()) {
-            QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(groupp); }, Qt::QueuedConnection);
+        if ((m_Groups).find(group) == (m_Groups).end()) {
+            QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(group); }, Qt::QueuedConnection);
         }
     }
     return;
 }
 
 void ChattingWindow::removeUsers(char user[USERNAME_LENGTH], uint32_t size) {
-    std::string user_to_remove(user);
-    QMetaObject::invokeMethod(this, [=] { this->removeUserfromScreen(QString::fromStdString(user_to_remove)); }, Qt::QueuedConnection);
-    return;
+    QMetaObject::invokeMethod(this, [=] { this->removeUserfromScreen(QString::fromStdString(std::string(user))); }, Qt::QueuedConnection);
 }
 
 void ChattingWindow::addGrouptoScreen(const QString group_n) {
     QPushButton* group = new QPushButton(this);
 
-    GroupMessage* groupMsg = new GroupMessage(group_n);
+    GroupMessage* group_msg = new GroupMessage(group_n);
 
     m_generalSemaphore.acquire();
     m_Groups.insert(std::make_pair(group_n, group));
-    m_groupMessages.insert(std::make_pair(group_n, groupMsg));
+    m_groupMessages.insert(std::make_pair(group_n, group_msg));
     m_generalSemaphore.release();
 
     group->setText(group_n);
@@ -669,7 +666,7 @@ void ChattingWindow::sendMessageToScreenSend(const QString& message) {
     addWidgetToLayout<MessageWidget_s*>(new MessageWidget_s(message, this), Qt::AlignRight);
 }
 
-void ChattingWindow::sendUserToScreen(QString username) {
+void ChattingWindow::sendUserToScreen(const QString& username) {
     QPushButton* user = new QPushButton(this);
 
     if(username == m_selfUsername) {
@@ -714,7 +711,7 @@ void ChattingWindow::removeAllChatItemsFromScreen() {
         if (!w) continue;
 
         if (qobject_cast<QPushButton*>(w)) {
-            w->hide();              // stays in layout, can be shown later
+            w->hide();
         }
         else {
             m_ui.chatLayout->removeWidget(w);
@@ -761,32 +758,7 @@ void ChattingWindow::encrypt(QString& message) {
     }
 }
 
-void ChattingWindow::initUI() {
-    m_ui.setupUi(this);
-    //we're just creating a layout for scrolling and out vertical layout
-    QWidget* contents = m_ui.scrollArea->takeWidget();
-    QVBoxLayout* layout = new QVBoxLayout(contents);
-
-    layout->setContentsMargins(0, 0, 0, 0);
-    contents->setLayout(layout);
-    m_ui.scrollArea->setWidget(contents);
-
-    m_ui.chatLayout = layout;
-    layout->setSpacing(5);
-    layout->setSizeConstraint(QLayout::SetMinimumSize);
-
-    //we're just creating a layout for scrolling and out vertical layout
-    QWidget* contents_users = m_ui.scrollArea_2->takeWidget();
-    QVBoxLayout* layout_users = new QVBoxLayout(contents_users);
-
-    layout_users->setContentsMargins(0, 0, 0, 0);
-    contents_users->setLayout(layout_users);
-    m_ui.scrollArea_2->setWidget(contents_users);
-
-    m_ui.userLayout = layout_users;
-    layout_users->setSpacing(5);
-    layout_users->setSizeConstraint(QLayout::SetMinimumSize);
-
+void ChattingWindow::initStyles() {
     m_defaultButtonStylesheet =
         "QPushButton {"
         " background-color: #4CAF50;"
@@ -839,14 +811,9 @@ void ChattingWindow::initUI() {
         " border:1px solid #E0E0E0;"
         " border-radius:12px;"
         " font-size: 16px;";
+}
 
-    m_ui.userLayout->setContentsMargins(10, 5, 10, 0); // 10px left/right margins
-
-    m_ui.chatLayout->setContentsMargins(10, 10, 10, 10); // 10px left/right margins
-
-    auto* l = static_cast<QVBoxLayout*>(m_ui.scrollAreaWidgetContents->layout());
-    l->insertStretch(0, 1);
-
+void ChattingWindow::initButtons() {
     m_ui.chatLayout->addStretch(1);  // Push all bubbles to top
 
     m_ui.title_label->setFont(m_titleFont);
@@ -863,4 +830,46 @@ void ChattingWindow::initUI() {
 
     m_ui.chatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
     m_ui.addGroup->hide();
+}
+
+void ChattingWindow::initLayout() {
+    QWidget* contents = m_ui.scrollArea->takeWidget();
+    QVBoxLayout* layout = new QVBoxLayout(contents);
+
+    layout->setContentsMargins(0, 0, 0, 0);
+    contents->setLayout(layout);
+    m_ui.scrollArea->setWidget(contents);
+
+    m_ui.chatLayout = layout;
+    layout->setSpacing(5);
+    layout->setSizeConstraint(QLayout::SetMinimumSize);
+}
+
+void ChattingWindow::initContentLayout() {
+    //we're just creating a layout for scrolling and out vertical layout
+    QWidget* contents_users = m_ui.scrollArea_2->takeWidget();
+    QVBoxLayout* layout_users = new QVBoxLayout(contents_users);
+
+    layout_users->setContentsMargins(0, 0, 0, 0);
+    contents_users->setLayout(layout_users);
+    m_ui.scrollArea_2->setWidget(contents_users);
+
+    m_ui.userLayout = layout_users;
+    layout_users->setSpacing(5);
+    layout_users->setSizeConstraint(QLayout::SetMinimumSize);
+
+    m_ui.userLayout->setContentsMargins(10, 5, 10, 0); // 10px left/right margins
+
+    m_ui.chatLayout->setContentsMargins(10, 10, 10, 10); // 10px left/right margins
+
+    auto* l = static_cast<QVBoxLayout*>(m_ui.scrollAreaWidgetContents->layout());
+    l->insertStretch(0, 1);
+}
+
+void ChattingWindow::initUI() {
+    m_ui.setupUi(this);
+    initStyles();
+    initButtons();
+    initLayout();
+    initContentLayout();
 }

@@ -14,10 +14,10 @@
 #include "UserMessage.h"
 #include "GroupMessage.h"
 
-constexpr auto OTHER_USER = true;
-constexpr auto CURR_USER = false;
-constexpr auto UserB = true;
-constexpr auto GroupB = false;
+constexpr bool OTHER_USER = true;
+constexpr bool CURR_USER = false;
+constexpr bool UserB = true;
+constexpr bool GroupB = false;
 
 class ChattingWindow : public QMainWindow {
     Q_OBJECT
@@ -33,17 +33,16 @@ private:
     QString m_messageToSend;
     QString m_groupToSend;
     QString m_selfUsername;
-    //should get deleted itself
     QPushButton* m_lastPressedUser; // basically current button pressed (last pressed as we need to see if we had pressed a button before, and which)
     QPushButton* m_lastPressedGroup; // basically current button pressed (last pressed as we need to see if we had pressed a button before, and which)
     QFont m_messageFont;
     QFont m_titleFont;
     QFont m_buttonAddGroupFont;
     QFont m_buttonFont;
-    std::unordered_map<QString, UserMessage*> m_messages; // Name of other user, <Who sent it, The Message>
-    std::unordered_map<QString, GroupMessage*> m_groupMessages; // Name of Group, <Who sent it <The user who sent it, The Message>>
-    std::unordered_map<QString, QPushButton*> m_Users; // <Name of User, Button addr>
-    std::unordered_map<QString, QPushButton*> m_Groups;  // <Name of Group, Button addr> 
+    std::unordered_map<QString, UserMessage*> m_messages;
+    std::unordered_map<QString, GroupMessage*> m_groupMessages;
+    std::unordered_map<QString, QPushButton*> m_Users;
+    std::unordered_map<QString, QPushButton*> m_Groups;
     std::unordered_map<QChar, QChar> m_encryptMap;
     std::unordered_map<QPushButton*, File*> m_files;
     Network m_network;
@@ -62,7 +61,7 @@ public:
     void addMessage_group(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH], char group[USERNAME_LENGTH]);
     void sendMessageToScreenRecv(const QString& message, const QString& user, bool type);
     void sendMessageToScreenSend(const QString& message);
-    void sendUserToScreen(QString username);
+    void sendUserToScreen(const QString& username);
     void addUsers(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size);
     void removeUsers(char user[USERNAME_LENGTH], uint32_t size);
     void removeUserfromScreen(const QString& user);
@@ -76,14 +75,15 @@ public:
     void threadFunction();
     std::pair<QPushButton*, QString> createAndStyleGroupButton();
     QPushButton* createAndStyleButton(const QString& name);
-    QPushButton* createAndStyleFileButton(std::string& fileName);
+    QPushButton* createAndStyleFileButton(const std::string& fileName);
     void userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton) const;
-    void addFileButtonToScreen(File* recvFile, std::string fileName);
+    void addFileButtonToScreen(File* recvFile, const std::string& fileName);
     void downloadFile();
-    void processFileRecv(File* recvFile, std::string fileName);
+    void processFileRecv(File* recvFile, const std::string& fileName);
     void destroyFiles();
     void destroyUserMessages();
     void destroyGroupMessages();
+    void threadShutdown();
     void displayUserMessages(const QString& t_user_name);
     void displayGroupMessages(const QString& t_group_name);
     void displayFileButtons(const QString& user_or_group_name);
@@ -104,6 +104,10 @@ public:
             });
     }
     QString findNewGroupName();
+    void initStyles();
+    void initButtons();
+    void initLayout();
+    void initContentLayout();
 private slots:
     void on_sendButton_clicked();
     void on_fileButton_clicked();
