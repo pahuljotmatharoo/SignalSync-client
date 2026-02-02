@@ -150,10 +150,10 @@ void ChattingWindow::downloadFile() {
 
     QPushButton* btn = qobject_cast<QPushButton*>(sender());
     if (m_files[btn]->downloadFile(btn->text().toStdString(), dirName.toStdString())) {
-        sendError("File download successfully!");
+        ChatAppClient::sendError("File download successfully!");
     }
     else {
-        sendError("Unable to download file!");
+        ChatAppClient::sendError("Unable to download file!");
     }
 }
 
@@ -201,7 +201,7 @@ QPushButton* ChattingWindow::createAndStyleButton(const QString& name) {
 
 std::pair<QPushButton*, QString> ChattingWindow::createAndStyleGroupButton() {
     if (m_Groups.size() >= 10) {
-        sendError("Already at a maximum number of Groups!");
+        ChatAppClient::sendError("Already at a maximum number of Groups!");
         return { nullptr, ""};
     }
 
@@ -245,13 +245,13 @@ void ChattingWindow::on_fileButton_clicked() {
             QString fileName = fileInfo.fileName();
 
             if (m_usernameToSend == "") { 
-                sendError("Select a user!");
+                ChatAppClient::sendError("Select a user!");
                 file.close(); 
                 return; 
             }
 
             if (fileInfo.size() > MAX_FILE_SIZE) {
-                sendError("File too large! Must be less than 5 MB");
+                ChatAppClient::sendError("File too large! Must be less than 5 MB");
                 return;
             }
             if (m_selfUsername == m_usernameToSend.toStdString().substr(4)) {
@@ -260,7 +260,7 @@ void ChattingWindow::on_fileButton_clicked() {
             }   
             else {
                 if (m_network.sendFile(&content, m_usernameToSend.toStdString(), fileName.toStdString()) == -1) {
-                    sendError("Cannot send file successfully");
+                    ChatAppClient::sendError("Cannot send file successfully");
                 }
             }
             file.close();
@@ -280,7 +280,7 @@ void ChattingWindow::on_addGroup_clicked() {
     m_generalSemaphore.release();
 
     if (m_network.sendGroupName(buttonAndName.second.toStdString()) == -1) {
-        sendError("Cannot add group successfully");
+        ChatAppClient::sendError("Cannot add group successfully");
     };
 }
 
@@ -459,12 +459,12 @@ void ChattingWindow::on_sendButton_clicked() {
         std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
 
         if (message_to_sendStd.length() >= 128) {
-            sendError("Message is too long! Cannot be longer than 128 characters.");
+            ChatAppClient::sendError("Message is too long! Cannot be longer than 128 characters.");
             return;
         }
 
         if (message_to_sendStd.length() == 0) {
-            sendError("Message is empty! Cannot send empty message!.");
+            ChatAppClient::sendError("Message is empty! Cannot send empty message!.");
             return;
         }
 
@@ -484,7 +484,7 @@ void ChattingWindow::on_sendButton_clicked() {
         m_generalSemaphore.release();
 
         if (m_network.sendMsg(message_to_sendStd, username_to_sendStd, MSG_SEND) == -1) {
-            sendError("Connection Lost! Please reconnect!");
+            ChatAppClient::sendError("Connection Lost! Please reconnect!");
             std::exit(1);
         }
 
@@ -496,12 +496,12 @@ void ChattingWindow::on_sendButton_clicked() {
         std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
 
         if (message_to_sendStd.length() >= 128) {
-            sendError("Message is too long! Cannot be longer than 128 characters.");
+            ChatAppClient::sendError("Message is too long! Cannot be longer than 128 characters.");
             return;
         }
 
         if (message_to_sendStd.length() == 0) {
-            sendError("Message is empty! Cannot send empty message!.");
+            ChatAppClient::sendError("Message is empty! Cannot send empty message!.");
             return;
         }
         m_generalSemaphore.acquire();
@@ -509,7 +509,7 @@ void ChattingWindow::on_sendButton_clicked() {
         m_generalSemaphore.release();
 
         if (m_network.sendMsg(message_to_sendStd, group_to_sendStd, ROOM_MSG) == -1) {
-            sendError("Connection Lost! Please reconnect!");
+            ChatAppClient::sendError("Connection Lost! Please reconnect!");
             std::exit(1);
         }
 
@@ -691,15 +691,6 @@ void ChattingWindow::sendUserToScreen(const QString& username) {
 
     connect(user, &QPushButton::clicked, this, &ChattingWindow::onUserClick);
 
-    return;
-}
-
-void ChattingWindow::sendError(const QString& error_message) {
-    QMessageBox msgBox;
-    msgBox.setText(error_message);
-    msgBox.setStandardButtons(QMessageBox::Ok);
-    msgBox.setDefaultButton(QMessageBox::Ok);
-    int ret = msgBox.exec();
     return;
 }
 

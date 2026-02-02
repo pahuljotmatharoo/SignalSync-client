@@ -6,6 +6,7 @@
 #include <mutex>
 #include <type_traits>
 #include <semaphore>
+#include "ChatAppClient.h"
 #include "message.h"
 #include "message_s.h"
 #include "ui_ChattingWindow.h"
@@ -56,7 +57,6 @@ public:
     ~ChattingWindow();
     void setSelfUser(const QString t_username) { m_selfUsername = t_username; }
     void setNetwork(Network& t_network) { m_network = t_network; };
-    void sendError(const QString& error_message);
     void addMessage(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH]);
     void addMessage_group(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH], char group[USERNAME_LENGTH]);
     void sendMessageToScreenRecv(const QString& message, const QString& user, bool type);

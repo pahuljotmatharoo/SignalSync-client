@@ -6,7 +6,7 @@
 #include <QMessageBox>
 #include "ChattingWindow.h"
 
-ChatAppClient::ChatAppClient(QWidget *parent): QMainWindow(parent), username{""}
+ChatAppClient::ChatAppClient(QWidget *parent): QMainWindow(parent), username{""}, m_http("localhost:8080")
 {
     ui.setupUi(this);
 }
@@ -16,7 +16,7 @@ void ChatAppClient::on_lineEdit_textEdited(const QString &text)
     username = text;
 }
 
-void ChatAppClient::send_error(const QString& error_message)
+void ChatAppClient::sendError(const QString& error_message)
 {
     QMessageBox msgBox;
     msgBox.setText(error_message);
@@ -31,12 +31,12 @@ void ChatAppClient::on_pushButton_clicked() {
     const std::string userStd = username.toStdString();
 
     if (userStd.length() >= 50) {
-        send_error("Username too long! Cannot be longer than 50 characters.");
+        sendError("Username too long! Cannot be longer than 50 characters.");
         return;
     }
 
     if (userStd.length() <= 4) {
-        send_error("Username too short! Cannot be shorter than 5 characters.");
+        sendError("Username too short! Cannot be shorter than 5 characters.");
         return;
     }
 
