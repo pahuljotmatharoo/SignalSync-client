@@ -2,11 +2,14 @@ package main
 
 import (
 	"database/sql"
-	dataBase "signalsync/backend/db"
 
-	handlers "signalsync/backend/handlers"
+	"signalsync/backend/database"
+
+	"signalsync/backend/handlers"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/joho/godotenv"
 )
 
 //packages are like namespaces (hold set of functions/types)
@@ -48,8 +51,9 @@ func defineEndpoints(router *gin.Engine, db *sql.DB) {
 }
 
 func main() {
+	godotenv.Load()
 	router := gin.Default()
-	db := dataBase.InitDataBase()
+	db := database.InitDataBase()
 	defineEndpoints(router, db)
 	router.Run("localhost:8080")
 }

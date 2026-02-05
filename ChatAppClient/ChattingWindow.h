@@ -99,9 +99,7 @@ public:
 
         m_ui.scrollArea->verticalScrollBar()->setValue(m_ui.scrollArea->verticalScrollBar()->maximum());
 
-        QTimer::singleShot(0, this, [=]() {
-            m_ui.scrollArea->ensureWidgetVisible(widget);
-            });
+        QTimer::singleShot(0, this, [=]() { m_ui.scrollArea->ensureWidgetVisible(widget); });
     }
     QString findNewGroupName();
     void initStyles();

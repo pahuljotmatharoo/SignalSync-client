@@ -6,18 +6,25 @@
 #include <QMessageBox>
 #include "ChattingWindow.h"
 
-ChatAppClient::ChatAppClient(QWidget *parent): QMainWindow(parent), username{""}, m_http("localhost:8080")
+ChatAppClient::ChatAppClient(QWidget *parent): QMainWindow(parent), m_username(""), m_password(""), m_http("localhost:8080")
 {
     ui.setupUi(this);
 }
 
-void ChatAppClient::on_lineEdit_textEdited(const QString &text)
-{
-    username = text;
+void ChatAppClient::on_pushButton_2_clicked() {
+    if (m_http.registerToServer(m_username.toStdString(), m_password.toStdString()) == 0) { sendError("Login information incorrect!"); return; }
+    sendError("Registered Successfully!");
 }
 
-void ChatAppClient::sendError(const QString& error_message)
-{
+void ChatAppClient::on_lineEdit_textEdited(const QString &text) {
+    m_username = text;
+}
+
+void ChatAppClient::on_lineEdit_2_textEdited(const QString& text) {
+    m_password = text;
+}
+
+void ChatAppClient::sendError(const QString& error_message) {
     QMessageBox msgBox;
     msgBox.setText(error_message);
     msgBox.setStandardButtons(QMessageBox::Ok);
@@ -28,7 +35,7 @@ void ChatAppClient::sendError(const QString& error_message)
 
 void ChatAppClient::on_pushButton_clicked() {
 
-    const std::string userStd = username.toStdString();
+    const std::string userStd = m_username.toStdString();
 
     if (userStd.length() >= 50) {
         sendError("Username too long! Cannot be longer than 50 characters.");
@@ -40,18 +47,18 @@ void ChatAppClient::on_pushButton_clicked() {
         return;
     }
 
-    int status = m_network.serverConnect(userStd);
+    if (m_http.connectToServer(m_username.toStdString(), m_password.toStdString()) == 0) { sendError("Login information incorrect!"); return; }
 
-    if (status == SOCKET_ERROR) { QMessageBox::information(this, tr("Error!"), tr("Cannot connect to server"));  return; }
+    if (m_network.serverConnect(userStd) == SOCKET_ERROR) { sendError("Cannot Connect to Server!"); return; }
 
-    QMessageBox::information(this,tr("Logged in!"),tr("Logged in as %1").arg(username));
+    QMessageBox::information(this,tr("Logged in!"),tr("Logged in as %1").arg(m_username));
 
-    auto* w = new ChattingWindow;
-    w->setNetwork(this->m_network);
-    w->setSelfUser(username);
+    auto* window = new ChattingWindow;
+    window->setNetwork(this->m_network);
+    window->setSelfUser(m_username);
 
     this->close();
 
-    w->setAttribute(Qt::WA_DeleteOnClose);
-    w->show(); 
+    window->setAttribute(Qt::WA_DeleteOnClose);
+    window->show();
 }

@@ -11,7 +11,8 @@ class ChatAppClient : public QMainWindow
 
 private:
     Ui::ChatAppClientClass ui;
-    QString username;
+    QString m_username;
+    QString m_password;
     Network m_network;
     HTTPRequest m_http;
 public:
@@ -19,6 +20,8 @@ public:
     static void sendError(const QString& error_message);
 private slots: // Declare slots in this section
     void on_pushButton_clicked();
+    void on_pushButton_2_clicked();
     void on_lineEdit_textEdited(const QString& text);
+    void on_lineEdit_2_textEdited(const QString& text);
 };
 
