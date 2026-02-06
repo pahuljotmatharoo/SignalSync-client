@@ -5,7 +5,7 @@ import (
 
 	"signalsync/backend/database"
 
-	"signalsync/backend/handlers"
+	"signalsync/backend/controllers"
 
 	"github.com/gin-gonic/gin"
 
@@ -46,8 +46,9 @@ import (
 // ex: Client -> Middleware 1 (check login) -> Middleware 2 (check authentication) -> Middleware 3 (validate the request) -> Send Response
 
 func defineEndpoints(router *gin.Engine, db *sql.DB) {
-	router.POST("/login", handlers.ValidateLogin(db))
-	router.POST("/register", handlers.RegisterUser(db))
+	router.POST("/login", controllers.ValidateLogin(db))
+	router.POST("/register", controllers.RegisterUser(db))
+	router.POST("/delete", controllers.DeleteUser(db))
 }
 
 func main() {

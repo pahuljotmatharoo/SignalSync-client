@@ -22,4 +22,13 @@ public:
 		}
 		return 0;
 	}
+
+	std::size_t deleteToServer(const std::string& username, const std::string& password) {
+		std::string jsonBody = "{\"username\":\"" + username + "\", \"password\":\"" + password + "\"}";
+		auto response = m_client.Post("/delete", jsonBody, "application/json");
+		if (response && response->status == 200) {
+			return 1;
+		}
+		return 0;
+	}
 };

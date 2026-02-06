@@ -11,16 +11,21 @@ ChatAppClient::ChatAppClient(QWidget *parent): QMainWindow(parent), m_username("
     ui.setupUi(this);
 }
 
-void ChatAppClient::on_pushButton_2_clicked() {
+void ChatAppClient::on_registerButton_clicked() {
     if (m_http.registerToServer(m_username.toStdString(), m_password.toStdString()) == 0) { sendError("Login information incorrect!"); return; }
     sendError("Registered Successfully!");
 }
 
-void ChatAppClient::on_lineEdit_textEdited(const QString &text) {
+void ChatAppClient::on_deleteButton_clicked() {
+    if (m_http.deleteToServer(m_username.toStdString(), m_password.toStdString()) == 0) { sendError("Login information incorrect!"); return; }
+    sendError("Deleted Successfully!");
+}
+
+void ChatAppClient::on_usernameEdit_textEdited(const QString &text) {
     m_username = text;
 }
 
-void ChatAppClient::on_lineEdit_2_textEdited(const QString& text) {
+void ChatAppClient::on_passwordEdit_textEdited(const QString& text) {
     m_password = text;
 }
 
@@ -33,7 +38,7 @@ void ChatAppClient::sendError(const QString& error_message) {
     return;
 }
 
-void ChatAppClient::on_pushButton_clicked() {
+void ChatAppClient::on_connectButton_clicked() {
 
     const std::string userStd = m_username.toStdString();
 

@@ -19,9 +19,10 @@ public:
     ChatAppClient(QWidget* parent = nullptr);
     static void sendError(const QString& error_message);
 private slots: // Declare slots in this section
-    void on_pushButton_clicked();
-    void on_pushButton_2_clicked();
-    void on_lineEdit_textEdited(const QString& text);
-    void on_lineEdit_2_textEdited(const QString& text);
+    void on_connectButton_clicked();
+    void on_registerButton_clicked();
+    void on_deleteButton_clicked();
+    void on_usernameEdit_textEdited(const QString& text);
+    void on_passwordEdit_textEdited(const QString& text);
 };
 
