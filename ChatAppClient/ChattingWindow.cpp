@@ -29,12 +29,13 @@ ChattingWindow::~ChattingWindow() {
 }
 
 void ChattingWindow::threadFunction() {
-    int type = 0;
+    NetworkRequest type{};
+    //int type = 0;
     while (!m_threadStop) {
-        std::size_t recvData = recv(m_network.getSockID(), reinterpret_cast<char*>(&type), sizeof(int), 0);
+        std::size_t recvData = recv(m_network.getSockID(), reinterpret_cast<char*>(&type), sizeof(NetworkRequest), 0);
         if(recvData > 0) {
             switch (type) {
-                case MSG_SEND: {
+                case NetworkRequest::MSG_SEND: {
                     std::lock_guard<std::mutex> lock(m_mutex);
                     MsgRecvUser* recvStruct = m_network.recvMethod<MsgRecvUser>();
                     if (recvStruct == nullptr) { continue; }
@@ -44,7 +45,7 @@ void ChattingWindow::threadFunction() {
                     delete recvStruct;
                     break;
                 }
-                case MSG_LIST: {
+                case NetworkRequest::MSG_LIST: {
                     std::lock_guard<std::mutex> lock(m_mutex);
                     List* list = m_network.recvMethod<List>();
                     if (list == nullptr) { continue; }
@@ -53,7 +54,7 @@ void ChattingWindow::threadFunction() {
                     delete list;
                     break;
                 }
-                case USER_EXIT: {
+                case NetworkRequest::USER_EXIT: {
                     std::lock_guard<std::mutex> lock(m_mutex);
                     char* username = m_network.recvUser();
                     if (username == nullptr) { continue; }
@@ -61,7 +62,7 @@ void ChattingWindow::threadFunction() {
                     delete[] username;
                     break;
                 }
-                case ROOM_CREATE: {
+                case NetworkRequest::ROOM_CREATE: {
                     std::lock_guard<std::mutex> lock(m_mutex);
                     RecvGroupName* groupName = m_network.recvMethod<RecvGroupName>();
                     if (groupName == nullptr) { continue; }
@@ -69,7 +70,7 @@ void ChattingWindow::threadFunction() {
                     delete groupName;
                     break;
                 }
-                case ROOM_MSG: {
+                case NetworkRequest::ROOM_MSG: {
                     std::lock_guard<std::mutex> lock(m_mutex);
                     MsgRecvGroup* recvGrpMsg = m_network.recvMethod<MsgRecvGroup>();
                     if (recvGrpMsg == nullptr) { continue; }
@@ -79,7 +80,7 @@ void ChattingWindow::threadFunction() {
                     delete recvGrpMsg;
                     break;
                 }
-                case ROOM_LIST: {
+                case NetworkRequest::ROOM_LIST: {
                     std::lock_guard<std::mutex> lock(m_mutex);
                     List* listGroup = m_network.recvMethod<List>();
                     if (listGroup == nullptr) { continue; }
@@ -91,7 +92,7 @@ void ChattingWindow::threadFunction() {
                     delete listGroup;
                     break;
                 }
-                case FILE_C: {
+                case NetworkRequest::FILE_C: {
                     std::lock_guard<std::mutex> lock(m_mutex);
                     uint32_t* sizeFile = m_network.recvMethod<uint32_t>();
                     if (sizeFile == nullptr) { continue; }
@@ -135,7 +136,7 @@ void ChattingWindow::destroyGroupMessages() {
 }
 
 void ChattingWindow::threadShutdown() {
-    m_network.sendInitMsg(MSG_EXIT);
+    m_network.sendInitMsg(NetworkRequest::MSG_EXIT);
     ::shutdown(m_network.getSockID(), SD_BOTH); // send shut down to socket, should get us out of the while loop
     m_threadStop = true; // thread safe atomic
     m_thread.join();
@@ -483,7 +484,7 @@ void ChattingWindow::on_sendButton_clicked() {
         (m_messages)[m_usernameToSend]->addMessage((std::make_pair(CURR_USER, m_messageToSend.toStdString())));
         m_generalSemaphore.release();
 
-        if (m_network.sendMsg(message_to_sendStd, username_to_sendStd, MSG_SEND) == -1) {
+        if (m_network.sendMsg(message_to_sendStd, username_to_sendStd, NetworkRequest::MSG_SEND) == -1) {
             ChatAppClient::sendError("Connection Lost! Please reconnect!");
             std::exit(1);
         }
@@ -508,7 +509,7 @@ void ChattingWindow::on_sendButton_clicked() {
         m_groupMessages[m_groupToSend]->addMessage(m_selfUsername, CURR_USER, m_selfUsername + " : " + m_messageToSend);
         m_generalSemaphore.release();
 
-        if (m_network.sendMsg(message_to_sendStd, group_to_sendStd, ROOM_MSG) == -1) {
+        if (m_network.sendMsg(message_to_sendStd, group_to_sendStd, NetworkRequest::ROOM_MSG) == -1) {
             ChatAppClient::sendError("Connection Lost! Please reconnect!");
             std::exit(1);
         }

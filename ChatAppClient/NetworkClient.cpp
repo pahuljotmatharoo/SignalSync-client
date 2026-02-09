@@ -80,9 +80,9 @@ uint32_t Network::sendUsername(const std::string& t_username, const std::size_t 
 	return currentPointer;
 }
 
-std::size_t Network::sendInitMsg(const int& t_constant) const {
+std::size_t Network::sendInitMsg(const NetworkRequest& t_constant) const {
 	MsgHeaderr msg = {0};
-	msg.type = htonl(t_constant);
+	msg.type = htonl(static_cast<u_long>(t_constant));
 	msg.length = htonl(static_cast<uint32_t>(5));
 
 	return send(getSockID(), reinterpret_cast<char*>(&msg), sizeof(msg), 0);
@@ -99,7 +99,7 @@ int Network::sendFile(const QByteArray* t_fileData, const std::string& t_user_to
 	png.size_m = static_cast<uint32_t>(t_fileData->size());
 	png.size_u = t_user_to_send.length();
 	png.data = const_cast<char*>(pngData);
-	if (sendInitMsg(FILE_C) == -1) { return -1; }
+	if (sendInitMsg(NetworkRequest::FILE_C) == -1) { return -1; }
 	if (sendFileSize(png.size_m) == -1) { return -1;};
 	if (sendFileData(&png) == -1) { return -1; };
 	if (sendUsername(t_user_to_send, USERNAME_LENGTH) == -1) { return -1; };
@@ -118,7 +118,7 @@ char* Network::recvUser() const {
 	return username;
 }
 
-std::size_t Network::sendMsg(const std::string& t_message, const std::string& t_username, const int& t_constant) const {
+std::size_t Network::sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& t_constant) const {
 	sendInitMsg(t_constant);
 
 	MsgSend message_to_Send{0};
@@ -135,11 +135,10 @@ std::size_t Network::sendMsg(const std::string& t_message, const std::string& t_
 
 
 std::size_t Network::sendGroupName(const std::string& t_group_name) const {
-	sendInitMsg(ROOM_CREATE);
+	sendInitMsg(NetworkRequest::ROOM_CREATE);
 
 	char grpName[USERNAME_LENGTH];
 	memcpy(grpName, t_group_name.c_str(), USERNAME_LENGTH);
 
 	return send(getSockID(), grpName, USERNAME_LENGTH, 0);
 }
-

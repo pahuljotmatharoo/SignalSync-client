@@ -15,9 +15,15 @@ func ValidateLoginService(db *sql.DB, info *database.Login) bool {
 		return false
 	}
 	fmt.Print(errors)
-	error := rows.Scan(&info.Password) == nil
-	fmt.Print(error)
-	return !error
+	if !rows.Next() {
+		return false
+	}
+	var password string
+	err := rows.Scan(&password)
+	if err != nil {
+		return false
+	}
+	return password == (info.Password)
 }
 
 func RegisterUserService(db *sql.DB, info *database.Login) bool {
