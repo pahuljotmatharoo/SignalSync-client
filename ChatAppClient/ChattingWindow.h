@@ -25,6 +25,8 @@ class ChattingWindow : public QMainWindow {
 private:
     Ui::ChattingWindow m_ui;
     bool m_userOrGroup; // lets us know whether the user is on userlist or grouplist
+    HTTPRequest m_http;
+    std::string m_apiKey;
     QString m_defaultButtonStylesheet;
     QString m_pressedButtonStylesheet;
     QString m_sendMessageStylesheet;
@@ -56,6 +58,7 @@ public:
     explicit ChattingWindow(QWidget* parent = nullptr);
     ~ChattingWindow();
     void setSelfUser(const QString t_username) { m_selfUsername = t_username; }
+    void setApiKey(const std::string t_apiKey) { m_apiKey = t_apiKey; }
     void setNetwork(Network& t_network) { m_network = t_network; };
     void addMessage(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH]);
     void addMessage_group(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH], char group[USERNAME_LENGTH]);

@@ -2,17 +2,26 @@
 #include <ws2tcpip.h>
 #include <iostream>
 #include <string>
-#include "ChatAppClient.h"
+#include <random>
 #include <QMessageBox>
 #include "ChattingWindow.h"
+#include "ChatAppClient.h"
 
-ChatAppClient::ChatAppClient(QWidget *parent): QMainWindow(parent), m_username(""), m_password(""), m_http("localhost:8080")
+ChatAppClient::ChatAppClient(QWidget *parent): QMainWindow(parent), m_username(""), m_password(""), m_http("localhost:8080"), m_apiKey("")
 {
     ui.setupUi(this);
 }
 
+std::string ChatAppClient::generateAPIKey(int length) {
+    std::string s;
+    for (int i = 0; i < length; i++) {
+        s += 32 + rand() % 95;
+    }
+    return s;
+}
+
 void ChatAppClient::on_registerButton_clicked() {
-    if (m_http.registerToServer(m_username.toStdString(), m_password.toStdString()) == 0) { sendError("Login information incorrect!"); return; }
+    if (m_http.registerToServer(m_username.toStdString(), m_password.toStdString(), generateAPIKey(10)) == 0) { sendError("Login information incorrect!"); return; }
     sendError("Registered Successfully!");
 }
 
@@ -51,8 +60,14 @@ void ChatAppClient::on_connectButton_clicked() {
         sendError("Username too short! Cannot be shorter than 5 characters.");
         return;
     }
-
-    if (m_http.connectToServer(m_username.toStdString(), m_password.toStdString()) == 0) { sendError("Login information incorrect!"); return; }
+    auto connect_to_server = m_http.connectToServer(m_username.toStdString(), m_password.toStdString());
+    if (connect_to_server.first == 0) { 
+        sendError("Login information incorrect!"); 
+        return; 
+    }
+    else {
+        m_apiKey = connect_to_server.second;
+    }
 
     if (m_network.serverConnect(userStd) == SOCKET_ERROR) { sendError("Cannot Connect to Server!"); return; }
 
@@ -61,6 +76,7 @@ void ChatAppClient::on_connectButton_clicked() {
     auto* window = new ChattingWindow;
     window->setNetwork(this->m_network);
     window->setSelfUser(m_username);
+    window->setApiKey(m_apiKey);
 
     this->close();
 

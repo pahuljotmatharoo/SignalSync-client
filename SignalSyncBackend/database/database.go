@@ -12,6 +12,12 @@ import (
 type Login struct {
 	Username string
 	Password string
+	Api_key  string
+}
+
+type SessionVerification struct {
+	Username string
+	Api_key  string
 }
 
 func InitDataBase() *sql.DB {

@@ -14,7 +14,7 @@
 
 ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::threadFunction, this),
                                                     m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), 
-                                                    m_userOrGroup(UserB), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10), m_usernameToSend(""), m_groupSemaphore(1), m_generalSemaphore(1)
+                                                    m_userOrGroup(UserB), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10), m_usernameToSend(""), m_groupSemaphore(1), m_generalSemaphore(1), m_http("localhost:8080")
 {
     initUI();
 
@@ -285,7 +285,7 @@ void ChattingWindow::on_addGroup_clicked() {
     };
 }
 
-void ChattingWindow::userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton) const {
+void ChattingWindow::userOrGroupSelect(std::unordered_map<QString, QPushButton*>& hide, std::unordered_map<QString, QPushButton*>& show, QPushButton*& lastPressedButton) const {
     if (hide.size() != 0) {
         for (auto itr = hide.begin(); itr != hide.end(); itr++) {
             itr->second->hide();
@@ -484,6 +484,11 @@ void ChattingWindow::on_sendButton_clicked() {
         (m_messages)[m_usernameToSend]->addMessage((std::make_pair(CURR_USER, m_messageToSend.toStdString())));
         m_generalSemaphore.release();
 
+
+        if (m_http.verifySession(m_selfUsername.toStdString(), m_apiKey) == -1) {
+            ChatAppClient::sendError("Session Invalid!");
+            std::exit(1);
+        }
         if (m_network.sendMsg(message_to_sendStd, username_to_sendStd, NetworkRequest::MSG_SEND) == -1) {
             ChatAppClient::sendError("Connection Lost! Please reconnect!");
             std::exit(1);

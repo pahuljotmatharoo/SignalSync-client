@@ -11,6 +11,7 @@ class ChatAppClient : public QMainWindow
 
 private:
     Ui::ChatAppClientClass ui;
+    std::string m_apiKey;
     QString m_username;
     QString m_password;
     Network m_network;
@@ -18,6 +19,7 @@ private:
 public:
     ChatAppClient(QWidget* parent = nullptr);
     static void sendError(const QString& error_message);
+    static std::string generateAPIKey(int length);
 private slots: // Declare slots in this section
     void on_connectButton_clicked();
     void on_registerButton_clicked();
