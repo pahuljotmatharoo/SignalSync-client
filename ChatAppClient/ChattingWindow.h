@@ -80,9 +80,11 @@ public:
     QPushButton* createAndStyleButton(const QString& name);
     QPushButton* createAndStyleFileButton(const std::string& fileName);
     void userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton) const;
-    void addFileButtonToScreen(File* recvFile, const std::string& fileName);
+    void addFileButtonToScreenUser(File* recvFile, const std::string& fileName);
+    void addFileButtonToScreenGroup(File* recvFile, const std::string& fileName, const std::string& groupName);
     void downloadFile();
-    void processFileRecv(File* recvFile, const std::string& fileName);
+    void processFileRecvUser(File* recvFile, const std::string& fileName);
+    void processFileRecvGroup(File* recvFile, const std::string& fileName, const std::string& groupName);
     void destroyFiles();
     void destroyUserMessages();
     void destroyGroupMessages();

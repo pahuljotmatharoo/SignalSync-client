@@ -41,12 +41,13 @@ public:
     QPushButton *groupChat;
     QPushButton *addGroup;
     QLabel *username_label;
+    QPushButton *fileButton;
 
     void setupUi(QMainWindow *ChattingWindow)
     {
         if (ChattingWindow->objectName().isEmpty())
             ChattingWindow->setObjectName("ChattingWindow");
-        ChattingWindow->resize(1063, 680);
+        ChattingWindow->resize(1077, 680);
         QSizePolicy sizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Ignored);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
@@ -180,7 +181,7 @@ public:
         Message_input = new QLineEdit(centralwidget);
         Message_input->setObjectName("Message_input");
         Message_input->setEnabled(true);
-        Message_input->setGeometry(QRect(281, 630, 721, 41));
+        Message_input->setGeometry(QRect(281, 630, 661, 41));
         Message_input->setStyleSheet(QString::fromUtf8("padding: 6px;\n"
 "    border: 1px solid #444;\n"
 "    border-radius: 4px;\n"
@@ -270,6 +271,24 @@ public:
         username_label->setFont(font4);
         username_label->setStyleSheet(QString::fromUtf8("font-weight: bold;"));
         username_label->setAlignment(Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter);
+        fileButton = new QPushButton(centralwidget);
+        fileButton->setObjectName("fileButton");
+        fileButton->setGeometry(QRect(950, 630, 51, 41));
+        fileButton->setStyleSheet(QString::fromUtf8("QPushButton#fileButton {\n"
+"    background-color: #0078d7;\n"
+"    padding: 3px 7px;\n"
+"    border-radius: 5px;\n"
+"    border: none;\n"
+"}\n"
+"\n"
+"QPushButton#fileButton:hover {\n"
+"    background-color: #2892ff;\n"
+"}\n"
+"\n"
+"QPushButton#fileButton:pressed {\n"
+"    background-color: #005fa3;\n"
+"}\n"
+""));
         ChattingWindow->setCentralWidget(centralwidget);
 
         retranslateUi(ChattingWindow);
@@ -288,6 +307,7 @@ public:
         groupChat->setText(QCoreApplication::translate("ChattingWindow", "Group Chat", nullptr));
         addGroup->setText(QCoreApplication::translate("ChattingWindow", "Add Group", nullptr));
         username_label->setText(QCoreApplication::translate("ChattingWindow", "Select a User to talk to!", nullptr));
+        fileButton->setText(QString());
     } // retranslateUi
 
 };

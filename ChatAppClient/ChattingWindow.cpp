@@ -12,6 +12,8 @@
 #include <cstdlib>
 #include "ChattingWindow.h"
 
+// Files look like they are sent fine for groups, just rendered on DM? Debug this
+
 ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::threadFunction, this),
                                                     m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), 
                                                     m_userOrGroup(UserB), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10), m_usernameToSend(""), m_groupSemaphore(1), m_generalSemaphore(1), m_http("localhost:8080")
@@ -92,7 +94,7 @@ void ChattingWindow::threadFunction() {
                     delete listGroup;
                     break;
                 }
-                case NetworkRequest::FILE_C: {
+                case NetworkRequest::FILE_USER: {
                     std::lock_guard<std::mutex> lock(m_mutex);
                     uint32_t* sizeFile = m_network.recvMethod<uint32_t>();
                     if (sizeFile == nullptr) { continue; }
@@ -105,9 +107,32 @@ void ChattingWindow::threadFunction() {
                     std::string userString(userFrom);
                     std::string filenameString(fileName);
                     File* recvFile = new File(QString::fromStdString(userString), fileData, *sizeFile);
-                    processFileRecv(recvFile, filenameString);
+                    processFileRecvUser(recvFile, filenameString);
                     delete sizeFile;
                     delete userFrom;
+                    delete fileName;
+                }
+                case NetworkRequest::FILE_GROUP: {
+                    std::lock_guard<std::mutex> lock(m_mutex);
+                    uint32_t* sizeFile = m_network.recvMethod<uint32_t>();
+                    if (sizeFile == nullptr) { continue; }
+                    char* fileData = m_network.recvFile(*sizeFile);
+                    if (fileData == nullptr) { continue; }
+                    char* userFrom = m_network.recvUser();
+                    if (userFrom == nullptr) { continue; }
+                    char* fileName = m_network.recvUser();
+                    if (fileName == nullptr) { continue; }
+                    char* groupName = m_network.recvUser();
+                    if (groupName == nullptr) { continue; }
+                    std::string userString(userFrom);
+                    std::string filenameString(fileName);
+                    std::string groupNameString(groupName);
+                    File* recvFile = new File(QString::fromStdString(userString), fileData, *sizeFile);
+                    processFileRecvGroup(recvFile, filenameString, groupNameString);
+                    delete sizeFile;
+                    delete userFrom;
+                    delete fileName;
+                    delete groupName;
                 }
             }
         }
@@ -142,8 +167,13 @@ void ChattingWindow::threadShutdown() {
     m_thread.join();
 }
 
-void ChattingWindow::processFileRecv(File* recvFile, const std::string& fileName) {
-    QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreen(recvFile, fileName); }, Qt::QueuedConnection);
+void ChattingWindow::processFileRecvUser(File* recvFile, const std::string& fileName) {
+    QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenUser(recvFile, fileName); }, Qt::QueuedConnection);
+}
+
+void ChattingWindow::processFileRecvGroup(File* recvFile, const std::string& fileName, const std::string& groupName)
+{
+    QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenGroup(recvFile, fileName, groupName); }, Qt::QueuedConnection);
 }
 
 void ChattingWindow::downloadFile() {
@@ -174,7 +204,7 @@ QPushButton* ChattingWindow::createAndStyleFileButton(const std::string& fileNam
 }
 
 
-void ChattingWindow::addFileButtonToScreen(File* recvFile, const std::string& fileName) {
+void ChattingWindow::addFileButtonToScreenUser(File* recvFile, const std::string& fileName) {
     QPushButton* button = createAndStyleFileButton(fileName);
 
     if (button == nullptr) { return; }
@@ -186,6 +216,24 @@ void ChattingWindow::addFileButtonToScreen(File* recvFile, const std::string& fi
     }
 
     notificationUser(recvFile->getUserFrom());
+
+    m_generalSemaphore.acquire();
+    m_files.insert(std::make_pair(button, recvFile));
+    m_generalSemaphore.release();
+}
+void ChattingWindow::addFileButtonToScreenGroup(File* recvFile, const std::string& fileName, const std::string& groupName)
+{
+    QPushButton* button = createAndStyleFileButton(fileName);
+
+    if (button == nullptr) { return; }
+
+    addWidgetToLayout<QPushButton*>(button, Qt::AlignLeft);
+
+    if (m_lastPressedGroup != nullptr && groupName == m_lastPressedGroup->text()) {
+        button->show();
+    }
+
+    notificationGroup(QString::fromStdString(groupName));
 
     m_generalSemaphore.acquire();
     m_files.insert(std::make_pair(button, recvFile));
@@ -260,8 +308,15 @@ void ChattingWindow::on_fileButton_clicked() {
                 return;
             }   
             else {
-                if (m_network.sendFile(&content, m_usernameToSend.toStdString(), fileName.toStdString()) == -1) {
-                    ChatAppClient::sendError("Cannot send file successfully");
+                if (m_lastPressedUser) {
+                    if (m_network.sendFile(&content, m_usernameToSend.toStdString(), fileName.toStdString(), NetworkRequest::FILE_USER) == -1) {
+                        ChatAppClient::sendError("Cannot send file successfully");
+                    }
+                }
+                else if (m_lastPressedGroup) {
+                    if (m_network.sendFile(&content, m_groupToSend.toStdString(), fileName.toStdString(), NetworkRequest::FILE_GROUP) == -1) {
+                        ChatAppClient::sendError("Cannot send file successfully");
+                    }
                 }
             }
             file.close();

@@ -11,17 +11,10 @@ enum class NetworkRequest {
 	ROOM_CREATE = 5,
 	ROOM_MSG = 6,
 	ROOM_LIST = 7,
-	FILE_C = 8
+	FILE_USER = 8,
+	FILE_GROUP = 9
 };
 
-//constexpr auto MSG_SEND = 1;
-//constexpr auto MSG_LIST = 2;
-//constexpr auto MSG_EXIT = 3;
-//constexpr auto USER_EXIT = 4;
-//constexpr auto ROOM_CREATE = 5;
-//constexpr auto ROOM_MSG = 6;
-//constexpr auto ROOM_LIST = 7;
-//constexpr auto FILE_C = 8;
 constexpr auto MESSAGE_LENGTH = 128;
 constexpr auto MAX_USERS = 10;
 constexpr auto USERNAME_LENGTH = 50;
@@ -109,7 +102,7 @@ public:
 	uint32_t sendUsername(const std::string& t_username, const std::size_t t_length) const;
 	std::size_t sendInitMsg(const NetworkRequest& t_constant) const;
 	std::size_t sendFileSize(const uint32_t& t_fileSize) const;
-	int sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send) const;
+	int sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant) const;
 	char* recvUser() const;
 	std::size_t sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& constant) const;
 	std::size_t sendGroupName(const std::string& group_name) const;

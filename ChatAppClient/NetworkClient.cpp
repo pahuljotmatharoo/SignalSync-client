@@ -92,14 +92,14 @@ std::size_t Network::sendFileSize(const uint32_t& t_fileSize) const {
 	return send(m_sockid, reinterpret_cast<const char*>(&t_fileSize), sizeof(uint32_t), 0); // QSize = 8 bytes
 }
 
-int Network::sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send) const {
+int Network::sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant) const {
 	const char* pngData = t_fileData->constData();
 	FileSend png{ 0 };
 	png.user_to_send = const_cast<char*>(t_user_to_send.c_str());
 	png.size_m = static_cast<uint32_t>(t_fileData->size());
 	png.size_u = t_user_to_send.length();
 	png.data = const_cast<char*>(pngData);
-	if (sendInitMsg(NetworkRequest::FILE_C) == -1) { return -1; }
+	if (sendInitMsg(constant) == -1) { return -1; }
 	if (sendFileSize(png.size_m) == -1) { return -1;};
 	if (sendFileData(&png) == -1) { return -1; };
 	if (sendUsername(t_user_to_send, USERNAME_LENGTH) == -1) { return -1; };
