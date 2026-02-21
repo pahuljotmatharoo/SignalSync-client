@@ -32,7 +32,6 @@ ChattingWindow::~ChattingWindow() {
 
 void ChattingWindow::threadFunction() {
     NetworkRequest type{};
-    //int type = 0;
     while (!m_threadStop) {
         std::size_t recvData = recv(m_network.getSockID(), reinterpret_cast<char*>(&type), sizeof(NetworkRequest), 0);
         if(recvData > 0) {
@@ -68,7 +67,8 @@ void ChattingWindow::threadFunction() {
                     std::lock_guard<std::mutex> lock(m_mutex);
                     RecvGroupName* groupName = m_network.recvMethod<RecvGroupName>();
                     if (groupName == nullptr) { continue; }
-                    addGroup(groupName->groupName);
+                    std::string group_name(groupName->groupName);
+                    addGroup(group_name);
                     delete groupName;
                     break;
                 }
@@ -143,7 +143,7 @@ void ChattingWindow::threadFunction() {
 }
 
 void ChattingWindow::destroyFiles() {
-    for (auto itr = m_files.begin(); itr != m_files.end(); ++itr) {
+    for (auto itr = m_filesUsers.begin(); itr != m_filesUsers.end(); ++itr) {
         delete itr->second;
     }
 }
@@ -176,11 +176,25 @@ void ChattingWindow::processFileRecvGroup(File* recvFile, const std::string& fil
     QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenGroup(recvFile, fileName, groupName); }, Qt::QueuedConnection);
 }
 
-void ChattingWindow::downloadFile() {
+//these are the same basically, fix
+
+void ChattingWindow::downloadUserFile() {
     QString dirName = QFileDialog::getExistingDirectory(this, tr("Select a directory"), "/home",QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
     QPushButton* btn = qobject_cast<QPushButton*>(sender());
-    if (m_files[btn]->downloadFile(btn->text().toStdString(), dirName.toStdString())) {
+    if (m_filesUsers[btn]->downloadFile(btn->text().toStdString(), dirName.toStdString())) {
+        ChatAppClient::sendError("File download successfully!");
+    }
+    else {
+        ChatAppClient::sendError("Unable to download file!");
+    }
+}
+
+void ChattingWindow::downloadGroupFile() {
+    QString dirName = QFileDialog::getExistingDirectory(this, tr("Select a directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+    QPushButton* btn = qobject_cast<QPushButton*>(sender());
+    if (m_filesGroup[btn].first->downloadFile(btn->text().toStdString(), dirName.toStdString())) {
         ChatAppClient::sendError("File download successfully!");
     }
     else {
@@ -198,14 +212,13 @@ QPushButton* ChattingWindow::createAndStyleFileButton(const std::string& fileNam
 
     button->hide();
 
-    connect(button, &QPushButton::clicked, this, &ChattingWindow::downloadFile);
-
     return button;
 }
 
 
 void ChattingWindow::addFileButtonToScreenUser(File* recvFile, const std::string& fileName) {
     QPushButton* button = createAndStyleFileButton(fileName);
+    connect(button, &QPushButton::clicked, this, &ChattingWindow::downloadUserFile);
 
     if (button == nullptr) { return; }
 
@@ -218,7 +231,7 @@ void ChattingWindow::addFileButtonToScreenUser(File* recvFile, const std::string
     notificationUser(recvFile->getUserFrom());
 
     m_generalSemaphore.acquire();
-    m_files.insert(std::make_pair(button, recvFile));
+    m_filesUsers.insert(std::make_pair(button, recvFile));
     m_generalSemaphore.release();
 }
 void ChattingWindow::addFileButtonToScreenGroup(File* recvFile, const std::string& fileName, const std::string& groupName)
@@ -236,7 +249,7 @@ void ChattingWindow::addFileButtonToScreenGroup(File* recvFile, const std::strin
     notificationGroup(QString::fromStdString(groupName));
 
     m_generalSemaphore.acquire();
-    m_files.insert(std::make_pair(button, recvFile));
+    m_filesGroup.insert(std::make_pair(button, std::make_pair(recvFile, QString::fromStdString(groupName))));
     m_generalSemaphore.release();
 }
 
@@ -445,17 +458,25 @@ void ChattingWindow::displayGroupMessages(const QString& t_group_name) {
     for (auto itr = vec_m.begin(); itr != vec_m.end(); ++itr) {
         displayMessages(itr->second, t_group_name, GroupB);
     }
+
+    for (auto itr = m_filesGroup.begin(); itr != m_filesGroup.end(); itr++) {
+        if (itr->second.second == t_group_name) {
+            itr->first->show();
+        }
+    }
 }
 
 void ChattingWindow::displayFileButtons(const QString& user_or_group_name) {
-    auto itr = m_files.begin();
-    for (std::size_t i{ 0 }; i < m_files.size() && itr != m_files.end(); i++) {
+    auto itr = m_filesUsers.begin();
+    for (std::size_t i{ 0 }; i < m_filesUsers.size() && itr != m_filesUsers.end(); i++) {
         if (itr->second->getUserFrom() == user_or_group_name) { itr->first->show(); itr++; }
     }
 }
 
 void ChattingWindow::displayMessages(UserMessage* t_messages, const QString& user_or_group_name, bool user_or_group) {
-    auto& vec = t_messages->getMessages();
+    UserMessage* user_messages = m_messages[user_or_group_name];
+    if (user_messages == nullptr) { return; }
+    auto& vec = user_messages->getMessages();
 
     for (int i{ 0 }; i < vec.size(); i++) {
         if (vec[i].first == CURR_USER) { sendMessageToScreenSend(QString::fromStdString(vec[i].second)); }
@@ -540,10 +561,11 @@ void ChattingWindow::on_sendButton_clicked() {
         m_generalSemaphore.release();
 
 
-        if (m_http.verifySession(m_selfUsername.toStdString(), m_apiKey) == -1) {
-            ChatAppClient::sendError("Session Invalid!");
-            std::exit(1);
-        }
+        //if (m_http.verifySession(m_selfUsername.toStdString(), m_apiKey) == -1) {
+        //    ChatAppClient::sendError("Session Invalid!");
+        //    std::exit(1);
+        //}
+
         if (m_network.sendMsg(message_to_sendStd, username_to_sendStd, NetworkRequest::MSG_SEND) == -1) {
             ChatAppClient::sendError("Connection Lost! Please reconnect!");
             std::exit(1);
@@ -578,9 +600,9 @@ void ChattingWindow::on_sendButton_clicked() {
     }
 }
 
-void ChattingWindow::addGroup(const char group[USERNAME_LENGTH]) {
+void ChattingWindow::addGroup(const std::string group) {
 
-    QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(QString::fromStdString(std::string(group))); }, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(QString::fromStdString(group)); }, Qt::QueuedConnection);
 }
 
 void ChattingWindow::addMessage_group(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH], char group[USERNAME_LENGTH]) {

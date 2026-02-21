@@ -47,7 +47,8 @@ private:
     std::unordered_map<QString, QPushButton*> m_Users;
     std::unordered_map<QString, QPushButton*> m_Groups;
     std::unordered_map<QChar, QChar> m_encryptMap;
-    std::unordered_map<QPushButton*, File*> m_files;
+    std::unordered_map<QPushButton*, File*> m_filesUsers;
+    std::unordered_map<QPushButton*, std::pair<File*, QString>> m_filesGroup;
     Network m_network;
     std::thread m_thread;
     std::mutex m_mutex;
@@ -68,7 +69,7 @@ public:
     void addUsers(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size);
     void removeUsers(char user[USERNAME_LENGTH], uint32_t size);
     void removeUserfromScreen(const QString& user);
-    void addGroup(const char group[USERNAME_LENGTH]);
+    void addGroup(const std::string group);
     void addGroups(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size);
     void addGrouptoScreen(const QString user);
     void removeAllChatItemsFromScreen();
@@ -82,7 +83,8 @@ public:
     void userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton) const;
     void addFileButtonToScreenUser(File* recvFile, const std::string& fileName);
     void addFileButtonToScreenGroup(File* recvFile, const std::string& fileName, const std::string& groupName);
-    void downloadFile();
+    void downloadUserFile();
+    void downloadGroupFile();
     void processFileRecvUser(File* recvFile, const std::string& fileName);
     void processFileRecvGroup(File* recvFile, const std::string& fileName, const std::string& groupName);
     void destroyFiles();
