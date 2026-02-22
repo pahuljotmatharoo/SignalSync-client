@@ -14,12 +14,15 @@
 
 // Files look like they are sent fine for groups, just rendered on DM? Debug this
 
+// Deadlock upon calling destructor, fix
+
 ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::threadFunction, this),
                                                     m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), 
-                                                    m_userOrGroup(UserB), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10), m_usernameToSend(""), m_groupSemaphore(1), m_generalSemaphore(1), m_http("localhost:8080")
+                                                    m_userOrGroup(UserB), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10), m_usernameToSend(""), m_groupSemaphore(1), m_generalSemaphore(1), m_queueSemaphore(0), 
+                                                    m_http("localhost:8080"), m_threadPool(MAX_THREADS)
 {
     initUI();
-
+    initThreads();
     initEncryptMap();
 }
 
@@ -30,6 +33,12 @@ ChattingWindow::~ChattingWindow() {
     threadShutdown();
 }
 
+void ChattingWindow::initThreads() {
+    for (std::thread& t : m_threadPool) {
+        t = std::thread(&ChattingWindow::waitingThreadFunction, this);
+    }
+}
+
 void ChattingWindow::threadFunction() {
     NetworkRequest type{};
     while (!m_threadStop) {
@@ -37,26 +46,21 @@ void ChattingWindow::threadFunction() {
         if(recvData > 0) {
             switch (type) {
                 case NetworkRequest::MSG_SEND: {
-                    std::lock_guard<std::mutex> lock(m_mutex);
                     MsgRecvUser* recvStruct = m_network.recvMethod<MsgRecvUser>();
                     if (recvStruct == nullptr) { continue; }
-                    addMessage(recvStruct->message, recvStruct->user_from);
+                    enqueue(&ChattingWindow::addMessage, this, recvStruct);
                     std::string user_from(recvStruct->user_from);
                     notificationPassUser(QString::fromStdString(user_from));
-                    delete recvStruct;
                     break;
                 }
                 case NetworkRequest::MSG_LIST: {
-                    std::lock_guard<std::mutex> lock(m_mutex);
                     List* list = m_network.recvMethod<List>();
                     if (list == nullptr) { continue; }
                     list->size = ntohl(list->size);
-                    addUsers(list->arr, list->size);
-                    delete list;
+                    enqueue(&ChattingWindow::addUsers, this, list);
                     break;
                 }
                 case NetworkRequest::USER_EXIT: {
-                    std::lock_guard<std::mutex> lock(m_mutex);
                     char* username = m_network.recvUser();
                     if (username == nullptr) { continue; }
                     removeUsers(username, USERNAME_LENGTH);
@@ -64,7 +68,6 @@ void ChattingWindow::threadFunction() {
                     break;
                 }
                 case NetworkRequest::ROOM_CREATE: {
-                    std::lock_guard<std::mutex> lock(m_mutex);
                     RecvGroupName* groupName = m_network.recvMethod<RecvGroupName>();
                     if (groupName == nullptr) { continue; }
                     std::string group_name(groupName->groupName);
@@ -73,7 +76,6 @@ void ChattingWindow::threadFunction() {
                     break;
                 }
                 case NetworkRequest::ROOM_MSG: {
-                    std::lock_guard<std::mutex> lock(m_mutex);
                     MsgRecvGroup* recvGrpMsg = m_network.recvMethod<MsgRecvGroup>();
                     if (recvGrpMsg == nullptr) { continue; }
                     addMessage_group(recvGrpMsg->message, recvGrpMsg->user_from, recvGrpMsg->group_name);
@@ -83,7 +85,6 @@ void ChattingWindow::threadFunction() {
                     break;
                 }
                 case NetworkRequest::ROOM_LIST: {
-                    std::lock_guard<std::mutex> lock(m_mutex);
                     List* listGroup = m_network.recvMethod<List>();
                     if (listGroup == nullptr) { continue; }
                     listGroup->size = ntohl(listGroup->size);
@@ -95,7 +96,6 @@ void ChattingWindow::threadFunction() {
                     break;
                 }
                 case NetworkRequest::FILE_USER: {
-                    std::lock_guard<std::mutex> lock(m_mutex);
                     uint32_t* sizeFile = m_network.recvMethod<uint32_t>();
                     if (sizeFile == nullptr) { continue; }
                     char* fileData = m_network.recvFile(*sizeFile);
@@ -111,9 +111,9 @@ void ChattingWindow::threadFunction() {
                     delete sizeFile;
                     delete userFrom;
                     delete fileName;
+                    break;
                 }
                 case NetworkRequest::FILE_GROUP: {
-                    std::lock_guard<std::mutex> lock(m_mutex);
                     uint32_t* sizeFile = m_network.recvMethod<uint32_t>();
                     if (sizeFile == nullptr) { continue; }
                     char* fileData = m_network.recvFile(*sizeFile);
@@ -133,11 +133,28 @@ void ChattingWindow::threadFunction() {
                     delete userFrom;
                     delete fileName;
                     delete groupName;
+                    break;
                 }
             }
         }
         else {
             break;
+        }
+    }
+}
+
+void ChattingWindow::waitingThreadFunction() {
+    while (!m_threadStop) {
+        m_queueSemaphore.acquire();
+        m_queueMutex.lock();
+        if (m_functionQueue.size() > 0) {
+            auto top = m_functionQueue.front();
+            m_functionQueue.pop();
+            m_queueMutex.unlock();
+            top();
+        }
+        else {
+            m_queueMutex.unlock();
         }
     }
 }
@@ -165,6 +182,12 @@ void ChattingWindow::threadShutdown() {
     ::shutdown(m_network.getSockID(), SD_BOTH); // send shut down to socket, should get us out of the while loop
     m_threadStop = true; // thread safe atomic
     m_thread.join();
+    for (int i = 0; i < MAX_THREADS; i++) {
+        m_queueSemaphore.release();
+    }
+    for (auto& t : m_threadPool) {
+        t.join();
+    }
 }
 
 void ChattingWindow::processFileRecvUser(File* recvFile, const std::string& fileName) {
@@ -630,10 +653,10 @@ void ChattingWindow::addMessage_group(char message[MESSAGE_LENGTH], char usernam
     QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(username_toadd + " : " + message_toadd), QString::fromStdString(group_toadd), GroupB); }, Qt::QueuedConnection);
 }
 
-void ChattingWindow::addMessage(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH]) {
-    std::string username_toadd(username);
+void ChattingWindow::addMessage(MsgRecvUser* recvStruct) {
+    std::string username_toadd(recvStruct->user_from);
+    std::string message_toadd(recvStruct->message);
 
-    std::string message_toadd(message);
     QString message_r = QString::fromStdString(message_toadd);
     encrypt(message_r); //unencrypt the message
     message_toadd = message_r.toStdString();
@@ -652,22 +675,24 @@ void ChattingWindow::addMessage(char message[MESSAGE_LENGTH], char username[USER
         m_generalSemaphore.release();
     }
 
+    delete recvStruct;
+
     //we'll be able to display right away to screen, since this function will be called by recv thread, cannot create element here so queue it on main thread
     QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(message_toadd), QString::fromStdString(username_toadd), UserB); }, Qt::QueuedConnection);
 }
 
-void ChattingWindow::addUsers(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size) {
+void ChattingWindow::addUsers(List* list) {
     //just goes through the list of users when its updated from the server end, and adds any new ones.
     //better logic will be implemented later from server side soon
-    for (std::size_t i{0}; i < size; i++) {
-        QString username = QString::fromStdString(std::string(users[i]));
+    for (std::size_t i{0}; i < list->size; i++) {
+        QString username = QString::fromStdString(std::string(list->arr[i]));
 
         //since this function will be called by recv thread, cannot create element here so queue it on main thread
         if ((m_Users).find(username) == (m_Users).end()) {
             QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(username); }, Qt::QueuedConnection);
         }
     }
-    return;
+    delete list;
 }
 
 void ChattingWindow::addGroups(char groups[MAXUSERS][USERNAME_LENGTH], uint32_t size) {

@@ -6,6 +6,8 @@
 #include <mutex>
 #include <type_traits>
 #include <semaphore>
+#include <functional>
+#include <utility>
 #include "ChatAppClient.h"
 #include "message.h"
 #include "message_s.h"
@@ -14,11 +16,13 @@
 #include "File.h"
 #include "UserMessage.h"
 #include "GroupMessage.h"
+#include <queue>
 
 constexpr bool OTHER_USER = true;
 constexpr bool CURR_USER = false;
 constexpr bool UserB = true;
 constexpr bool GroupB = false;
+constexpr int MAX_THREADS = 5;
 
 class ChattingWindow : public QMainWindow {
     Q_OBJECT
@@ -51,9 +55,13 @@ private:
     std::unordered_map<QPushButton*, std::pair<File*, QString>> m_filesGroup;
     Network m_network;
     std::thread m_thread;
+    std::vector<std::thread> m_threadPool;
+    std::queue<std::function<void()>> m_functionQueue;
     std::mutex m_mutex;
+    std::mutex m_queueMutex;
     std::binary_semaphore m_groupSemaphore;
     std::binary_semaphore m_generalSemaphore;
+    std::binary_semaphore m_queueSemaphore;
     std::atomic<bool> m_threadStop;
 public:
     explicit ChattingWindow(QWidget* parent = nullptr);
@@ -61,12 +69,12 @@ public:
     void setSelfUser(const QString t_username) { m_selfUsername = t_username; }
     void setApiKey(const std::string t_apiKey) { m_apiKey = t_apiKey; }
     void setNetwork(Network& t_network) { m_network = t_network; };
-    void addMessage(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH]);
+    void addMessage(MsgRecvUser* recvStruct);
     void addMessage_group(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH], char group[USERNAME_LENGTH]);
     void sendMessageToScreenRecv(const QString& message, const QString& user, bool type);
     void sendMessageToScreenSend(const QString& message);
     void sendUserToScreen(const QString& username);
-    void addUsers(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size);
+    void addUsers(List* list);
     void removeUsers(char user[USERNAME_LENGTH], uint32_t size);
     void removeUserfromScreen(const QString& user);
     void addGroup(const std::string group);
@@ -113,6 +121,23 @@ public:
     void initButtons();
     void initLayout();
     void initContentLayout();
+    template <class F, class... Args>
+    void enqueue(F&& f, Args&&... args) // idek 
+    {
+        auto task = [fn = std::forward<F>(f), tp = std::make_tuple(std::forward<Args>(args)...)]() mutable
+            { 
+                std::apply( [&](auto&&... xs) { std::invoke(fn, std::forward<decltype(xs)>(xs)...); }, tp );
+            };
+        m_queueMutex.lock();
+        m_functionQueue.push(std::move(task));
+        m_queueMutex.unlock();
+        m_queueSemaphore.release();
+    }
+    void dequeue() {
+        m_functionQueue.pop();
+    }
+    void waitingThreadFunction();
+    void initThreads();
 private slots:
     void on_sendButton_clicked();
     void on_fileButton_clicked();
