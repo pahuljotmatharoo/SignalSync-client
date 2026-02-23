@@ -57,11 +57,10 @@ private:
     std::thread m_thread;
     std::vector<std::thread> m_threadPool;
     std::queue<std::function<void()>> m_functionQueue;
-    std::mutex m_mutex;
     std::mutex m_queueMutex;
     std::binary_semaphore m_groupSemaphore;
     std::binary_semaphore m_generalSemaphore;
-    std::binary_semaphore m_queueSemaphore;
+    std::counting_semaphore<INT_MAX> m_queueSemaphore;
     std::atomic<bool> m_threadStop;
 public:
     explicit ChattingWindow(QWidget* parent = nullptr);
@@ -70,12 +69,12 @@ public:
     void setApiKey(const std::string t_apiKey) { m_apiKey = t_apiKey; }
     void setNetwork(Network& t_network) { m_network = t_network; };
     void addMessage(MsgRecvUser* recvStruct);
-    void addMessage_group(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH], char group[USERNAME_LENGTH]);
+    void addMessage_group(std::string message_toadd, const std::string username_toadd, const std::string group_toadd);
     void sendMessageToScreenRecv(const QString& message, const QString& user, bool type);
     void sendMessageToScreenSend(const QString& message);
     void sendUserToScreen(const QString& username);
     void addUsers(List* list);
-    void removeUsers(char user[USERNAME_LENGTH], uint32_t size);
+    void removeUsers(const std::string user, uint32_t size);
     void removeUserfromScreen(const QString& user);
     void addGroup(const std::string group);
     void addGroups(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size);
@@ -122,9 +121,10 @@ public:
     void initLayout();
     void initContentLayout();
     template <class F, class... Args>
-    void enqueue(F&& f, Args&&... args) // idek 
+    void enqueue(F&& f, Args&&... args) // accepts args and function as universal reference (could be l-val or r-val)
     {
-        auto task = [fn = std::forward<F>(f), tp = std::make_tuple(std::forward<Args>(args)...)]() mutable
+        // idek
+        auto task = [fn = std::forward<F>(f), tp = std::make_tuple(std::forward<Args>(args)...)]() mutable // std::forward here to ensure it works with both r-val and l-val (otherwise compiler will assume its l-val)
             { 
                 std::apply( [&](auto&&... xs) { std::invoke(fn, std::forward<decltype(xs)>(xs)...); }, tp );
             };

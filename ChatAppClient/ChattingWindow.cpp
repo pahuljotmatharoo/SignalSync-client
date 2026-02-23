@@ -63,7 +63,7 @@ void ChattingWindow::threadFunction() {
                 case NetworkRequest::USER_EXIT: {
                     char* username = m_network.recvUser();
                     if (username == nullptr) { continue; }
-                    removeUsers(username, USERNAME_LENGTH);
+                    enqueue(&ChattingWindow::removeUsers, this, std::string(username), 50);
                     delete[] username;
                     break;
                 }
@@ -71,15 +71,15 @@ void ChattingWindow::threadFunction() {
                     RecvGroupName* groupName = m_network.recvMethod<RecvGroupName>();
                     if (groupName == nullptr) { continue; }
                     std::string group_name(groupName->groupName);
-                    addGroup(group_name);
+                    enqueue(&ChattingWindow::addGroup, this, group_name);
                     delete groupName;
                     break;
                 }
                 case NetworkRequest::ROOM_MSG: {
                     MsgRecvGroup* recvGrpMsg = m_network.recvMethod<MsgRecvGroup>();
                     if (recvGrpMsg == nullptr) { continue; }
-                    addMessage_group(recvGrpMsg->message, recvGrpMsg->user_from, recvGrpMsg->group_name);
                     std::string group_name(recvGrpMsg->group_name);
+                    enqueue(&ChattingWindow::addMessage_group, this, std::string(recvGrpMsg->message), std::string(recvGrpMsg->user_from), group_name);
                     notificationPassGroup(QString::fromStdString(group_name));
                     delete recvGrpMsg;
                     break;
@@ -107,7 +107,7 @@ void ChattingWindow::threadFunction() {
                     std::string userString(userFrom);
                     std::string filenameString(fileName);
                     File* recvFile = new File(QString::fromStdString(userString), fileData, *sizeFile);
-                    processFileRecvUser(recvFile, filenameString);
+                    enqueue(&ChattingWindow::processFileRecvUser, this, recvFile, filenameString);
                     delete sizeFile;
                     delete userFrom;
                     delete fileName;
@@ -128,7 +128,7 @@ void ChattingWindow::threadFunction() {
                     std::string filenameString(fileName);
                     std::string groupNameString(groupName);
                     File* recvFile = new File(QString::fromStdString(userString), fileData, *sizeFile);
-                    processFileRecvGroup(recvFile, filenameString, groupNameString);
+                    enqueue(&ChattingWindow::processFileRecvGroup, this, recvFile, filenameString, groupNameString);
                     delete sizeFile;
                     delete userFrom;
                     delete fileName;
@@ -146,10 +146,13 @@ void ChattingWindow::threadFunction() {
 void ChattingWindow::waitingThreadFunction() {
     while (!m_threadStop) {
         m_queueSemaphore.acquire();
+        if (m_threadStop) {
+            break;
+        }
         m_queueMutex.lock();
         if (m_functionQueue.size() > 0) {
             auto top = m_functionQueue.front();
-            m_functionQueue.pop();
+            dequeue();
             m_queueMutex.unlock();
             top();
         }
@@ -182,9 +185,7 @@ void ChattingWindow::threadShutdown() {
     ::shutdown(m_network.getSockID(), SD_BOTH); // send shut down to socket, should get us out of the while loop
     m_threadStop = true; // thread safe atomic
     m_thread.join();
-    for (int i = 0; i < MAX_THREADS; i++) {
-        m_queueSemaphore.release();
-    }
+    m_queueSemaphore.release(MAX_THREADS);
     for (auto& t : m_threadPool) {
         t.join();
     }
@@ -628,13 +629,10 @@ void ChattingWindow::addGroup(const std::string group) {
     QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(QString::fromStdString(group)); }, Qt::QueuedConnection);
 }
 
-void ChattingWindow::addMessage_group(char message[MESSAGE_LENGTH], char username[USERNAME_LENGTH], char group[USERNAME_LENGTH]) {
-    std::string username_toadd(username);
-    std::string message_toadd(message);
+void ChattingWindow::addMessage_group(std::string message_toadd, const std::string username_toadd, const std::string group_toadd) {
     QString message_r = QString::fromStdString(message_toadd);
     encrypt(message_r); //unencrypt the message
     message_toadd = message_r.toStdString();
-    std::string group_toadd(group);
 
     if (m_groupMessages.find(QString::fromStdString(group_toadd)) == m_groupMessages.end()) {
         m_groupMessages[QString::fromStdString(group_toadd)] = new GroupMessage(QString::fromStdString(group_toadd));
@@ -709,7 +707,7 @@ void ChattingWindow::addGroups(char groups[MAXUSERS][USERNAME_LENGTH], uint32_t 
     return;
 }
 
-void ChattingWindow::removeUsers(char user[USERNAME_LENGTH], uint32_t size) {
+void ChattingWindow::removeUsers(const std::string user, uint32_t size) {
     QMetaObject::invokeMethod(this, [=] { this->removeUserfromScreen(QString::fromStdString(std::string(user))); }, Qt::QueuedConnection);
 }
 
