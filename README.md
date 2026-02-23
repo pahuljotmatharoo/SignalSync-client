@@ -1,6 +1,6 @@
 # SignalSync (C++ / Qt)
 
-A lightweight C++/Qt messaging app that supports **direct messages**, **group chats**, and **sending PNG images** to other connected users.
+A lightweight C++/Qt Messaging & File Transfer System that supports **direct messages**, **group chats**, and **sending files** to other connected users.
 
 ## Features
 
