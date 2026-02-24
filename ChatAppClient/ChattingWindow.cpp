@@ -12,25 +12,21 @@
 #include <cstdlib>
 #include "ChattingWindow.h"
 
-// Files look like they are sent fine for groups, just rendered on DM? Debug this
-
-// Deadlock upon calling destructor, fix
-
 ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::threadFunction, this),
                                                     m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), 
                                                     m_userOrGroup(UserB), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10), m_usernameToSend(""), m_groupSemaphore(1), m_generalSemaphore(1), m_queueSemaphore(0), 
                                                     m_http("localhost:8080"), m_threadPool(MAX_THREADS)
 {
     initUI();
-    initThreads();
     initEncryptMap();
+    initThreads();
 }
 
 ChattingWindow::~ChattingWindow() {
+    threadShutdown();
     destroyFiles();
     destroyUserMessages();
     destroyGroupMessages();
-    threadShutdown();
 }
 
 void ChattingWindow::initThreads() {
@@ -341,18 +337,24 @@ void ChattingWindow::on_fileButton_clicked() {
                 return;
             }
             if (m_selfUsername == m_usernameToSend.toStdString().substr(4)) {
-                file.close();
+                file.close(); // sending file to self (not allowed as of right now)
                 return;
             }   
             else {
                 if (m_lastPressedUser) {
                     if (m_network.sendFile(&content, m_usernameToSend.toStdString(), fileName.toStdString(), NetworkRequest::FILE_USER) == -1) {
                         ChatAppClient::sendError("Cannot send file successfully");
+                        file.close();
+                        //processFileRecvUser()
+                        return;
                     }
                 }
                 else if (m_lastPressedGroup) {
                     if (m_network.sendFile(&content, m_groupToSend.toStdString(), fileName.toStdString(), NetworkRequest::FILE_GROUP) == -1) {
                         ChatAppClient::sendError("Cannot send file successfully");
+                        file.close();
+                        //processFileRecvGroup()
+                        return;
                     }
                 }
             }
@@ -498,13 +500,16 @@ void ChattingWindow::displayFileButtons(const QString& user_or_group_name) {
 }
 
 void ChattingWindow::displayMessages(UserMessage* t_messages, const QString& user_or_group_name, bool user_or_group) {
-    UserMessage* user_messages = m_messages[user_or_group_name];
-    if (user_messages == nullptr) { return; }
-    auto& vec = user_messages->getMessages();
+    if (t_messages == nullptr) { return; }
+    auto& vec = t_messages->getMessages();
 
-    for (int i{ 0 }; i < vec.size(); i++) {
-        if (vec[i].first == CURR_USER) { sendMessageToScreenSend(QString::fromStdString(vec[i].second)); }
-        else { sendMessageToScreenRecv(QString::fromStdString(vec[i].second), user_or_group_name, user_or_group); };
+    for (int i{0}; i < vec.size(); i++) {
+        if (vec[i].first == CURR_USER) { 
+            sendMessageToScreenSend(QString::fromStdString(vec[i].second)); 
+        }
+        else { 
+            sendMessageToScreenRecv(QString::fromStdString(vec[i].second), user_or_group_name, user_or_group); 
+        }
     }
 }
 
