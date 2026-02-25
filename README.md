@@ -6,7 +6,7 @@ A lightweight C++/Qt Messaging & File Transfer System that supports **direct mes
 
 - **Direct messaging:** send text messages to any connected user
 - **Group chats:** create/join group chats with any users and message everyone in the group
-- **PNG image sharing:** send `.png` images directly to a user
+- **File sharing:** send files directly to a user
 - **Live UI updates:** chat view updates as messages/images arrive
 
 ## Tech Stack
