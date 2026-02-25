@@ -12,7 +12,7 @@
 #include <cstdlib>
 #include "ChattingWindow.h"
 
-ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::threadFunction, this),
+ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::networkThreadFunction, this),
                                                     m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), 
                                                     m_userOrGroup(UserB), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10), m_usernameToSend(""), m_groupSemaphore(1), m_generalSemaphore(1), m_queueSemaphore(0), 
                                                     m_http("localhost:8080"), m_threadPool(MAX_THREADS)
@@ -24,18 +24,13 @@ ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPre
 
 ChattingWindow::~ChattingWindow() {
     threadShutdown();
-    destroyFiles();
+    destroyUserFiles();
+    destroyGroupFiles();
     destroyUserMessages();
     destroyGroupMessages();
 }
 
-void ChattingWindow::initThreads() {
-    for (std::thread& t : m_threadPool) {
-        t = std::thread(&ChattingWindow::waitingThreadFunction, this);
-    }
-}
-
-void ChattingWindow::threadFunction() {
+void ChattingWindow::networkThreadFunction() {
     NetworkRequest type{};
     while (!m_threadStop) {
         std::size_t recvData = recv(m_network.getSockID(), reinterpret_cast<char*>(&type), sizeof(NetworkRequest), 0);
@@ -139,6 +134,16 @@ void ChattingWindow::threadFunction() {
     }
 }
 
+void ChattingWindow::initThreads() {
+    for (std::thread& t : m_threadPool) {
+        t = std::thread(&ChattingWindow::waitingThreadFunction, this);
+    }
+}
+
+void ChattingWindow::dequeue() {
+    m_functionQueue.pop();
+}
+
 void ChattingWindow::waitingThreadFunction() {
     while (!m_threadStop) {
         m_queueSemaphore.acquire();
@@ -158,9 +163,15 @@ void ChattingWindow::waitingThreadFunction() {
     }
 }
 
-void ChattingWindow::destroyFiles() {
+void ChattingWindow::destroyUserFiles() {
     for (auto itr = m_filesUsers.begin(); itr != m_filesUsers.end(); ++itr) {
         delete itr->second;
+    }
+}
+
+void ChattingWindow::destroyGroupFiles() {
+    for (auto itr = m_filesGroup.begin(); itr != m_filesGroup.end(); itr++) {
+        delete itr->second.first;
     }
 }
 
@@ -257,6 +268,7 @@ void ChattingWindow::addFileButtonToScreenUser(File* recvFile, const std::string
 void ChattingWindow::addFileButtonToScreenGroup(File* recvFile, const std::string& fileName, const std::string& groupName)
 {
     QPushButton* button = createAndStyleFileButton(fileName);
+    connect(button, &QPushButton::clicked, this, &ChattingWindow::downloadGroupFile);
 
     if (button == nullptr) { return; }
 
@@ -326,7 +338,7 @@ void ChattingWindow::on_fileButton_clicked() {
 
             QString fileName = fileInfo.fileName();
 
-            if (m_usernameToSend == "") { 
+            if (m_usernameToSend == "" && m_groupToSend == "") {
                 ChatAppClient::sendError("Select a user!");
                 file.close(); 
                 return; 

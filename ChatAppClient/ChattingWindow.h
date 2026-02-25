@@ -83,7 +83,7 @@ public:
     void initEncryptMap();
     void initUI();
     void encrypt(QString& message);
-    void threadFunction();
+    void networkThreadFunction();
     std::pair<QPushButton*, QString> createAndStyleGroupButton();
     QPushButton* createAndStyleButton(const QString& name);
     QPushButton* createAndStyleFileButton(const std::string& fileName);
@@ -94,7 +94,8 @@ public:
     void downloadGroupFile();
     void processFileRecvUser(File* recvFile, const std::string& fileName);
     void processFileRecvGroup(File* recvFile, const std::string& fileName, const std::string& groupName);
-    void destroyFiles();
+    void destroyUserFiles();
+    void destroyGroupFiles();
     void destroyUserMessages();
     void destroyGroupMessages();
     void threadShutdown();
@@ -107,6 +108,7 @@ public:
     void notificationUser(const QString& user_from);
     void notificationGroup(const QString& group_from);
     void createIfGroupMissing(const QString& group_name);
+
     template <typename T>
     void addWidgetToLayout(const T& widget, Qt::Alignment alignment) {
         m_ui.chatLayout->addWidget(widget, 0, alignment);
@@ -115,11 +117,13 @@ public:
 
         QTimer::singleShot(0, this, [=]() { m_ui.scrollArea->ensureWidgetVisible(widget); });
     }
+
     QString findNewGroupName();
     void initStyles();
     void initButtons();
     void initLayout();
     void initContentLayout();
+
     template <class F, class... Args>
     void enqueue(F&& f, Args&&... args) // accepts args and function as universal reference (could be l-val or r-val)
     {
@@ -133,9 +137,8 @@ public:
         m_queueMutex.unlock();
         m_queueSemaphore.release();
     }
-    void dequeue() {
-        m_functionQueue.pop();
-    }
+
+    void dequeue();
     void waitingThreadFunction();
     void initThreads();
 private slots:
