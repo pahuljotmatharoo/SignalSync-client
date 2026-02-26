@@ -75,7 +75,7 @@ void ChattingWindow::networkThreadFunction() {
                     delete recvGrpMsg;
                     break;
                 }
-                case NetworkRequest::ROOM_LIST: {
+                case NetworkRequest::ROOM_LIST: { // ? wtf am i doing here lol
                     List* listGroup = m_network.recvMethod<List>();
                     if (listGroup == nullptr) { continue; }
                     listGroup->size = ntohl(listGroup->size);
@@ -189,8 +189,8 @@ void ChattingWindow::destroyGroupMessages() {
 
 void ChattingWindow::threadShutdown() {
     m_network.sendInitMsg(NetworkRequest::MSG_EXIT);
-    ::shutdown(m_network.getSockID(), SD_BOTH); // send shut down to socket, should get us out of the while loop
-    m_threadStop = true; // thread safe atomic
+    ::shutdown(m_network.getSockID(), SD_BOTH);
+    m_threadStop = true;
     m_thread.join();
     m_queueSemaphore.release(MAX_THREADS);
     for (auto& t : m_threadPool) {
@@ -199,35 +199,15 @@ void ChattingWindow::threadShutdown() {
 }
 
 void ChattingWindow::processFileRecvUser(File* recvFile, const std::string& fileName) {
-    QPushButton* button = createAndStyleFileButton(fileName);
-
-    if (m_lastPressedUser != nullptr && recvFile->getUserFrom() == m_lastPressedUser->text()) {
-        button->show();
-    }
-
-    m_generalSemaphore.acquire();
-    m_filesUsers.insert(std::make_pair(button, recvFile));
-    m_generalSemaphore.release();
-
-    QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenUser(button, recvFile->getUserFrom()); }, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenUser(recvFile, fileName); }, Qt::QueuedConnection);
 }
 
 void ChattingWindow::processFileRecvGroup(File* recvFile, const std::string& fileName, const std::string& groupName) {
-    QPushButton* button = createAndStyleFileButton(fileName);
-
-    if (m_lastPressedGroup != nullptr && groupName == m_lastPressedGroup->text()) {
-        button->show();
-    }
-
-    m_generalSemaphore.acquire();
-    m_filesGroup.insert(std::make_pair(button, std::make_pair(recvFile, QString::fromStdString(groupName))));
-    m_generalSemaphore.release();
-
-    QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenGroup(button, QString::fromStdString(groupName)); }, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenGroup(recvFile, fileName, groupName); }, Qt::QueuedConnection);
 }
 
-//these are the same basically, fix
 
+//these are the same basically, fix
 void ChattingWindow::downloadUserFile() {
     QString dirName = QFileDialog::getExistingDirectory(this, tr("Select a directory"), "/home",QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
@@ -266,21 +246,35 @@ QPushButton* ChattingWindow::createAndStyleFileButton(const std::string& fileNam
 }
 
 //yeah literally same function...
-void ChattingWindow::addFileButtonToScreenUser(QPushButton* fileButton, const QString userFrom) {
-    connect(fileButton, &QPushButton::clicked, this, &ChattingWindow::downloadUserFile);
+void ChattingWindow::addFileButtonToScreenUser(File* recvFile, const std::string& fileName)  {
+    QPushButton* file_button = createAndStyleFileButton(fileName);
 
-    addWidgetToLayout<QPushButton*>(fileButton, Qt::AlignLeft);
+    if (m_lastPressedUser != nullptr && recvFile->getUserFrom() == m_lastPressedUser->text()) {
+        file_button->show();
+    }
 
-    notificationUser(userFrom);
+    m_filesUsers.insert(std::make_pair(file_button, recvFile));
+
+    connect(file_button, &QPushButton::clicked, this, &ChattingWindow::downloadUserFile);
+
+    addWidgetToLayout<QPushButton*>(file_button, Qt::AlignLeft);
+
+    notificationPassUser(recvFile->getUserFrom());
 }
+void ChattingWindow::addFileButtonToScreenGroup(File* recvFile, const std::string& fileName, const std::string& groupName) {
+    QPushButton* file_button = createAndStyleFileButton(fileName);
 
-void ChattingWindow::addFileButtonToScreenGroup(QPushButton* fileButton, const QString groupFrom)
-{
-    connect(fileButton, &QPushButton::clicked, this, &ChattingWindow::downloadGroupFile);
+    if (m_lastPressedGroup != nullptr && groupName == m_lastPressedGroup->text()) {
+        file_button->show();
+    }
 
-    addWidgetToLayout<QPushButton*>(fileButton, Qt::AlignLeft);
+    m_filesGroup.insert(std::make_pair(file_button, std::make_pair(recvFile, QString::fromStdString(groupName))));
 
-    notificationGroup(groupFrom);
+    connect(file_button, &QPushButton::clicked, this, &ChattingWindow::downloadGroupFile);
+
+    addWidgetToLayout<QPushButton*>(file_button, Qt::AlignLeft);
+
+    notificationPassGroup(QString::fromStdString(groupName));
 }
 
 QPushButton* ChattingWindow::createAndStyleButton(const QString& name) {
@@ -408,7 +402,6 @@ void ChattingWindow::userOrGroupSelect(std::unordered_map<QString, QPushButton*>
     }
 }
 
-//can't really simplify this i think as it is tied to the button itself
 void ChattingWindow::on_groupChat_clicked() {
     m_ui.addGroup->show();
     m_userOrGroup = GroupB;
@@ -418,7 +411,6 @@ void ChattingWindow::on_groupChat_clicked() {
     userOrGroupSelect(m_Users, m_Groups, m_lastPressedUser);
 }
 
-//can't really simplify this i think as it is tied to the button itself
 void ChattingWindow::on_userList_clicked() {
     m_ui.addGroup->hide();
     m_userOrGroup = UserB;
@@ -428,7 +420,6 @@ void ChattingWindow::on_userList_clicked() {
     userOrGroupSelect(m_Groups, m_Users, m_lastPressedGroup);
 }
 
-//can't really simplify this i think as it is tied to the button itself
 void ChattingWindow::onUserClick() {
     QPushButton* clickedButton = qobject_cast<QPushButton*>(sender());
 
@@ -452,7 +443,6 @@ void ChattingWindow::onUserClick() {
     displayUserMessages(m_usernameToSend);
 }
 
-//can't really simplify this i think as it is tied to the button itself
 void ChattingWindow::onGroupClick() {
     QPushButton* clickedButton = qobject_cast<QPushButton*>(sender());
 
@@ -468,7 +458,7 @@ void ChattingWindow::onGroupClick() {
 
     m_lastPressedGroup = clickedButton;
 
-    //remove all the items in the current chat layout
+    
     removeAllChatItemsFromScreen();
 
     m_ui.username_label->setText(clickedButton->text());
@@ -533,38 +523,38 @@ void ChattingWindow::notificationPassGroup(const QString& group_from)
     QMetaObject::invokeMethod(this, [=] { this->notificationGroup(group_from); }, Qt::QueuedConnection);
 }
 
+// edit this method to be thread safe, don't cause a deadlock
 void ChattingWindow::notificationUser(const QString& user_from) {
     if (m_Users.find(user_from) == m_Users.end() || m_lastPressedUser == m_Users[user_from]) {
         return;
     }
-    m_generalSemaphore.acquire();
+    //m_generalSemaphore.acquire();
     m_Users[user_from]->setStyleSheet(m_recvNotificationStylesheet);
-    m_generalSemaphore.release();
+    //m_generalSemaphore.release();
 }
-
+// edit this method to be thread safe, don't cause a deadlock
 void ChattingWindow::notificationGroup(const QString& group_from) {
     if (m_Groups.find(group_from) == m_Groups.end() || m_lastPressedGroup == m_Groups[group_from]) {
         return;
     }
-    m_generalSemaphore.acquire();
+    //m_generalSemaphore.acquire();
     m_Groups[group_from]->setStyleSheet(m_recvNotificationStylesheet);
-    m_generalSemaphore.release();
+    //m_generalSemaphore.release();
 }
 
 void ChattingWindow::createIfGroupMissing(const QString& group_name) {
     QPushButton* group_button = createAndStyleButton(group_name);
 
-    //don't need it here...
-    m_generalSemaphore.acquire();
     m_Groups.insert(std::make_pair(group_name, group_button));
-    m_generalSemaphore.release();
+
+    m_groupSemaphore.release();
+
     if (m_userOrGroup == UserB) {
         group_button->hide();
     }
 
-    m_ui.userLayout->addWidget(group_button, 0, Qt::AlignCenter | Qt::AlignTop);
     connect(group_button, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
-    m_groupSemaphore.release();
+    m_ui.userLayout->addWidget(group_button, 0, Qt::AlignCenter | Qt::AlignTop);
 }
 
 void ChattingWindow::on_sendButton_clicked() {
@@ -600,12 +590,6 @@ void ChattingWindow::on_sendButton_clicked() {
         (m_messages)[m_usernameToSend]->addMessage((std::make_pair(CURR_USER, m_messageToSend.toStdString())));
         m_generalSemaphore.release();
 
-
-        //if (m_http.verifySession(m_selfUsername.toStdString(), m_apiKey) == -1) {
-        //    ChatAppClient::sendError("Session Invalid!");
-        //    std::exit(1);
-        //}
-
         if (m_network.sendMsg(message_to_sendStd, username_to_sendStd, NetworkRequest::MSG_SEND) == -1) {
             ChatAppClient::sendError("Connection Lost! Please reconnect!");
             std::exit(1);
@@ -615,8 +599,8 @@ void ChattingWindow::on_sendButton_clicked() {
     }
 
     else {
-        std::string group_to_sendStd = m_groupToSend.toStdString(); // group name not coming correctly
-        std::string message_to_sendStd = messageCopy.toStdString(); // the one we are going to store in our vector (unencrypted)
+        std::string group_to_sendStd = m_groupToSend.toStdString();
+        std::string message_to_sendStd = messageCopy.toStdString();
 
         if (message_to_sendStd.length() >= 128) {
             ChatAppClient::sendError("Message is too long! Cannot be longer than 128 characters.");
@@ -640,26 +624,17 @@ void ChattingWindow::on_sendButton_clicked() {
     }
 }
 
-void ChattingWindow::addGroup(const std::string group) {
+void ChattingWindow::addGroup(const std::string group_name_s) {
 
-    QPushButton* group = new QPushButton(this);
+    QString group_name = QString::fromStdString(group_name_s);
 
-    GroupMessage* group_msg = new GroupMessage(group_n);
+    GroupMessage* group_msg = new GroupMessage(group_name);
 
     m_generalSemaphore.acquire();
-    m_Groups.insert(std::make_pair(group_n, group));
-    m_groupMessages.insert(std::make_pair(group_n, group_msg));
+    m_groupMessages.insert(std::make_pair(group_name, group_msg));
     m_generalSemaphore.release();
 
-    group->setText(group_n);
-    group->setMinimumSize(205, 40);
-    group->setStyleSheet(m_defaultButtonStylesheet);
-
-    if (m_userOrGroup == UserB) {
-        group->hide();
-    }
-
-    QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(group); }, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(group_name); }, Qt::QueuedConnection);
 }
 
 void ChattingWindow::addMessage_group(std::string message_toadd, const std::string username_toadd, const std::string group_toadd) {
@@ -673,15 +648,12 @@ void ChattingWindow::addMessage_group(std::string message_toadd, const std::stri
         m_groupMessages[QString::fromStdString(group_toadd)] = new GroupMessage(QString::fromStdString(group_toadd));
     }
 
-    // a bit wonky......
     if (m_Groups.find(QString::fromStdString(group_toadd)) == m_Groups.end()) {
-        m_groupSemaphore.acquire(); // lock semaphore here, to ensure that group only gets added once
+        m_groupSemaphore.acquire();
         QMetaObject::invokeMethod(this, [=] { this->createIfGroupMissing(QString::fromStdString(group_toadd)); }, Qt::QueuedConnection);
-        m_generalSemaphore.release();
-        m_generalSemaphore.acquire();
     }
 
-    m_groupMessages[QString::fromStdString(group_toadd)]->addMessage(QString::fromStdString(username_toadd), OTHER_USER, QString::fromStdString(username_toadd) + ":" + message_r); // group is null when we initally recieve it
+    m_groupMessages[QString::fromStdString(group_toadd)]->addMessage(QString::fromStdString(username_toadd), OTHER_USER, QString::fromStdString(username_toadd) + ":" + message_r);
 
     m_generalSemaphore.release();
 
@@ -720,48 +692,26 @@ void ChattingWindow::addMessage(MsgRecvUser* recvStruct) {
 void ChattingWindow::addUsers(List* list) {
     //just goes through the list of users when its updated from the server end, and adds any new ones.
     //better logic will be implemented later from server side soon
+    m_generalSemaphore.acquire();
     for (std::size_t i{0}; i < list->size; i++) {
         QString username = QString::fromStdString(std::string(list->arr[i]));
-
-        // should prolly be in a seperate function
-        QPushButton* user = new QPushButton(this);
-
-        if(username == m_selfUsername) {
-            user->setText("You:" + username);
+        if ((m_Users).find(QString::fromStdString(std::string(list->arr[i]))) == (m_Users).end()) {
+            QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(username); }, Qt::QueuedConnection);
         }
-        else {
-            user->setText(username);
-        }
-
-        if (m_userOrGroup == GroupB) {
-            user->hide();
-        }
-
-        m_generalSemaphore.acquire();
-
-        m_messages[username] = new UserMessage(username);
-        m_Users.insert(std::make_pair(username, user));
-        //////////
-
-        if ((m_Users).find(username) == (m_Users).end()) {
-            QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(user); }, Qt::QueuedConnection);
-        }
-
-        m_generalSemaphore.release();
     }
+    m_generalSemaphore.release();
     delete list;
 }
 
 void ChattingWindow::addGroups(char groups[MAXUSERS][USERNAME_LENGTH], uint32_t size) {
-    //just goes through the list of users when its updated from the server end, and adds any new ones.
-    //better logic will be implemented later from server side soon
     for (std::size_t i{0}; i < size; i++) {
         QString group = QString::fromStdString(std::string(groups[i]));
 
-        //since this function will be called by recv thread, cannot create element here so queue it on main thread
+        m_generalSemaphore.acquire();
         if ((m_Groups).find(group) == (m_Groups).end()) {
-            QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(group); }, Qt::QueuedConnection);
+            QMetaObject::invokeMethod(this, [=] { this->addGroup(std::string(groups[i])); }, Qt::QueuedConnection);
         }
+        m_generalSemaphore.release();
     }
     return;
 }
@@ -770,7 +720,17 @@ void ChattingWindow::removeUsers(const std::string user, uint32_t size) {
     QMetaObject::invokeMethod(this, [=] { this->removeUserfromScreen(QString::fromStdString(std::string(user))); }, Qt::QueuedConnection);
 }
 
-void ChattingWindow::addGrouptoScreen(QPushButton* group) {
+void ChattingWindow::addGrouptoScreen(const QString group_name) {
+    QPushButton* group = new QPushButton(this);
+    m_Groups.insert(std::make_pair(group_name, group));
+
+    group->setText(group_name);
+    group->setMinimumSize(205, 40);
+    group->setStyleSheet(m_defaultButtonStylesheet);
+
+    if (m_userOrGroup == UserB) {
+        group->hide();
+    }
 
     m_ui.userLayout->addWidget(group, 0, Qt::AlignCenter | Qt::AlignTop);
     connect(group, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
@@ -816,7 +776,23 @@ void ChattingWindow::sendMessageToScreenSend(const QString& message) {
     addWidgetToLayout<MessageWidget_s*>(new MessageWidget_s(message, this), Qt::AlignRight);
 }
 
-void ChattingWindow::sendUserToScreen(QPushButton* user) {
+void ChattingWindow::sendUserToScreen(const QString username) {
+    // should prolly be in a seperate function
+    QPushButton* user = new QPushButton(this);
+
+    if (username == m_selfUsername) {
+        user->setText("You:" + username);
+    }
+    else {
+        user->setText(username);
+    }
+
+    if (m_userOrGroup == GroupB) {
+        user->hide();
+    }
+
+    m_messages[username] = new UserMessage(username);
+    m_Users.insert(std::make_pair(username, user));
     user->setMinimumSize(205, 40);
     user->setStyleSheet(m_defaultButtonStylesheet);
 

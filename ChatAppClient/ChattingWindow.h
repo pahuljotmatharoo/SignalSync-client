@@ -72,13 +72,13 @@ public:
     void addMessage_group(std::string message_toadd, const std::string username_toadd, const std::string group_toadd);
     void sendMessageToScreenRecv(const QString& message, const QString& user, bool type);
     void sendMessageToScreenSend(const QString& message);
-    void sendUserToScreen(QPushButton* user);
+    void sendUserToScreen(const QString username);
     void addUsers(List* list);
     void removeUsers(const std::string user, uint32_t size);
     void removeUserfromScreen(const QString& user);
     void addGroup(const std::string group);
     void addGroups(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size);
-    void addGrouptoScreen(QPushButton* group);
+    void addGrouptoScreen(const QString group_name);
     void removeAllChatItemsFromScreen();
     void initEncryptMap();
     void initUI();
@@ -88,8 +88,8 @@ public:
     QPushButton* createAndStyleButton(const QString& name);
     QPushButton* createAndStyleFileButton(const std::string& fileName);
     void userOrGroupSelect(std::unordered_map<QString, QPushButton*> &hide, std::unordered_map<QString, QPushButton*> &show, QPushButton*& lastPressedButton) const;
-    void addFileButtonToScreenUser(QPushButton* fileButton, const QString userFrom);
-    void addFileButtonToScreenGroup(QPushButton* fileButton, const QString groupFrom);
+    void addFileButtonToScreenUser(File* recvFile, const std::string& fileName);
+    void addFileButtonToScreenGroup(File* recvFile, const std::string& fileName, const std::string& groupName);
     void downloadUserFile();
     void downloadGroupFile();
     void processFileRecvUser(File* recvFile, const std::string& fileName);
