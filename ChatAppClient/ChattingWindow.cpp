@@ -28,6 +28,7 @@ ChattingWindow::~ChattingWindow() {
     destroyGroupFiles();
     destroyUserMessages();
     destroyGroupMessages();
+    int x = 45;
 }
 
 void ChattingWindow::networkThreadFunction() {
@@ -513,41 +514,48 @@ void ChattingWindow::displayMessages(UserMessage* t_messages, const QString& use
     }
 }
 
-void ChattingWindow::notificationPassUser(const QString& user_from)
-{
+void ChattingWindow::notificationPassUser(const QString& user_from) {
+    m_generalSemaphore.acquire();
+    if (m_Users.find(user_from) == m_Users.end() || m_lastPressedUser == m_Users[user_from]) {
+        m_generalSemaphore.release();
+        return;
+    }
+    m_generalSemaphore.release();
     QMetaObject::invokeMethod(this, [=] { this->notificationUser(user_from); }, Qt::QueuedConnection);
 }
 
-void ChattingWindow::notificationPassGroup(const QString& group_from)
-{
+void ChattingWindow::notificationPassGroup(const QString& group_from) {
+    m_generalSemaphore.acquire();
+    if (m_Groups.find(group_from) == m_Groups.end() || m_lastPressedGroup == m_Groups[group_from]) {
+        m_generalSemaphore.release();
+        return;
+    }
+    m_generalSemaphore.release();
     QMetaObject::invokeMethod(this, [=] { this->notificationGroup(group_from); }, Qt::QueuedConnection);
 }
 
 // edit this method to be thread safe, don't cause a deadlock
 void ChattingWindow::notificationUser(const QString& user_from) {
-    if (m_Users.find(user_from) == m_Users.end() || m_lastPressedUser == m_Users[user_from]) {
-        return;
-    }
-    //m_generalSemaphore.acquire();
+    m_generalSemaphore.acquire();
     m_Users[user_from]->setStyleSheet(m_recvNotificationStylesheet);
-    //m_generalSemaphore.release();
+    m_generalSemaphore.release();
 }
 // edit this method to be thread safe, don't cause a deadlock
 void ChattingWindow::notificationGroup(const QString& group_from) {
-    if (m_Groups.find(group_from) == m_Groups.end() || m_lastPressedGroup == m_Groups[group_from]) {
-        return;
-    }
-    //m_generalSemaphore.acquire();
+    m_generalSemaphore.acquire();
     m_Groups[group_from]->setStyleSheet(m_recvNotificationStylesheet);
-    //m_generalSemaphore.release();
+    m_generalSemaphore.release();
 }
 
 void ChattingWindow::createIfGroupMissing(const QString& group_name) {
     QPushButton* group_button = createAndStyleButton(group_name);
 
-    m_Groups.insert(std::make_pair(group_name, group_button));
 
-    m_groupSemaphore.release();
+    m_generalSemaphore.acquire();
+    m_Groups.insert(std::make_pair(group_name, group_button));
+    m_generalSemaphore.release();
+
+    //m_groupSemaphore.release();
 
     if (m_userOrGroup == UserB) {
         group_button->hide();
@@ -649,7 +657,7 @@ void ChattingWindow::addMessage_group(std::string message_toadd, const std::stri
     }
 
     if (m_Groups.find(QString::fromStdString(group_toadd)) == m_Groups.end()) {
-        m_groupSemaphore.acquire();
+        //m_groupSemaphore.acquire();
         QMetaObject::invokeMethod(this, [=] { this->createIfGroupMissing(QString::fromStdString(group_toadd)); }, Qt::QueuedConnection);
     }
 
