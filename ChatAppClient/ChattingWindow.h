@@ -8,6 +8,7 @@
 #include <semaphore>
 #include <functional>
 #include <utility>
+#include <queue>
 #include "ChatAppClient.h"
 #include "message.h"
 #include "message_s.h"
@@ -16,7 +17,7 @@
 #include "File.h"
 #include "UserMessage.h"
 #include "GroupMessage.h"
-#include <queue>
+#include "LockGuard.h"
 
 constexpr bool OTHER_USER = true;
 constexpr bool CURR_USER = false;

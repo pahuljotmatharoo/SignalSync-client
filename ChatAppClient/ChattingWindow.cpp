@@ -296,9 +296,10 @@ std::pair<QPushButton*, QString> ChattingWindow::createAndStyleGroupButton() {
 
     QPushButton* group = createAndStyleButton(group_name);
 
-    m_generalSemaphore.acquire();
-    m_Groups.insert(std::make_pair(group_name, group));
-    m_generalSemaphore.release();
+    {
+        LockGuard guard(m_generalSemaphore);
+        m_Groups.insert(std::make_pair(group_name, group));
+    }
 
     m_ui.userLayout->addWidget(group, 0, Qt::AlignCenter | Qt::AlignTop);
 
@@ -375,9 +376,10 @@ void ChattingWindow::on_addGroup_clicked() {
 
     connect(buttonAndName.first, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
 
-    m_generalSemaphore.acquire();
-    m_groupMessages.insert(std::make_pair(buttonAndName.second, new GroupMessage(buttonAndName.second)));
-    m_generalSemaphore.release();
+    {
+        LockGuard guard(m_generalSemaphore);
+        m_groupMessages.insert(std::make_pair(buttonAndName.second, new GroupMessage(buttonAndName.second)));
+    }
 
     if (m_network.sendGroupName(buttonAndName.second.toStdString()) == -1) {
         ChatAppClient::sendError("Cannot add group successfully");
@@ -515,47 +517,43 @@ void ChattingWindow::displayMessages(UserMessage* t_messages, const QString& use
 }
 
 void ChattingWindow::notificationPassUser(const QString& user_from) {
-    m_generalSemaphore.acquire();
-    if (m_Users.find(user_from) == m_Users.end() || m_lastPressedUser == m_Users[user_from]) {
-        m_generalSemaphore.release();
-        return;
+    {
+        LockGuard guard(m_generalSemaphore);
+        if (m_Users.find(user_from) == m_Users.end() || m_lastPressedUser == m_Users[user_from]) {
+            return;
+        }
     }
-    m_generalSemaphore.release();
     QMetaObject::invokeMethod(this, [=] { this->notificationUser(user_from); }, Qt::QueuedConnection);
 }
 
 void ChattingWindow::notificationPassGroup(const QString& group_from) {
-    m_generalSemaphore.acquire();
-    if (m_Groups.find(group_from) == m_Groups.end() || m_lastPressedGroup == m_Groups[group_from]) {
-        m_generalSemaphore.release();
-        return;
+    {
+        LockGuard guard(m_generalSemaphore);
+        if (m_Groups.find(group_from) == m_Groups.end() || m_lastPressedGroup == m_Groups[group_from]) {
+            return;
+        }
     }
-    m_generalSemaphore.release();
     QMetaObject::invokeMethod(this, [=] { this->notificationGroup(group_from); }, Qt::QueuedConnection);
 }
 
 // edit this method to be thread safe, don't cause a deadlock
 void ChattingWindow::notificationUser(const QString& user_from) {
-    m_generalSemaphore.acquire();
-    m_Users[user_from]->setStyleSheet(m_recvNotificationStylesheet);
-    m_generalSemaphore.release();
+     LockGuard guard(m_generalSemaphore);
+     m_Users[user_from]->setStyleSheet(m_recvNotificationStylesheet);
 }
 // edit this method to be thread safe, don't cause a deadlock
 void ChattingWindow::notificationGroup(const QString& group_from) {
-    m_generalSemaphore.acquire();
+    LockGuard guard(m_generalSemaphore);
     m_Groups[group_from]->setStyleSheet(m_recvNotificationStylesheet);
-    m_generalSemaphore.release();
 }
 
 void ChattingWindow::createIfGroupMissing(const QString& group_name) {
     QPushButton* group_button = createAndStyleButton(group_name);
 
-
-    m_generalSemaphore.acquire();
-    m_Groups.insert(std::make_pair(group_name, group_button));
-    m_generalSemaphore.release();
-
-    //m_groupSemaphore.release();
+    {
+        LockGuard guard(m_generalSemaphore);
+        m_Groups.insert(std::make_pair(group_name, group_button));
+    }
 
     if (m_userOrGroup == UserB) {
         group_button->hide();
@@ -588,15 +586,14 @@ void ChattingWindow::on_sendButton_clicked() {
             return;
         }
 
-        if ((m_messages).find(m_usernameToSend) == m_messages.end() || m_messages[m_usernameToSend] == nullptr) {
-            m_generalSemaphore.acquire();
-            m_messages.insert(std::make_pair(m_usernameToSend, new UserMessage(QString::fromStdString(username_to_sendStd))));
-            m_generalSemaphore.release();
-        }
+        {
+            LockGuard guard(m_generalSemaphore);
+            if ((m_messages).find(m_usernameToSend) == m_messages.end() || m_messages[m_usernameToSend] == nullptr) {
+                m_messages.insert(std::make_pair(m_usernameToSend, new UserMessage(QString::fromStdString(username_to_sendStd))));
+            }
 
-        m_generalSemaphore.acquire();
-        (m_messages)[m_usernameToSend]->addMessage((std::make_pair(CURR_USER, m_messageToSend.toStdString())));
-        m_generalSemaphore.release();
+            (m_messages)[m_usernameToSend]->addMessage((std::make_pair(CURR_USER, m_messageToSend.toStdString())));
+        }
 
         if (m_network.sendMsg(message_to_sendStd, username_to_sendStd, NetworkRequest::MSG_SEND) == -1) {
             ChatAppClient::sendError("Connection Lost! Please reconnect!");
@@ -619,9 +616,11 @@ void ChattingWindow::on_sendButton_clicked() {
             ChatAppClient::sendError("Message is empty! Cannot send empty message!.");
             return;
         }
-        m_generalSemaphore.acquire();
-        m_groupMessages[m_groupToSend]->addMessage(m_selfUsername, CURR_USER, m_selfUsername + " : " + m_messageToSend);
-        m_generalSemaphore.release();
+
+        {
+            LockGuard guard(m_generalSemaphore);
+            m_groupMessages[m_groupToSend]->addMessage(m_selfUsername, CURR_USER, m_selfUsername + " : " + m_messageToSend);
+        }
 
         if (m_network.sendMsg(message_to_sendStd, group_to_sendStd, NetworkRequest::ROOM_MSG) == -1) {
             ChatAppClient::sendError("Connection Lost! Please reconnect!");
@@ -638,9 +637,10 @@ void ChattingWindow::addGroup(const std::string group_name_s) {
 
     GroupMessage* group_msg = new GroupMessage(group_name);
 
-    m_generalSemaphore.acquire();
-    m_groupMessages.insert(std::make_pair(group_name, group_msg));
-    m_generalSemaphore.release();
+    {
+        LockGuard guard(m_generalSemaphore);
+        m_groupMessages.insert(std::make_pair(group_name, group_msg));
+    }
 
     QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(group_name); }, Qt::QueuedConnection);
 }
@@ -650,20 +650,20 @@ void ChattingWindow::addMessage_group(std::string message_toadd, const std::stri
     encrypt(message_r);
     message_toadd = message_r.toStdString();
 
-    m_generalSemaphore.acquire();
+    {
+        LockGuard guard(m_generalSemaphore);
 
-    if (m_groupMessages.find(QString::fromStdString(group_toadd)) == m_groupMessages.end()) {
-        m_groupMessages[QString::fromStdString(group_toadd)] = new GroupMessage(QString::fromStdString(group_toadd));
+        if (m_groupMessages.find(QString::fromStdString(group_toadd)) == m_groupMessages.end()) {
+            m_groupMessages[QString::fromStdString(group_toadd)] = new GroupMessage(QString::fromStdString(group_toadd));
+        }
+
+        if (m_Groups.find(QString::fromStdString(group_toadd)) == m_Groups.end()) {
+            QMetaObject::invokeMethod(this, [=] { this->createIfGroupMissing(QString::fromStdString(group_toadd)); }, Qt::QueuedConnection);
+        }
+
+        m_groupMessages[QString::fromStdString(group_toadd)]->addMessage(QString::fromStdString(username_toadd), OTHER_USER, QString::fromStdString(username_toadd) + ":" + message_r);
+
     }
-
-    if (m_Groups.find(QString::fromStdString(group_toadd)) == m_Groups.end()) {
-        //m_groupSemaphore.acquire();
-        QMetaObject::invokeMethod(this, [=] { this->createIfGroupMissing(QString::fromStdString(group_toadd)); }, Qt::QueuedConnection);
-    }
-
-    m_groupMessages[QString::fromStdString(group_toadd)]->addMessage(QString::fromStdString(username_toadd), OTHER_USER, QString::fromStdString(username_toadd) + ":" + message_r);
-
-    m_generalSemaphore.release();
 
     //we'll be able to display right away to screen, needs to run on the gui thread (main thread)
     QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(username_toadd + " : " + message_toadd), QString::fromStdString(group_toadd), GroupB); }, Qt::QueuedConnection);
@@ -677,18 +677,16 @@ void ChattingWindow::addMessage(MsgRecvUser* recvStruct) {
     encrypt(message_r); //unencrypt the message
     message_toadd = message_r.toStdString();
 
-    if (m_messages.find(QString::fromStdString(username_toadd)) != m_messages.end()) {
-        m_generalSemaphore.acquire();
-        m_messages[QString::fromStdString(username_toadd)]->addMessage(std::make_pair(OTHER_USER, message_toadd));
-        m_generalSemaphore.release();
-    }
-
-    else {
-        UserMessage* user_msg = new UserMessage(QString::fromStdString(username_toadd));
-        m_generalSemaphore.acquire();
-        m_messages[QString::fromStdString(username_toadd)] = user_msg;
-        user_msg->addMessage(std::make_pair(OTHER_USER, message_toadd));
-        m_generalSemaphore.release();
+    {
+        LockGuard guard(m_generalSemaphore);
+        if (m_messages.find(QString::fromStdString(username_toadd)) != m_messages.end()) {
+            m_messages[QString::fromStdString(username_toadd)]->addMessage(std::make_pair(OTHER_USER, message_toadd));
+        }
+        else {
+            UserMessage* user_msg = new UserMessage(QString::fromStdString(username_toadd));
+            m_messages[QString::fromStdString(username_toadd)] = user_msg;
+            user_msg->addMessage(std::make_pair(OTHER_USER, message_toadd));
+        }
     }
 
     delete recvStruct;
@@ -698,30 +696,29 @@ void ChattingWindow::addMessage(MsgRecvUser* recvStruct) {
 }
 
 void ChattingWindow::addUsers(List* list) {
-    //just goes through the list of users when its updated from the server end, and adds any new ones.
-    //better logic will be implemented later from server side soon
-    m_generalSemaphore.acquire();
-    for (std::size_t i{0}; i < list->size; i++) {
-        QString username = QString::fromStdString(std::string(list->arr[i]));
-        if ((m_Users).find(QString::fromStdString(std::string(list->arr[i]))) == (m_Users).end()) {
-            QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(username); }, Qt::QueuedConnection);
+    {
+        LockGuard guard(m_generalSemaphore);
+        for (std::size_t i{ 0 }; i < list->size; i++) {
+            QString username = QString::fromStdString(std::string(list->arr[i]));
+            if ((m_Users).find(QString::fromStdString(std::string(list->arr[i]))) == (m_Users).end()) {
+                QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(username); }, Qt::QueuedConnection);
+            }
         }
     }
-    m_generalSemaphore.release();
     delete list;
 }
 
 void ChattingWindow::addGroups(char groups[MAXUSERS][USERNAME_LENGTH], uint32_t size) {
-    for (std::size_t i{0}; i < size; i++) {
-        QString group = QString::fromStdString(std::string(groups[i]));
+    {
+        LockGuard guard(m_generalSemaphore);
+        for (std::size_t i{ 0 }; i < size; i++) {
+            QString group = QString::fromStdString(std::string(groups[i]));
 
-        m_generalSemaphore.acquire();
-        if ((m_Groups).find(group) == (m_Groups).end()) {
-            QMetaObject::invokeMethod(this, [=] { this->addGroup(std::string(groups[i])); }, Qt::QueuedConnection);
+            if ((m_Groups).find(group) == (m_Groups).end()) {
+                QMetaObject::invokeMethod(this, [=] { this->addGroup(std::string(groups[i])); }, Qt::QueuedConnection);
+            }
         }
-        m_generalSemaphore.release();
     }
-    return;
 }
 
 void ChattingWindow::removeUsers(const std::string user, uint32_t size) {
@@ -730,7 +727,11 @@ void ChattingWindow::removeUsers(const std::string user, uint32_t size) {
 
 void ChattingWindow::addGrouptoScreen(const QString group_name) {
     QPushButton* group = new QPushButton(this);
-    m_Groups.insert(std::make_pair(group_name, group));
+
+    {
+        LockGuard guard(m_generalSemaphore);
+        m_Groups.insert(std::make_pair(group_name, group));
+    }
 
     group->setText(group_name);
     group->setMinimumSize(205, 40);
@@ -800,7 +801,10 @@ void ChattingWindow::sendUserToScreen(const QString username) {
     }
 
     m_messages[username] = new UserMessage(username);
-    m_Users.insert(std::make_pair(username, user));
+    {
+        LockGuard guard(m_generalSemaphore);
+        m_Users.insert(std::make_pair(username, user));
+    }
     user->setMinimumSize(205, 40);
     user->setStyleSheet(m_defaultButtonStylesheet);
 
