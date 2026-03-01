@@ -1,16 +1,17 @@
 #pragma once
 
 #include <QtWidgets/QMainWindow>
-#include "ui_ChatAppClient.h"
 #include "NetworkClient.h"
 #include "HttpRequest.h"
+
+namespace Ui { class ChatAppClientClass; }
 
 class ChatAppClient : public QMainWindow
 {
     Q_OBJECT
 
 private:
-    Ui::ChatAppClientClass ui;
+    Ui::ChatAppClientClass* ui;
     std::string m_apiKey;
     QString m_username;
     QString m_password;
@@ -18,6 +19,7 @@ private:
     HTTPRequest m_http;
 public:
     ChatAppClient(QWidget* parent = nullptr);
+    ~ChatAppClient();
     static void sendError(const QString& error_message);
     static std::string generateAPIKey(int length);
 private slots: // Declare slots in this section

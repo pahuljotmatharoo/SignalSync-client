@@ -11,11 +11,14 @@
 #include <fstream>
 #include <cstdlib>
 #include "ChattingWindow.h"
+#include "ui_ChattingWindow.h"
+
+//reminder that std library containers are RAII compliant, and allocate & deallocate elements on heap themselves
 
 ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::networkThreadFunction, this),
                                                     m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25), 
                                                     m_userOrGroup(UserB), m_buttonAddGroupFont("Montserrat", 8), m_buttonFont("Montserrat", 10), m_usernameToSend(""), m_groupSemaphore(1), m_generalSemaphore(1), m_queueSemaphore(0), 
-                                                    m_http("localhost:8080"), m_threadPool(MAX_THREADS)
+                                                    m_http("localhost:8080"), m_threadPool(MAX_THREADS), m_ui(new Ui::ChattingWindow)
 {
     initUI();
     initEncryptMap();
@@ -28,7 +31,6 @@ ChattingWindow::~ChattingWindow() {
     destroyGroupFiles();
     destroyUserMessages();
     destroyGroupMessages();
-    int x = 45;
 }
 
 void ChattingWindow::networkThreadFunction() {
@@ -151,15 +153,16 @@ void ChattingWindow::waitingThreadFunction() {
         if (m_threadStop) {
             break;
         }
-        m_queueMutex.lock();
-        if (m_functionQueue.size() > 0) {
-            auto top = m_functionQueue.front();
-            dequeue();
-            m_queueMutex.unlock();
-            top();
+        std::function<void()> task;
+        {
+            std::lock_guard<std::mutex> lock(m_queueMutex);
+            if (m_functionQueue.size() > 0) {
+                task = std::move(m_functionQueue.front());
+                dequeue();
+            }
         }
-        else {
-            m_queueMutex.unlock();
+        if (task) {
+            task();
         }
     }
 }
@@ -258,7 +261,7 @@ void ChattingWindow::addFileButtonToScreenUser(File* recvFile, const std::string
 
     connect(file_button, &QPushButton::clicked, this, &ChattingWindow::downloadUserFile);
 
-    addWidgetToLayout<QPushButton*>(file_button, Qt::AlignLeft);
+    addWidgetToLayout(file_button, Qt::AlignLeft);
 
     notificationPassUser(recvFile->getUserFrom());
 }
@@ -273,7 +276,7 @@ void ChattingWindow::addFileButtonToScreenGroup(File* recvFile, const std::strin
 
     connect(file_button, &QPushButton::clicked, this, &ChattingWindow::downloadGroupFile);
 
-    addWidgetToLayout<QPushButton*>(file_button, Qt::AlignLeft);
+    addWidgetToLayout(file_button, Qt::AlignLeft);
 
     notificationPassGroup(QString::fromStdString(groupName));
 }
@@ -301,7 +304,7 @@ std::pair<QPushButton*, QString> ChattingWindow::createAndStyleGroupButton() {
         m_Groups.insert(std::make_pair(group_name, group));
     }
 
-    m_ui.userLayout->addWidget(group, 0, Qt::AlignCenter | Qt::AlignTop);
+    m_ui->userLayout->addWidget(group, 0, Qt::AlignCenter | Qt::AlignTop);
 
     return { group, group_name };
 }
@@ -406,19 +409,19 @@ void ChattingWindow::userOrGroupSelect(std::unordered_map<QString, QPushButton*>
 }
 
 void ChattingWindow::on_groupChat_clicked() {
-    m_ui.addGroup->show();
+    m_ui->addGroup->show();
     m_userOrGroup = GroupB;
 
-    m_ui.currUsers_label->setText("Current Groups");
+    m_ui->currUsers_label->setText("Current Groups");
 
     userOrGroupSelect(m_Users, m_Groups, m_lastPressedUser);
 }
 
 void ChattingWindow::on_userList_clicked() {
-    m_ui.addGroup->hide();
+    m_ui->addGroup->hide();
     m_userOrGroup = UserB;
 
-    m_ui.currUsers_label->setText("Current Users");
+    m_ui->currUsers_label->setText("Current Users");
 
     userOrGroupSelect(m_Groups, m_Users, m_lastPressedGroup);
 }
@@ -439,12 +442,13 @@ void ChattingWindow::onUserClick() {
 
     removeAllChatItemsFromScreen();
 
-    m_ui.username_label->setText(clickedButton->text());
+    m_ui->username_label->setText(clickedButton->text());
     m_usernameToSend = clickedButton->text();
     auto& vec_msg = (m_messages)[m_usernameToSend];
 
     displayUserMessages(m_usernameToSend);
 }
+
 
 void ChattingWindow::onGroupClick() {
     QPushButton* clickedButton = qobject_cast<QPushButton*>(sender());
@@ -464,7 +468,7 @@ void ChattingWindow::onGroupClick() {
     
     removeAllChatItemsFromScreen();
 
-    m_ui.username_label->setText(clickedButton->text());
+    m_ui->username_label->setText(clickedButton->text());
     m_groupToSend = clickedButton->text();
 
     displayGroupMessages(m_groupToSend);
@@ -536,15 +540,26 @@ void ChattingWindow::notificationPassGroup(const QString& group_from) {
     QMetaObject::invokeMethod(this, [=] { this->notificationGroup(group_from); }, Qt::QueuedConnection);
 }
 
-// edit this method to be thread safe, don't cause a deadlock
 void ChattingWindow::notificationUser(const QString& user_from) {
      LockGuard guard(m_generalSemaphore);
      m_Users[user_from]->setStyleSheet(m_recvNotificationStylesheet);
 }
-// edit this method to be thread safe, don't cause a deadlock
+
 void ChattingWindow::notificationGroup(const QString& group_from) {
     LockGuard guard(m_generalSemaphore);
     m_Groups[group_from]->setStyleSheet(m_recvNotificationStylesheet);
+}
+
+void ChattingWindow::addWidgetToLayout(QWidget* widget, Qt::Alignment alignment)
+{
+    m_ui->chatLayout->addWidget(widget, 0, alignment);
+
+    auto* sb = m_ui->scrollArea->verticalScrollBar();
+    sb->setValue(sb->maximum());
+
+    QTimer::singleShot(0, this, [this, widget]() {
+        m_ui->scrollArea->ensureWidgetVisible(widget);
+        });
 }
 
 void ChattingWindow::createIfGroupMissing(const QString& group_name) {
@@ -560,7 +575,7 @@ void ChattingWindow::createIfGroupMissing(const QString& group_name) {
     }
 
     connect(group_button, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
-    m_ui.userLayout->addWidget(group_button, 0, Qt::AlignCenter | Qt::AlignTop);
+    m_ui->userLayout->addWidget(group_button, 0, Qt::AlignCenter | Qt::AlignTop);
 }
 
 void ChattingWindow::on_sendButton_clicked() {
@@ -741,7 +756,7 @@ void ChattingWindow::addGrouptoScreen(const QString group_name) {
         group->hide();
     }
 
-    m_ui.userLayout->addWidget(group, 0, Qt::AlignCenter | Qt::AlignTop);
+    m_ui->userLayout->addWidget(group, 0, Qt::AlignCenter | Qt::AlignTop);
     connect(group, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
 }
 
@@ -752,9 +767,9 @@ void ChattingWindow::removeUserfromScreen(const QString& user) {
             m_lastPressedUser = nullptr;
             //need to remove messages 
             removeAllChatItemsFromScreen();
-            m_ui.username_label->setText("Select a User to talk to!");
+            m_ui->username_label->setText("Select a User to talk to!");
         }
-        m_ui.userLayout->removeWidget((m_Users)[user]);
+        m_ui->userLayout->removeWidget((m_Users)[user]);
         (m_Users)[user]->hide();
         (m_Users)[user]->deleteLater();
         (m_Users)[user] = nullptr;
@@ -778,11 +793,11 @@ void ChattingWindow::sendMessageToScreenRecv(const QString& message, const QStri
         else if (m_lastPressedGroup && m_lastPressedGroup->text() != user) { return; }
     }
 
-    addWidgetToLayout<MessageWidget*>(new MessageWidget(message, this), Qt::AlignLeft);
+    addWidgetToLayout(new MessageWidget(message, this), Qt::AlignLeft);
 }
 
 void ChattingWindow::sendMessageToScreenSend(const QString& message) {
-    addWidgetToLayout<MessageWidget_s*>(new MessageWidget_s(message, this), Qt::AlignRight);
+    addWidgetToLayout(new MessageWidget_s(message, this), Qt::AlignRight);
 }
 
 void ChattingWindow::sendUserToScreen(const QString username) {
@@ -808,7 +823,7 @@ void ChattingWindow::sendUserToScreen(const QString username) {
     user->setMinimumSize(205, 40);
     user->setStyleSheet(m_defaultButtonStylesheet);
 
-    m_ui.userLayout->addWidget(user, 0, Qt::AlignCenter | Qt::AlignTop);
+    m_ui->userLayout->addWidget(user, 0, Qt::AlignCenter | Qt::AlignTop);
 
     connect(user, &QPushButton::clicked, this, &ChattingWindow::onUserClick);
 
@@ -816,8 +831,8 @@ void ChattingWindow::sendUserToScreen(const QString username) {
 }
 
 void ChattingWindow::removeAllChatItemsFromScreen() {
-    for (int i = 0; i < m_ui.chatLayout->count(); ++i) {
-        QLayoutItem* item = m_ui.chatLayout->itemAt(i);
+    for (int i = 0; i < m_ui->chatLayout->count(); ++i) {
+        QLayoutItem* item = m_ui->chatLayout->itemAt(i);
         QWidget* w = nullptr;
         if (item != nullptr) { w = item->widget(); }
         if (!w) continue;
@@ -826,7 +841,7 @@ void ChattingWindow::removeAllChatItemsFromScreen() {
             w->hide();
         }
         else {
-            m_ui.chatLayout->removeWidget(w);
+            m_ui->chatLayout->removeWidget(w);
             w->deleteLater();
             --i;
         }
@@ -926,60 +941,60 @@ void ChattingWindow::initStyles() {
 }
 
 void ChattingWindow::initButtons() {
-    m_ui.chatLayout->addStretch(1);  // Push all bubbles to top
+    m_ui->chatLayout->addStretch(1);  // Push all bubbles to top
 
-    m_ui.title_label->setFont(m_titleFont);
+    m_ui->title_label->setFont(m_titleFont);
 
-    m_ui.addGroup->setFont(m_buttonAddGroupFont);
-    m_ui.userList->setFont(m_buttonFont);
-    m_ui.groupChat->setFont(m_buttonFont);
-    m_ui.Message_input->setFont(m_buttonFont);
-    m_ui.sendButton->setIcon(QIcon("icon.png"));
-    m_ui.sendButton->setIconSize(QSize(45, 37));
+    m_ui->addGroup->setFont(m_buttonAddGroupFont);
+    m_ui->userList->setFont(m_buttonFont);
+    m_ui->groupChat->setFont(m_buttonFont);
+    m_ui->Message_input->setFont(m_buttonFont);
+    m_ui->sendButton->setIcon(QIcon("icon.png"));
+    m_ui->sendButton->setIconSize(QSize(45, 37));
 
-    m_ui.fileButton->setIcon(QIcon("fileupload.png"));
-    m_ui.fileButton->setIconSize(QSize(45, 37));
+    m_ui->fileButton->setIcon(QIcon("fileupload.png"));
+    m_ui->fileButton->setIconSize(QSize(45, 37));
 
-    m_ui.chatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
-    m_ui.addGroup->hide();
+    m_ui->chatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
+    m_ui->addGroup->hide();
 }
 
 void ChattingWindow::initLayout() {
-    QWidget* contents = m_ui.scrollArea->takeWidget();
+    QWidget* contents = m_ui->scrollArea->takeWidget();
     QVBoxLayout* layout = new QVBoxLayout(contents);
 
     layout->setContentsMargins(0, 0, 0, 0);
     contents->setLayout(layout);
-    m_ui.scrollArea->setWidget(contents);
+    m_ui->scrollArea->setWidget(contents);
 
-    m_ui.chatLayout = layout;
+    m_ui->chatLayout = layout;
     layout->setSpacing(5);
     layout->setSizeConstraint(QLayout::SetMinimumSize);
 }
 
 void ChattingWindow::initContentLayout() {
     //we're just creating a layout for scrolling and out vertical layout
-    QWidget* contents_users = m_ui.scrollArea_2->takeWidget();
+    QWidget* contents_users = m_ui->scrollArea_2->takeWidget();
     QVBoxLayout* layout_users = new QVBoxLayout(contents_users);
 
     layout_users->setContentsMargins(0, 0, 0, 0);
     contents_users->setLayout(layout_users);
-    m_ui.scrollArea_2->setWidget(contents_users);
+    m_ui->scrollArea_2->setWidget(contents_users);
 
-    m_ui.userLayout = layout_users;
+    m_ui->userLayout = layout_users;
     layout_users->setSpacing(5);
     layout_users->setSizeConstraint(QLayout::SetMinimumSize);
 
-    m_ui.userLayout->setContentsMargins(10, 5, 10, 0); // 10px left/right margins
+    m_ui->userLayout->setContentsMargins(10, 5, 10, 0); // 10px left/right margins
 
-    m_ui.chatLayout->setContentsMargins(10, 10, 10, 10); // 10px left/right margins
+    m_ui->chatLayout->setContentsMargins(10, 10, 10, 10); // 10px left/right margins
 
-    auto* l = static_cast<QVBoxLayout*>(m_ui.scrollAreaWidgetContents->layout());
+    auto* l = static_cast<QVBoxLayout*>(m_ui->scrollAreaWidgetContents->layout());
     l->insertStretch(0, 1);
 }
 
 void ChattingWindow::initUI() {
-    m_ui.setupUi(this);
+    m_ui->setupUi(this);
     initStyles();
     initButtons();
     initLayout();

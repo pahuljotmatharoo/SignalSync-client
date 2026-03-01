@@ -6,10 +6,14 @@
 #include <QMessageBox>
 #include "ChattingWindow.h"
 #include "ChatAppClient.h"
+#include "ui_ChatAppClient.h"
 
-ChatAppClient::ChatAppClient(QWidget *parent): QMainWindow(parent), m_username(""), m_password(""), m_http("localhost:8080"), m_apiKey("")
-{
-    ui.setupUi(this);
+ChatAppClient::ChatAppClient(QWidget *parent): QMainWindow(parent), m_username(""), m_password(""), m_http("localhost:8080"), m_apiKey(""), ui(new Ui::ChatAppClientClass) {
+    ui->setupUi(this);
+}
+
+ChatAppClient::~ChatAppClient() {
+    delete ui;
 }
 
 std::string ChatAppClient::generateAPIKey(int length) {

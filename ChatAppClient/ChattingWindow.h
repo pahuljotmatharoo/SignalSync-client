@@ -12,12 +12,12 @@
 #include "ChatAppClient.h"
 #include "message.h"
 #include "message_s.h"
-#include "ui_ChattingWindow.h"
 #include "NetworkClient.h"
 #include "File.h"
 #include "UserMessage.h"
 #include "GroupMessage.h"
 #include "LockGuard.h"
+#include "SemaphoreLockGuard.h"
 
 constexpr bool OTHER_USER = true;
 constexpr bool CURR_USER = false;
@@ -25,10 +25,12 @@ constexpr bool UserB = true;
 constexpr bool GroupB = false;
 constexpr int MAX_THREADS = 5;
 
+namespace Ui { class ChattingWindow; }
+
 class ChattingWindow : public QMainWindow {
     Q_OBJECT
 private:
-    Ui::ChattingWindow m_ui;
+    Ui::ChattingWindow* m_ui;
     bool m_userOrGroup; // lets us know whether the user is on userlist or grouplist
     HTTPRequest m_http;
     std::string m_apiKey;
@@ -68,6 +70,7 @@ public:
     ~ChattingWindow();
     void setSelfUser(const QString t_username) { m_selfUsername = t_username; }
     void setApiKey(const std::string t_apiKey) { m_apiKey = t_apiKey; }
+    std::string getApiKey() { return m_apiKey; }
     void setNetwork(Network& t_network) { m_network = t_network; };
     void addMessage(MsgRecvUser* recvStruct);
     void addMessage_group(std::string message_toadd, const std::string username_toadd, const std::string group_toadd);
@@ -109,16 +112,7 @@ public:
     void notificationUser(const QString& user_from);
     void notificationGroup(const QString& group_from);
     void createIfGroupMissing(const QString& group_name);
-
-    template <typename T>
-    void addWidgetToLayout(const T& widget, Qt::Alignment alignment) {
-        m_ui.chatLayout->addWidget(widget, 0, alignment);
-
-        m_ui.scrollArea->verticalScrollBar()->setValue(m_ui.scrollArea->verticalScrollBar()->maximum());
-
-        QTimer::singleShot(0, this, [=]() { m_ui.scrollArea->ensureWidgetVisible(widget); });
-    }
-
+    void addWidgetToLayout(QWidget* widget, Qt::Alignment alignment);
     QString findNewGroupName();
     void initStyles();
     void initButtons();
