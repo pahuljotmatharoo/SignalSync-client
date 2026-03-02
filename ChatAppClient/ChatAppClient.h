@@ -1,8 +1,9 @@
 #pragma once
 
 #include <QtWidgets/QMainWindow>
-#include "NetworkClient.h"
-#include "HttpRequest.h"
+#include "./Network/NetworkClient.h"
+#include "./Assets/httplib.h"
+#include "./Assets/HttpRequest.h"
 
 namespace Ui { class ChatAppClientClass; }
 

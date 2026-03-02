@@ -10,14 +10,15 @@
 #include <utility>
 #include <queue>
 #include "ChatAppClient.h"
-#include "message.h"
-#include "message_s.h"
-#include "NetworkClient.h"
-#include "File.h"
-#include "UserMessage.h"
-#include "GroupMessage.h"
-#include "LockGuard.h"
-#include "SemaphoreLockGuard.h"
+#include "./Messages/Message Templates/message.h"
+#include "./Messages/Message Templates/message_s.h"
+#include "./Network/NetworkClient.h"
+#include "./Assets/File.h"
+#include "./Messages/User Messages/UserMessage.h"
+#include "./Messages/Group Messages/GroupMessage.h"
+#include "./Assets/LockGuard.h"
+#include "./Assets/SemaphoreLockGuard.h"
+#include "./Assets/HttpRequest.h"
 
 constexpr bool OTHER_USER = true;
 constexpr bool CURR_USER = false;
