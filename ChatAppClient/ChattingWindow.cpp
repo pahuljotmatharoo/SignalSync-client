@@ -688,9 +688,7 @@ void ChattingWindow::addMessage(MsgRecvUser* recvStruct) {
     std::string username_toadd(recvStruct->user_from);
     std::string message_toadd(recvStruct->message);
 
-    QString message_r = QString::fromStdString(message_toadd);
-    encrypt(message_r); //unencrypt the message
-    message_toadd = message_r.toStdString();
+    message_toadd = decrypt(message_toadd).toStdString();
 
     {
         LockGuard guard(m_generalSemaphore);
@@ -756,7 +754,6 @@ void ChattingWindow::removeUserfromScreen(const QString& user) {
     if ((m_Users)[user]) {
         if (m_lastPressedUser == (m_Users)[user]) {
             m_lastPressedUser = nullptr;
-            //need to remove messages 
             removeAllChatItemsFromScreen();
             m_ui->username_label->setText("Select a User to talk to!");
         }
@@ -867,6 +864,12 @@ void ChattingWindow::encrypt(QString& message) {
         }
         message[i] = (m_encryptMap)[message[i]];
     }
+}
+
+QString ChattingWindow::decrypt(const std::string message) {
+    QString message_r = QString::fromStdString(message);
+    encrypt(message_r);
+    return message_r;
 }
 
 void ChattingWindow::initStyles() {

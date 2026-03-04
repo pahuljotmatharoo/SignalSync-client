@@ -137,6 +137,7 @@ public:
     void dequeue();
     void waitingThreadFunction();
     void initThreads();
+    QString decrypt(const std::string message);
 private slots:
     void on_sendButton_clicked();
     void on_fileButton_clicked();
