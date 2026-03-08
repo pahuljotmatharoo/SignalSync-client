@@ -19,6 +19,7 @@
 #include "./Assets/LockGuard.h"
 #include "./Assets/SemaphoreLockGuard.h"
 #include "./Assets/HttpRequest.h"
+#include "./Assets/UnqiuePtr.h"
 
 constexpr bool OTHER_USER = true;
 constexpr bool CURR_USER = false;
@@ -50,7 +51,7 @@ private:
     QFont m_titleFont;
     QFont m_buttonAddGroupFont;
     QFont m_buttonFont;
-    std::unordered_map<QString, UserMessage*> m_messages;
+    std::unordered_map<QString, UniquePtr<UserMessage>> m_messages;
     std::unordered_map<QString, GroupMessage*> m_groupMessages;
     std::unordered_map<QString, QPushButton*> m_Users;
     std::unordered_map<QString, QPushButton*> m_Groups;
@@ -101,13 +102,13 @@ public:
     void processFileRecvGroup(File* recvFile, const std::string& fileName, const std::string& groupName);
     void destroyUserFiles();
     void destroyGroupFiles();
-    void destroyUserMessages();
+    //void destroyUserMessages();
     void destroyGroupMessages();
     void threadShutdown();
     void displayUserMessages(const QString& t_user_name);
     void displayGroupMessages(const QString& t_group_name);
     void displayFileButtons(const QString& user_or_group_name);
-    void displayMessages(UserMessage* t_messages, const QString& user_or_group_name, bool user_or_group);
+    void displayMessages(UserMessage& t_messages, const QString& user_or_group_name, bool user_or_group);
     void notificationPassUser(const QString& user_from);
     void notificationPassGroup(const QString& user_from);
     void notificationUser(const QString& user_from);
