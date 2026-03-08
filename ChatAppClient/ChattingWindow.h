@@ -52,7 +52,7 @@ private:
     QFont m_buttonAddGroupFont;
     QFont m_buttonFont;
     std::unordered_map<QString, UniquePtr<UserMessage>> m_messages;
-    std::unordered_map<QString, GroupMessage*> m_groupMessages;
+    std::unordered_map<QString, UniquePtr<GroupMessage>> m_groupMessages;
     std::unordered_map<QString, QPushButton*> m_Users;
     std::unordered_map<QString, QPushButton*> m_Groups;
     std::unordered_map<QChar, QChar> m_encryptMap;
@@ -103,7 +103,7 @@ public:
     void destroyUserFiles();
     void destroyGroupFiles();
     //void destroyUserMessages();
-    void destroyGroupMessages();
+    //void destroyGroupMessages();
     void threadShutdown();
     void displayUserMessages(const QString& t_user_name);
     void displayGroupMessages(const QString& t_group_name);

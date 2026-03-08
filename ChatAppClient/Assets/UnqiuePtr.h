@@ -4,7 +4,7 @@
 template <typename T>
 class UniquePtr {
 private:
-	T* m_ptr;
+	T* m_ptr = nullptr;
 public:
 	UniquePtr() : m_ptr(new T) {}
 	UniquePtr(T m_value) {
@@ -42,5 +42,9 @@ public:
 
 	T& operator*() {
 		return *(this->m_ptr);
+	}
+
+	T* operator->() {
+		return this->m_ptr;
 	}
 };

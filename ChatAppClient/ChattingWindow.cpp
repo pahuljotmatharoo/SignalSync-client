@@ -30,7 +30,7 @@ ChattingWindow::~ChattingWindow() {
     destroyUserFiles();
     destroyGroupFiles();
     //destroyUserMessages();
-    destroyGroupMessages();
+    //destroyGroupMessages();
 }
 
 void ChattingWindow::networkThreadFunction() {
@@ -185,11 +185,11 @@ void ChattingWindow::destroyGroupFiles() {
 //    }
 //}
 
-void ChattingWindow::destroyGroupMessages() {
-    for (auto itr = m_groupMessages.begin(); itr != m_groupMessages.end(); ++itr) {
-        delete itr->second;
-    }
-}
+//void ChattingWindow::destroyGroupMessages() {
+//    for (auto itr = m_groupMessages.begin(); itr != m_groupMessages.end(); ++itr) {
+//        delete itr->second;
+//    }
+//}
 
 void ChattingWindow::threadShutdown() {
     m_network.sendInitMsg(NetworkRequest::MSG_EXIT);
@@ -382,7 +382,7 @@ void ChattingWindow::on_addGroup_clicked() {
 
     {
         LockGuard guard(m_generalSemaphore);
-        m_groupMessages.insert(std::make_pair(buttonAndName.second, new GroupMessage(buttonAndName.second)));
+        m_groupMessages.insert(std::make_pair(buttonAndName.second, UniquePtr<GroupMessage>(GroupMessage(buttonAndName.second))));
     }
 
     if (m_network.sendGroupName(buttonAndName.second.toStdString()) == -1) {
@@ -475,7 +475,7 @@ void ChattingWindow::onGroupClick() {
 }
 
 void ChattingWindow::displayUserMessages(const QString& t_user_name) {
-    UserMessage user_messages = *m_messages[t_user_name];
+    UserMessage& user_messages = *m_messages[t_user_name];
     //if (user_messages == nullptr) { return; }
 
     displayMessages(user_messages, t_user_name, UserB);
@@ -484,9 +484,9 @@ void ChattingWindow::displayUserMessages(const QString& t_user_name) {
 }
 
 void ChattingWindow::displayGroupMessages(const QString& t_group_name) {
-    GroupMessage* group_messages = m_groupMessages[t_group_name];
+    GroupMessage& group_messages = *m_groupMessages[t_group_name];
 
-    auto& vec_m = group_messages->getMessages();
+    auto& vec_m = group_messages.getMessages();
 
     for (auto itr = vec_m.begin(); itr != vec_m.end(); ++itr) {
         displayMessages(*(itr->second), t_group_name, GroupB);
@@ -604,7 +604,7 @@ void ChattingWindow::on_sendButton_clicked() {
             if ((m_messages).find(m_usernameToSend) == m_messages.end()) {
                 m_messages.insert(std::make_pair(m_usernameToSend, UserMessage(QString::fromStdString(username_to_sendStd))));
             }
-           (*m_messages[m_usernameToSend]).addMessage((std::make_pair(CURR_USER, m_messageToSend.toStdString())));
+           m_messages[m_usernameToSend]->addMessage((std::make_pair(CURR_USER, m_messageToSend.toStdString())));
         }
 
         if (m_network.sendMsg(message_to_sendStd, username_to_sendStd, NetworkRequest::MSG_SEND) == -1) {
@@ -647,11 +647,9 @@ void ChattingWindow::addGroup(const std::string group_name_s) {
 
     QString group_name = QString::fromStdString(group_name_s);
 
-    GroupMessage* group_msg = new GroupMessage(group_name);
-
     {
         LockGuard guard(m_generalSemaphore);
-        m_groupMessages.insert(std::make_pair(group_name, group_msg));
+        m_groupMessages.insert(std::make_pair(group_name, UniquePtr<GroupMessage>(GroupMessage(group_name))));
     }
 
     QMetaObject::invokeMethod(this, [=] { this->addGrouptoScreen(group_name); }, Qt::QueuedConnection);
@@ -666,7 +664,7 @@ void ChattingWindow::addMessage_group(std::string message_toadd, const std::stri
         LockGuard guard(m_generalSemaphore);
 
         if (m_groupMessages.find(QString::fromStdString(group_toadd)) == m_groupMessages.end()) {
-            m_groupMessages[QString::fromStdString(group_toadd)] = new GroupMessage(QString::fromStdString(group_toadd));
+            m_groupMessages.insert(std::make_pair(QString::fromStdString(group_toadd), UniquePtr<GroupMessage>(GroupMessage(QString::fromStdString(group_toadd)))));
         }
 
         if (m_Groups.find(QString::fromStdString(group_toadd)) == m_Groups.end()) {
@@ -690,9 +688,9 @@ void ChattingWindow::addMessage(MsgRecvUser* recvStruct) {
     {
         LockGuard guard(m_generalSemaphore);
         if (m_messages.find(QString::fromStdString(username_toadd)) == m_messages.end()) {
-            m_messages[QString::fromStdString(username_toadd)] = UniquePtr<UserMessage>(UserMessage(QString::fromStdString(username_toadd)));
+            m_messages.insert(std::make_pair(QString::fromStdString(username_toadd), UniquePtr<UserMessage>(UserMessage(QString::fromStdString(username_toadd)))));
         }
-        (*m_messages[QString::fromStdString(username_toadd)]).addMessage(std::make_pair(OTHER_USER, message_toadd));
+        m_messages[QString::fromStdString(username_toadd)]->addMessage(std::make_pair(OTHER_USER, message_toadd));
     }
 
     delete recvStruct;
