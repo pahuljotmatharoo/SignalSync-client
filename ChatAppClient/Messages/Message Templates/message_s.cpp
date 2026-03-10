@@ -3,9 +3,9 @@
 #include <qboxlayout.h>
 #include <qtimer.h>
 #include <QAbstractTextDocumentLayout>
-
-MessageWidget_s::MessageWidget_s(const QString& message, QWidget* parent)
-    : QWidget(parent), ui(new Ui::Message_chat_s)
+namespace SignalSync {
+    MessageWidget_s::MessageWidget_s(const QString& message, QWidget* parent)
+        : QWidget(parent), ui(new ::Ui::Message_chat_s)
     {
         ui->setupUi(this);
 
@@ -27,9 +27,10 @@ MessageWidget_s::MessageWidget_s(const QString& message, QWidget* parent)
         auto* ly = new QHBoxLayout(this);
         ly->setContentsMargins(0, 0, 0, 0);
         ly->addWidget(ui->message_recv);
-}
+    }
 
-MessageWidget_s::~MessageWidget_s()
-{
-    delete ui;
+    MessageWidget_s::~MessageWidget_s()
+    {
+        delete ui;
+    }
 }

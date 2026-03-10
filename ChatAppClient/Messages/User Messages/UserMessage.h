@@ -1,5 +1,6 @@
 #pragma once
-class UserMessage {
+namespace SignalSync {
+	class UserMessage {
 	private:
 		QString m_name;
 		std::vector<std::pair<bool, std::string>> m_messages;
@@ -12,4 +13,5 @@ class UserMessage {
 		void setName(QString t_name) { m_name = t_name; }
 		QString getName() const { return m_name; }
 
-};
+	};
+}

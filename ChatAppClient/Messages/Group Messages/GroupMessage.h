@@ -1,11 +1,13 @@
 #pragma once
 #include <QString>
 #include <unordered_map>
-class GroupMessage {
+namespace SignalSync {
+	class GroupMessage {
 	private:
 		QString m_groupName;
 		std::unordered_map<QString, UserMessage*> m_messages;
 	public:
+		GroupMessage() {}
 		GroupMessage(QString t_name) : m_groupName(t_name) {}
 		~GroupMessage() {
 			for (auto itr = m_messages.begin(); itr != m_messages.end(); itr++) {
@@ -25,4 +27,5 @@ class GroupMessage {
 
 		void setName(QString t_name) { m_groupName = t_name; }
 		QString getName() const { return m_groupName; }
-};
+	};
+}
