@@ -29,10 +29,7 @@ namespace SignalSync {
 
     ChattingWindow::~ChattingWindow() {
         threadShutdown();
-        //destroyUserFiles();
         destroyGroupFiles();
-        //destroyUserMessages();
-        //destroyGroupMessages();
     }
 
     void ChattingWindow::networkThreadFunction() {
@@ -218,7 +215,7 @@ namespace SignalSync {
         QString dirName = QFileDialog::getExistingDirectory(this, tr("Select a directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
         QPushButton* btn = qobject_cast<QPushButton*>(sender());
-        if (m_filesUsers[btn]->downloadFile(btn->text().toStdString(), dirName.toStdString())) {
+        if (m_filesUsers[btn].downloadFile(btn->text().toStdString(), dirName.toStdString())) {
             ChatAppClient::sendError("File download successfully!");
         }
         else {
@@ -259,7 +256,8 @@ namespace SignalSync {
             file_button->show();
         }
 
-        m_filesUsers.insert(std::make_pair(file_button, UniquePtr<File>(File(t_userFrom, t_data, t_size))));
+        File temp_file(t_userFrom, t_data, t_size);
+        m_filesUsers.emplace(std::make_pair(file_button, std::move(temp_file)));
 
         connect(file_button, &QPushButton::clicked, this, &ChattingWindow::downloadUserFile);
 
@@ -504,7 +502,7 @@ namespace SignalSync {
     void ChattingWindow::displayFileButtons(const QString& user_or_group_name) {
         auto itr = m_filesUsers.begin();
         for (std::size_t i{ 0 }; i < m_filesUsers.size() && itr != m_filesUsers.end(); i++) {
-            if (itr->second->getUserFrom() == user_or_group_name) { itr->first->show(); itr++; }
+            if (itr->second.getUserFrom() == user_or_group_name) { itr->first->show(); itr++; }
         }
     }
 

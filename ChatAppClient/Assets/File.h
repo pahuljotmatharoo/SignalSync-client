@@ -11,6 +11,14 @@ namespace SignalSync {
 	public:
 		File() {}
 		File(QString t_userFrom, char* t_data, uint32_t t_size) : m_userFrom(t_userFrom), m_data((t_data)), m_size(t_size) {}
+		File(File&& other_file) {
+			m_userFrom = other_file.getUserFrom();
+			other_file.setUserFrom("");
+			m_data = other_file.getData();
+			other_file.setData(nullptr);
+			m_size = other_file.getSize();
+			other_file.setSize(0);
+		}
 		~File();
 		QString getUserFrom() const { return m_userFrom; }
 		void setUserFrom(const QString& t_userFrom) { m_userFrom = t_userFrom; }

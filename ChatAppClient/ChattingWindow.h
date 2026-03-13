@@ -56,7 +56,7 @@ namespace SignalSync {
         std::unordered_map<QString, QPushButton*> m_Users;
         std::unordered_map<QString, QPushButton*> m_Groups;
         std::unordered_map<QChar, QChar> m_encryptMap;
-        std::unordered_map<QPushButton*, UniquePtr<File>> m_filesUsers;
+        std::unordered_map < QPushButton*, File> m_filesUsers;
         std::unordered_map<QPushButton*, std::pair<File*, QString>> m_filesGroup;
         Network m_network;
         std::thread m_thread;
