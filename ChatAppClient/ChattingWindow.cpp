@@ -13,9 +13,6 @@
 #include "ChattingWindow.h"
 #include "ui_ChattingWindow.h"
 
-//something wrong with file download, debug
-
-//reminder that std library containers are RAII compliant, and allocate & deallocate elements on heap themselves
 namespace SignalSync {
     ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::networkThreadFunction, this),
         m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25),
@@ -27,10 +24,7 @@ namespace SignalSync {
         initThreads();
     }
 
-    ChattingWindow::~ChattingWindow() {
-        threadShutdown();
-        destroyGroupFiles();
-    }
+    ChattingWindow::~ChattingWindow() { threadShutdown(); }
 
     void ChattingWindow::networkThreadFunction() {
         NetworkRequest type{};
@@ -120,8 +114,8 @@ namespace SignalSync {
                     std::string userString(userFrom);
                     std::string filenameString(fileName);
                     std::string groupNameString(groupName);
-                    File* recvFile = new File(QString::fromStdString(userString), fileData, *sizeFile);
-                    enqueue(&ChattingWindow::processFileRecvGroup, this, recvFile, filenameString, groupNameString);
+                    //File* recvFile = new File(QString::fromStdString(userString), fileData, *sizeFile);
+                    enqueue(&ChattingWindow::processFileRecvGroup, this, QString::fromStdString(userString), fileData, *sizeFile, filenameString, groupNameString);
                     delete sizeFile;
                     delete userFrom;
                     delete fileName;
@@ -172,11 +166,11 @@ namespace SignalSync {
     //    }
     //}
 
-    void ChattingWindow::destroyGroupFiles() {
-        for (auto itr = m_filesGroup.begin(); itr != m_filesGroup.end(); itr++) {
-            delete itr->second.first;
-        }
-    }
+    //void ChattingWindow::destroyGroupFiles() {
+    //    for (auto itr = m_filesGroup.begin(); itr != m_filesGroup.end(); itr++) {
+    //        delete itr->second.first;
+    //    }
+    //}
 
     //void ChattingWindow::destroyUserMessages() {
     //    for (auto itr = m_messages.begin(); itr != m_messages.end(); ++itr) {
@@ -205,8 +199,8 @@ namespace SignalSync {
         QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenUser(t_userFrom, t_data, t_size, fileName); }, Qt::QueuedConnection);
     }
 
-    void ChattingWindow::processFileRecvGroup(File* recvFile, const std::string& fileName, const std::string& groupName) {
-        QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenGroup(recvFile, fileName, groupName); }, Qt::QueuedConnection);
+    void ChattingWindow::processFileRecvGroup(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName, const std::string& groupName) {
+        QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenGroup(t_userFrom, t_data, t_size  ,fileName, groupName); }, Qt::QueuedConnection);
     }
 
 
@@ -227,7 +221,7 @@ namespace SignalSync {
         QString dirName = QFileDialog::getExistingDirectory(this, tr("Select a directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
         QPushButton* btn = qobject_cast<QPushButton*>(sender());
-        if (m_filesGroup[btn].first->downloadFile(btn->text().toStdString(), dirName.toStdString())) {
+        if (m_filesGroup[btn].first.downloadFile(btn->text().toStdString(), dirName.toStdString())) {
             ChatAppClient::sendError("File download successfully!");
         }
         else {
@@ -256,8 +250,7 @@ namespace SignalSync {
             file_button->show();
         }
 
-        File temp_file(t_userFrom, t_data, t_size);
-        m_filesUsers.emplace(std::make_pair(file_button, std::move(temp_file)));
+        m_filesUsers.emplace(file_button, File(t_userFrom, t_data, t_size));
 
         connect(file_button, &QPushButton::clicked, this, &ChattingWindow::downloadUserFile);
 
@@ -266,14 +259,14 @@ namespace SignalSync {
         notificationPassUser(t_userFrom);
     }
 
-    void ChattingWindow::addFileButtonToScreenGroup(File* recvFile, const std::string& fileName, const std::string& groupName) {
+    void ChattingWindow::addFileButtonToScreenGroup(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName, const std::string& groupName) {
         QPushButton* file_button = createAndStyleFileButton(fileName);
 
         if (m_lastPressedGroup != nullptr && groupName == m_lastPressedGroup->text()) {
             file_button->show();
         }
 
-        m_filesGroup.insert(std::make_pair(file_button, std::make_pair(recvFile, QString::fromStdString(groupName))));
+        m_filesGroup.emplace(std::make_pair(file_button, std::make_pair(File(t_userFrom, t_data, t_size), QString::fromStdString(groupName))));
 
         connect(file_button, &QPushButton::clicked, this, &ChattingWindow::downloadGroupFile);
 
@@ -346,7 +339,7 @@ namespace SignalSync {
                     ChatAppClient::sendError("File too large! Must be less than 5 MB");
                     return;
                 }
-                if (m_selfUsername == m_usernameToSend.toStdString().substr(4)) {
+                if (m_groupToSend == "" && m_selfUsername == m_usernameToSend.toStdString().substr(4)) {
                     file.close(); // sending file to self (not allowed as of right now)
                     return;
                 }
