@@ -160,30 +160,6 @@ namespace SignalSync {
         }
     }
 
-    //void ChattingWindow::destroyUserFiles() {
-    //    for (auto itr = m_filesUsers.begin(); itr != m_filesUsers.end(); ++itr) {
-    //        delete itr->second;
-    //    }
-    //}
-
-    //void ChattingWindow::destroyGroupFiles() {
-    //    for (auto itr = m_filesGroup.begin(); itr != m_filesGroup.end(); itr++) {
-    //        delete itr->second.first;
-    //    }
-    //}
-
-    //void ChattingWindow::destroyUserMessages() {
-    //    for (auto itr = m_messages.begin(); itr != m_messages.end(); ++itr) {
-    //        delete itr->second;
-    //    }
-    //}
-
-    //void ChattingWindow::destroyGroupMessages() {
-    //    for (auto itr = m_groupMessages.begin(); itr != m_groupMessages.end(); ++itr) {
-    //        delete itr->second;
-    //    }
-    //}
-
     void ChattingWindow::threadShutdown() {
         m_network.sendInitMsg(NetworkRequest::MSG_EXIT);
         ::shutdown(m_network.getSockID(), SD_BOTH);
@@ -266,7 +242,7 @@ namespace SignalSync {
             file_button->show();
         }
 
-        m_filesGroup.emplace(std::make_pair(file_button, std::make_pair(File(t_userFrom, t_data, t_size), QString::fromStdString(groupName))));
+        m_filesGroup.emplace(file_button, std::make_pair(File(t_userFrom, t_data, t_size), QString::fromStdString(groupName)));
 
         connect(file_button, &QPushButton::clicked, this, &ChattingWindow::downloadGroupFile);
 
@@ -595,7 +571,7 @@ namespace SignalSync {
             {
                 LockGuard guard(m_generalSemaphore);
                 if ((m_messages).find(m_usernameToSend) == m_messages.end()) {
-                    m_messages.insert(std::make_pair(m_usernameToSend, UserMessage(QString::fromStdString(username_to_sendStd))));
+                    m_messages.emplace(m_usernameToSend, UniquePtr<UserMessage>(UserMessage(QString::fromStdString(username_to_sendStd))));
                 }
                 m_messages[m_usernameToSend]->addMessage((std::make_pair(CURR_USER, m_messageToSend.toStdString())));
             }
@@ -681,7 +657,7 @@ namespace SignalSync {
         {
             LockGuard guard(m_generalSemaphore);
             if (m_messages.find(QString::fromStdString(username_toadd)) == m_messages.end()) {
-                m_messages.insert(std::make_pair(QString::fromStdString(username_toadd), UniquePtr<UserMessage>(UserMessage(QString::fromStdString(username_toadd)))));
+                m_messages.emplace(QString::fromStdString(username_toadd), UniquePtr<UserMessage>(UserMessage(QString::fromStdString(username_toadd))));
             }
             m_messages[QString::fromStdString(username_toadd)]->addMessage(std::make_pair(OTHER_USER, message_toadd));
         }
@@ -746,7 +722,6 @@ namespace SignalSync {
             (m_Users)[user]->deleteLater();
             (m_Users)[user] = nullptr;
             m_Users.erase(user);
-            //delete m_messages[user];
             m_messages.erase(user);
         }
     }
