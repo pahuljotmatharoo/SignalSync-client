@@ -99,7 +99,7 @@ namespace SignalSync {
 		png.size_u = t_user_to_send.length();
 		png.data = const_cast<char*>(pngData);
 		if (sendInitMsg(constant) == -1) { return -1; }
-		if (sendSize(png.size_m) == -1) { return -1; };
+		if (sendSize(htonl(png.size_m)) == -1) { return -1; };
 		if (sendFileData(&png) == -1) { return -1; };
 		if (sendUsername(t_user_to_send, USERNAME_LENGTH) == -1) { return -1; };
 		if (sendUsername(t_filename_to_send, USERNAME_LENGTH) == -1) { return -1; };
@@ -121,16 +121,16 @@ namespace SignalSync {
 		MsgSend message_to_Send{ 0 };
 
 		if (sendInitMsg(t_constant) <= 0) { return 0; }
-		if (sendSize(static_cast<uint32_t>(t_message.length())) <= 0) { return 0; }
+		if (sendSize(static_cast<uint32_t>(htonl(t_message.length() + 1))) <= 0) { return 0; }
 
 		memcpy(message_to_Send.message, t_message.c_str(), t_message.length());
 
-		if (send(getSockID(), message_to_Send.message, t_message.length(), 0) <= 0) { return 0; }
+		if (send(getSockID(), message_to_Send.message, t_message.length() + 1, 0) <= 0) { return 0; }
 
-		if (sendSize(static_cast<uint32_t>(t_username.length())) <= 0) { return 0; }
+		if (sendSize(static_cast<uint32_t>(htonl(t_username.length() + 1))) <= 0) { return 0; }
 
 		memcpy(message_to_Send.user_to_send, t_username.c_str(), 50);
-		if (send(getSockID(), message_to_Send.message, t_message.length(), 0) <= 0) { return 0; }
+		if (send(getSockID(), message_to_Send.user_to_send, t_username.length() + 1, 0) <= 0) { return 0; }
 
 		return 1;
 	}
