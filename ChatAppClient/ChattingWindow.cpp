@@ -36,7 +36,7 @@ namespace SignalSync {
                     MsgRecvUser* recvStruct = m_network.recvMethod<MsgRecvUser>();
                     if (recvStruct == nullptr) { continue; }
                     enqueue(&ChattingWindow::addMessage, this, recvStruct);
-                    std::string user_from(recvStruct->user_from);
+                    std::string user_from(recvStruct->username);
                     notificationPassUser(QString::fromStdString(user_from));
                     break;
                 }
@@ -65,8 +65,8 @@ namespace SignalSync {
                 case NetworkRequest::ROOM_MSG: {
                     MsgRecvGroup* recvGrpMsg = m_network.recvMethod<MsgRecvGroup>();
                     if (recvGrpMsg == nullptr) { continue; }
-                    std::string group_name(recvGrpMsg->group_name);
-                    enqueue(&ChattingWindow::addMessage_group, this, std::string(recvGrpMsg->message), std::string(recvGrpMsg->user_from), group_name);
+                    std::string group_name(recvGrpMsg->group);
+                    enqueue(&ChattingWindow::addMessage_group, this, std::string(recvGrpMsg->message), std::string(recvGrpMsg->username), group_name);
                     notificationPassGroup(QString::fromStdString(group_name));
                     delete recvGrpMsg;
                     break;
@@ -177,6 +177,11 @@ namespace SignalSync {
 
     void ChattingWindow::processFileRecvGroup(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName, const std::string& groupName) {
         QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenGroup(t_userFrom, t_data, t_size  ,fileName, groupName); }, Qt::QueuedConnection);
+    }
+
+    void ChattingWindow::freeMessageStruct(MsgRecvUser* t_msg) {
+        delete[]t_msg->message;
+        delete[]t_msg->username;
     }
 
 
@@ -649,7 +654,7 @@ namespace SignalSync {
     }
 
     void ChattingWindow::addMessage(MsgRecvUser* recvStruct) {
-        std::string username_toadd(recvStruct->user_from);
+        std::string username_toadd(recvStruct->username);
         std::string message_toadd(recvStruct->message);
 
         message_toadd = decrypt(message_toadd).toStdString();
@@ -662,7 +667,7 @@ namespace SignalSync {
             m_messages[QString::fromStdString(username_toadd)]->addMessage(std::make_pair(OTHER_USER, message_toadd));
         }
 
-        delete recvStruct;
+        freeMessageStruct(recvStruct);
 
         QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(message_toadd), QString::fromStdString(username_toadd), UserB); }, Qt::QueuedConnection);
     }

@@ -24,7 +24,6 @@ namespace SignalSync {
 
 		if (status == SOCKET_ERROR) {
 			int error = WSAGetLastError();
-			fprintf(stderr, "connect(): %d\n", WSAGetLastError());
 			closesocket(sock);
 			WSACleanup();
 			return status;
@@ -37,7 +36,7 @@ namespace SignalSync {
 		return 0;
 	}
 
-	int16_t Network::serverConnectHelper(const uint16_t t_port) {
+	int16_t Network::serverConnectHelper(const uint16_t t_port) const {
 		sockaddr_in t_server{};
 		t_server.sin_family = AF_INET; //specify to use IPV4
 		t_server.sin_port = htons(t_port);
@@ -88,8 +87,8 @@ namespace SignalSync {
 		return send(getSockID(), reinterpret_cast<char*>(&msg), sizeof(msg), 0);
 	}
 
-	std::size_t Network::sendFileSize(const uint32_t& t_fileSize) const {
-		return send(m_sockid, reinterpret_cast<const char*>(&t_fileSize), sizeof(uint32_t), 0); // QSize = 8 bytes
+	std::size_t Network::sendSize(const uint32_t& size) const {
+		return send(m_sockid, reinterpret_cast<const char*>(&size), sizeof(uint32_t), 0);
 	}
 
 	int Network::sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant) const {
@@ -100,7 +99,7 @@ namespace SignalSync {
 		png.size_u = t_user_to_send.length();
 		png.data = const_cast<char*>(pngData);
 		if (sendInitMsg(constant) == -1) { return -1; }
-		if (sendFileSize(png.size_m) == -1) { return -1; };
+		if (sendSize(png.size_m) == -1) { return -1; };
 		if (sendFileData(&png) == -1) { return -1; };
 		if (sendUsername(t_user_to_send, USERNAME_LENGTH) == -1) { return -1; };
 		if (sendUsername(t_filename_to_send, USERNAME_LENGTH) == -1) { return -1; };
@@ -119,18 +118,21 @@ namespace SignalSync {
 	}
 
 	std::size_t Network::sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& t_constant) const {
-		sendInitMsg(t_constant);
-
 		MsgSend message_to_Send{ 0 };
 
-		memcpy(message_to_Send.message, t_message.c_str(), 128);
+		if (sendInitMsg(t_constant) <= 0) { return 0; }
+		if (sendSize(static_cast<uint32_t>(t_message.length())) <= 0) { return 0; }
+
+		memcpy(message_to_Send.message, t_message.c_str(), t_message.length());
+
+		if (send(getSockID(), message_to_Send.message, t_message.length(), 0) <= 0) { return 0; }
+
+		if (sendSize(static_cast<uint32_t>(t_username.length())) <= 0) { return 0; }
+
 		memcpy(message_to_Send.user_to_send, t_username.c_str(), 50);
-		message_to_Send.size_u = htonl(t_username.length());
-		message_to_Send.size_m = htonl(t_message.length());
+		if (send(getSockID(), message_to_Send.message, t_message.length(), 0) <= 0) { return 0; }
 
-		int sent = send(getSockID(), reinterpret_cast<char*>(&message_to_Send), sizeof(MsgSend), 0);
-
-		return static_cast<std::size_t>(sent);
+		return 1;
 	}
 
 

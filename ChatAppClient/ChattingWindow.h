@@ -116,6 +116,7 @@ namespace SignalSync {
         void initButtons();
         void initLayout();
         void initContentLayout();
+        void freeMessageStruct(MsgRecvUser* t_msg);
 
         template <class F, class... Args>
         void enqueue(F&& f, Args&&... args) // accepts args and function as universal reference (could be l-val or r-val)
