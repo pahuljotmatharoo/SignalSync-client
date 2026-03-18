@@ -35,14 +35,19 @@ namespace SignalSync {
 	};
 
 	struct MsgRecvUser {
-		char message[128];
-		char user_from[50];
+		int message_size;
+		char* message;
+		int username_size;
+		char* username;
 	};
 
 	struct MsgRecvGroup {
-		char message[128];
-		char user_from[50];
-		char group_name[50];
+		int message_size;
+		char* message;
+		int username_size;
+		char* username;
+		int group_size;
+		char* group;
 	};
 
 	struct RecvGroupName {
@@ -82,27 +87,59 @@ namespace SignalSync {
 		void setWsaData(const WSADATA wsadata) { m_wsaData = wsadata; }
 		WSADATA getWsaData() const { return m_wsaData; }
 		int serverConnect(std::string username);
-		int16_t serverConnectHelper(const uint16_t port);
+		int16_t serverConnectHelper(const uint16_t port) const;
 
-		//im unable to move this to the other file....
 		template <typename T>
 		T* recvMethod() {
 			T* msg = new T;
-			char* ptr = reinterpret_cast<char*>(msg);
-			std::size_t total = 0;
 
-			while (total < static_cast<std::size_t>(sizeof(T))) {
-				std::size_t recvBytes = recv(getSockID(), ptr + total, sizeof(T) - (total), 0);
-				total += recvBytes;
+			int size_message{ 0 };
+			int size_username{ 0 };
+			int size_group{ 0 };
+
+			if constexpr (std::is_same_v<T, MsgRecvUser> || std::is_same_v<T, MsgRecvGroup>) {
+				recvAll<int>(&size_message, sizeof(int));
+
+				msg->message = new char[size_message + 1];
+				recvAll<char>(msg->message, size_message);
+				msg->message[size_message] = '\0';
+
+				recvAll<int>(&size_username, sizeof(int));
+
+				msg->username = new char[size_username + 1];
+				recvAll<char>(msg->username, size_username);
+				msg->username[size_username] = '\0';
+			}
+			else {
+				recvAll<T>(msg, sizeof(T));
+			}
+
+			if constexpr (std::is_same_v<T, MsgRecvGroup>) {
+				recvAll<int>(&size_group, sizeof(int));
+				msg->group = new char[size_group + 1];
+				recvAll<char>(msg->group, size_group);
+				msg->group[size_group] = '\0';
 			}
 
 			return msg;
 		};
+
+		template <typename T>
+		int recvAll(T* t_storage, int bytes) {
+			std::size_t total = 0;
+
+			while (total < bytes) {
+				std::size_t recvBytes = recv(getSockID(), reinterpret_cast<char*>(t_storage) + total, bytes - total, 0);
+				total += recvBytes;
+			}
+
+			return total;
+		}
 		char* recvFile(const size_t t_sizeFile) const;
 		uint32_t sendFileData(const FileSend* t_data) const;
 		uint32_t sendUsername(const std::string& t_username, const std::size_t t_length) const;
 		std::size_t sendInitMsg(const NetworkRequest& t_constant) const;
-		std::size_t sendFileSize(const uint32_t& t_fileSize) const;
+		std::size_t sendSize(const uint32_t& size) const;
 		int sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant) const;
 		char* recvUser() const;
 		std::size_t sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& constant) const;

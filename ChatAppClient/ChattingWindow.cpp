@@ -13,9 +13,6 @@
 #include "ChattingWindow.h"
 #include "ui_ChattingWindow.h"
 
-//something wrong with file download, debug
-
-//reminder that std library containers are RAII compliant, and allocate & deallocate elements on heap themselves
 namespace SignalSync {
     ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::networkThreadFunction, this),
         m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25),
@@ -27,10 +24,7 @@ namespace SignalSync {
         initThreads();
     }
 
-    ChattingWindow::~ChattingWindow() {
-        threadShutdown();
-        destroyGroupFiles();
-    }
+    ChattingWindow::~ChattingWindow() { threadShutdown(); }
 
     void ChattingWindow::networkThreadFunction() {
         NetworkRequest type{};
@@ -43,7 +37,7 @@ namespace SignalSync {
                     if (recvStruct == nullptr) { continue; }
                     //m_functionQueue.push([=]()->void{addMessage(recvStruct);});
                     enqueue(&ChattingWindow::addMessage, this, recvStruct);
-                    std::string user_from(recvStruct->user_from);
+                    std::string user_from(recvStruct->username);
                     notificationPassUser(QString::fromStdString(user_from));
                     break;
                 }
@@ -72,8 +66,8 @@ namespace SignalSync {
                 case NetworkRequest::ROOM_MSG: {
                     MsgRecvGroup* recvGrpMsg = m_network.recvMethod<MsgRecvGroup>();
                     if (recvGrpMsg == nullptr) { continue; }
-                    std::string group_name(recvGrpMsg->group_name);
-                    enqueue(&ChattingWindow::addMessage_group, this, std::string(recvGrpMsg->message), std::string(recvGrpMsg->user_from), group_name);
+                    std::string group_name(recvGrpMsg->group);
+                    enqueue(&ChattingWindow::addMessage_group, this, std::string(recvGrpMsg->message), std::string(recvGrpMsg->username), group_name);
                     notificationPassGroup(QString::fromStdString(group_name));
                     delete recvGrpMsg;
                     break;
@@ -121,8 +115,8 @@ namespace SignalSync {
                     std::string userString(userFrom);
                     std::string filenameString(fileName);
                     std::string groupNameString(groupName);
-                    File* recvFile = new File(QString::fromStdString(userString), fileData, *sizeFile);
-                    enqueue(&ChattingWindow::processFileRecvGroup, this, recvFile, filenameString, groupNameString);
+                    //File* recvFile = new File(QString::fromStdString(userString), fileData, *sizeFile);
+                    enqueue(&ChattingWindow::processFileRecvGroup, this, QString::fromStdString(userString), fileData, *sizeFile, filenameString, groupNameString);
                     delete sizeFile;
                     delete userFrom;
                     delete fileName;
@@ -167,30 +161,6 @@ namespace SignalSync {
         }
     }
 
-    //void ChattingWindow::destroyUserFiles() {
-    //    for (auto itr = m_filesUsers.begin(); itr != m_filesUsers.end(); ++itr) {
-    //        delete itr->second;
-    //    }
-    //}
-
-    void ChattingWindow::destroyGroupFiles() {
-        for (auto itr = m_filesGroup.begin(); itr != m_filesGroup.end(); itr++) {
-            delete itr->second.first;
-        }
-    }
-
-    //void ChattingWindow::destroyUserMessages() {
-    //    for (auto itr = m_messages.begin(); itr != m_messages.end(); ++itr) {
-    //        delete itr->second;
-    //    }
-    //}
-
-    //void ChattingWindow::destroyGroupMessages() {
-    //    for (auto itr = m_groupMessages.begin(); itr != m_groupMessages.end(); ++itr) {
-    //        delete itr->second;
-    //    }
-    //}
-
     void ChattingWindow::threadShutdown() {
         m_network.sendInitMsg(NetworkRequest::MSG_EXIT);
         ::shutdown(m_network.getSockID(), SD_BOTH);
@@ -206,8 +176,13 @@ namespace SignalSync {
         QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenUser(t_userFrom, t_data, t_size, fileName); }, Qt::QueuedConnection);
     }
 
-    void ChattingWindow::processFileRecvGroup(File* recvFile, const std::string& fileName, const std::string& groupName) {
-        QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenGroup(recvFile, fileName, groupName); }, Qt::QueuedConnection);
+    void ChattingWindow::processFileRecvGroup(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName, const std::string& groupName) {
+        QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenGroup(t_userFrom, t_data, t_size  ,fileName, groupName); }, Qt::QueuedConnection);
+    }
+
+    void ChattingWindow::freeMessageStruct(MsgRecvUser* t_msg) {
+        delete[]t_msg->message;
+        delete[]t_msg->username;
     }
 
 
@@ -228,7 +203,7 @@ namespace SignalSync {
         QString dirName = QFileDialog::getExistingDirectory(this, tr("Select a directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
         QPushButton* btn = qobject_cast<QPushButton*>(sender());
-        if (m_filesGroup[btn].first->downloadFile(btn->text().toStdString(), dirName.toStdString())) {
+        if (m_filesGroup[btn].first.downloadFile(btn->text().toStdString(), dirName.toStdString())) {
             ChatAppClient::sendError("File download successfully!");
         }
         else {
@@ -257,8 +232,7 @@ namespace SignalSync {
             file_button->show();
         }
 
-        File temp_file(t_userFrom, t_data, t_size);
-        m_filesUsers.emplace(std::make_pair(file_button, std::move(temp_file)));
+        m_filesUsers.emplace(file_button, File(t_userFrom, t_data, t_size));
 
         connect(file_button, &QPushButton::clicked, this, &ChattingWindow::downloadUserFile);
 
@@ -267,14 +241,14 @@ namespace SignalSync {
         notificationPassUser(t_userFrom);
     }
 
-    void ChattingWindow::addFileButtonToScreenGroup(File* recvFile, const std::string& fileName, const std::string& groupName) {
+    void ChattingWindow::addFileButtonToScreenGroup(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName, const std::string& groupName) {
         QPushButton* file_button = createAndStyleFileButton(fileName);
 
         if (m_lastPressedGroup != nullptr && groupName == m_lastPressedGroup->text()) {
             file_button->show();
         }
 
-        m_filesGroup.insert(std::make_pair(file_button, std::make_pair(recvFile, QString::fromStdString(groupName))));
+        m_filesGroup.emplace(file_button, std::make_pair(File(t_userFrom, t_data, t_size), QString::fromStdString(groupName)));
 
         connect(file_button, &QPushButton::clicked, this, &ChattingWindow::downloadGroupFile);
 
@@ -347,7 +321,7 @@ namespace SignalSync {
                     ChatAppClient::sendError("File too large! Must be less than 5 MB");
                     return;
                 }
-                if (m_selfUsername == m_usernameToSend.toStdString().substr(4)) {
+                if (m_groupToSend == "" && m_selfUsername == m_usernameToSend.toStdString().substr(4)) {
                     file.close(); // sending file to self (not allowed as of right now)
                     return;
                 }
@@ -603,7 +577,7 @@ namespace SignalSync {
             {
                 LockGuard guard(m_generalSemaphore);
                 if ((m_messages).find(m_usernameToSend) == m_messages.end()) {
-                    m_messages.insert(std::make_pair(m_usernameToSend, UserMessage(QString::fromStdString(username_to_sendStd))));
+                    m_messages.emplace(m_usernameToSend, UniquePtr<UserMessage>(UserMessage(QString::fromStdString(username_to_sendStd))));
                 }
                 m_messages[m_usernameToSend]->addMessage((std::make_pair(CURR_USER, m_messageToSend.toStdString())));
             }
@@ -681,7 +655,7 @@ namespace SignalSync {
     }
 
     void ChattingWindow::addMessage(MsgRecvUser* recvStruct) {
-        std::string username_toadd(recvStruct->user_from);
+        std::string username_toadd(recvStruct->username);
         std::string message_toadd(recvStruct->message);
 
         message_toadd = decrypt(message_toadd).toStdString();
@@ -689,12 +663,12 @@ namespace SignalSync {
         {
             LockGuard guard(m_generalSemaphore);
             if (m_messages.find(QString::fromStdString(username_toadd)) == m_messages.end()) {
-                m_messages.insert(std::make_pair(QString::fromStdString(username_toadd), UniquePtr<UserMessage>(UserMessage(QString::fromStdString(username_toadd)))));
+                m_messages.emplace(QString::fromStdString(username_toadd), UniquePtr<UserMessage>(UserMessage(QString::fromStdString(username_toadd))));
             }
             m_messages[QString::fromStdString(username_toadd)]->addMessage(std::make_pair(OTHER_USER, message_toadd));
         }
 
-        delete recvStruct;
+        freeMessageStruct(recvStruct);
 
         QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(message_toadd), QString::fromStdString(username_toadd), UserB); }, Qt::QueuedConnection);
     }
@@ -754,7 +728,6 @@ namespace SignalSync {
             (m_Users)[user]->deleteLater();
             (m_Users)[user] = nullptr;
             m_Users.erase(user);
-            //delete m_messages[user];
             m_messages.erase(user);
         }
     }

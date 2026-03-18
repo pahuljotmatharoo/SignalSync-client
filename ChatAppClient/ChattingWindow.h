@@ -56,8 +56,8 @@ namespace SignalSync {
         std::unordered_map<QString, QPushButton*> m_Users;
         std::unordered_map<QString, QPushButton*> m_Groups;
         std::unordered_map<QChar, QChar> m_encryptMap;
-        std::unordered_map < QPushButton*, File> m_filesUsers;
-        std::unordered_map<QPushButton*, std::pair<File*, QString>> m_filesGroup;
+        std::unordered_map <QPushButton*, File> m_filesUsers;
+        std::unordered_map<QPushButton*, std::pair<File, QString>> m_filesGroup;
         Network m_network;
         std::thread m_thread;
         std::vector<std::thread> m_threadPool;
@@ -95,13 +95,11 @@ namespace SignalSync {
         QPushButton* createAndStyleFileButton(const std::string& fileName);
         void userOrGroupSelect(std::unordered_map<QString, QPushButton*>& hide, std::unordered_map<QString, QPushButton*>& show, QPushButton*& lastPressedButton) const;
         void addFileButtonToScreenUser(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName);
-        void addFileButtonToScreenGroup(File* recvFile, const std::string& fileName, const std::string& groupName);
+        void addFileButtonToScreenGroup(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName, const std::string& groupName);
         void downloadUserFile();
         void downloadGroupFile();
         void processFileRecvUser(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName);
-        void processFileRecvGroup(File* recvFile, const std::string& fileName, const std::string& groupName);
-        //void destroyUserFiles();
-        void destroyGroupFiles();
+        void processFileRecvGroup(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName, const std::string& groupName);
         void threadShutdown();
         void displayUserMessages(const QString& t_user_name);
         void displayGroupMessages(const QString& t_group_name);
@@ -118,6 +116,7 @@ namespace SignalSync {
         void initButtons();
         void initLayout();
         void initContentLayout();
+        void freeMessageStruct(MsgRecvUser* t_msg);
 
         template <class F, class... Args>
         void enqueue(F&& f, Args&&... args) // accepts args and function as universal reference (could be l-val or r-val)
