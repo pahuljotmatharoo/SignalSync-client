@@ -41,6 +41,7 @@ namespace SignalSync {
                 case NetworkRequest::MSG_SEND: {
                     MsgRecvUser* recvStruct = m_network.recvMethod<MsgRecvUser>();
                     if (recvStruct == nullptr) { continue; }
+                    //m_functionQueue.push([=]()->void{addMessage(recvStruct);});
                     enqueue(&ChattingWindow::addMessage, this, recvStruct);
                     std::string user_from(recvStruct->user_from);
                     notificationPassUser(QString::fromStdString(user_from));
