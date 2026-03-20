@@ -99,13 +99,13 @@ namespace SignalSync {
 
 			if constexpr (std::is_same_v<T, MsgRecvUser> || std::is_same_v<T, MsgRecvGroup>) {
 				recvAll<int>(&size_message, sizeof(int));
-
+				size_message = ntohl(size_message);
 				msg->message = new char[size_message + 1];
 				recvAll<char>(msg->message, size_message);
 				msg->message[size_message] = '\0';
 
 				recvAll<int>(&size_username, sizeof(int));
-
+				size_username = ntohl(size_username);
 				msg->username = new char[size_username + 1];
 				recvAll<char>(msg->username, size_username);
 				msg->username[size_username] = '\0';
@@ -116,6 +116,7 @@ namespace SignalSync {
 
 			if constexpr (std::is_same_v<T, MsgRecvGroup>) {
 				recvAll<int>(&size_group, sizeof(int));
+				size_group = ntohl(size_group);
 				msg->group = new char[size_group + 1];
 				recvAll<char>(msg->group, size_group);
 				msg->group[size_group] = '\0';
