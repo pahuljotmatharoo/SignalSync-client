@@ -138,11 +138,11 @@ namespace SignalSync {
 		}
 		char* recvFile(const size_t t_sizeFile) const;
 		uint32_t sendFileData(const FileSend* t_data) const;
-		uint32_t sendUsername(const std::string& t_username, const std::size_t t_length) const;
+		uint32_t sendUsername(const std::string& t_username) const;
 		std::size_t sendInitMsg(const NetworkRequest& t_constant) const;
-		std::size_t sendSize(const uint32_t& size) const;
+		std::size_t sendSize(uint32_t size) const;
 		int sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant) const;
-		char* recvUser() const;
+		char* recvUser();
 		std::size_t sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& constant) const;
 		std::size_t sendGroupName(const std::string& group_name) const;
 	};

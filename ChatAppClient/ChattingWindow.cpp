@@ -56,11 +56,11 @@ namespace SignalSync {
                     break;
                 }
                 case NetworkRequest::ROOM_CREATE: {
-                    RecvGroupName* groupName = m_network.recvMethod<RecvGroupName>();
+                    char* groupName = m_network.recvUser();
                     if (groupName == nullptr) { continue; }
-                    std::string group_name(groupName->groupName);
+                    std::string group_name(groupName);
                     enqueue(&ChattingWindow::addGroup, this, group_name);
-                    delete groupName;
+                    delete[] groupName;
                     break;
                 }
                 case NetworkRequest::ROOM_MSG: {
