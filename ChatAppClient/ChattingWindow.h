@@ -117,21 +117,7 @@ namespace SignalSync {
         void initLayout();
         void initContentLayout();
         void freeMessageStruct(MsgRecvUser* t_msg);
-
-        template <class F, class... Args>
-        void enqueue(F&& f, Args&&... args) // accepts args and function as universal reference (could be l-val or r-val)
-        {
-            // idek
-            auto task = [fn = std::forward<F>(f), tp = std::make_tuple(std::forward<Args>(args)...)]() mutable // std::forward here to ensure it works with both r-val and l-val (otherwise compiler will assume its l-val)
-                {
-                    std::apply([&](auto&&... xs) { std::invoke(fn, std::forward<decltype(xs)>(xs)...); }, tp);
-                };
-            m_queueMutex.lock();
-            m_functionQueue.push(std::move(task));
-            m_queueMutex.unlock();
-            m_queueSemaphore.release();
-        }
-
+        void enqueue(std::function<void()> func);
         void dequeue();
         void waitingThreadFunction();
         void initThreads();

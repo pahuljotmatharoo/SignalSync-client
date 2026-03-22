@@ -34,9 +34,7 @@ namespace SignalSync {
                 switch (type) {
                 case NetworkRequest::MSG_SEND: {
                     MsgRecvUser* recvStruct = m_network.recvMethod<MsgRecvUser>();
-                    if (recvStruct == nullptr) { continue; }
-                    //m_functionQueue.push([=]()->void{addMessage(recvStruct);});
-                    enqueue(&ChattingWindow::addMessage, this, recvStruct);
+                    enqueue([=]()->void {addMessage(recvStruct); });
                     std::string user_from(recvStruct->username);
                     notificationPassUser(QString::fromStdString(user_from));
                     break;
@@ -45,13 +43,14 @@ namespace SignalSync {
                     List* list = m_network.recvMethod<List>();
                     if (list == nullptr) { continue; }
                     list->size = ntohl(list->size);
-                    enqueue(&ChattingWindow::addUsers, this, list);
+                    enqueue([=]()->void {addUsers(list); });
                     break;
                 }
                 case NetworkRequest::USER_EXIT: {
                     char* username = m_network.recvUser();
                     if (username == nullptr) { continue; }
-                    enqueue(&ChattingWindow::removeUsers, this, std::string(username), 50);
+                    std::string username_str(username);
+                    enqueue([=]()->void {removeUsers(username_str, username_str.length()); });
                     delete[] username;
                     break;
                 }
@@ -59,7 +58,7 @@ namespace SignalSync {
                     char* groupName = m_network.recvUser();
                     if (groupName == nullptr) { continue; }
                     std::string group_name(groupName);
-                    enqueue(&ChattingWindow::addGroup, this, group_name);
+                    enqueue([=]()->void {addGroup(group_name); });
                     delete[] groupName;
                     break;
                 }
@@ -67,7 +66,7 @@ namespace SignalSync {
                     MsgRecvGroup* recvGrpMsg = m_network.recvMethod<MsgRecvGroup>();
                     if (recvGrpMsg == nullptr) { continue; }
                     std::string group_name(recvGrpMsg->group);
-                    enqueue(&ChattingWindow::addMessage_group, this, std::string(recvGrpMsg->message), std::string(recvGrpMsg->username), group_name);
+                    enqueue([=]()->void {addMessage_group(std::string(recvGrpMsg->message), std::string(recvGrpMsg->username), group_name); });
                     notificationPassGroup(QString::fromStdString(group_name));
                     delete recvGrpMsg;
                     break;
@@ -95,7 +94,7 @@ namespace SignalSync {
                     std::string userString(userFrom);
                     std::string filenameString(fileName);
                     //File* recvFile = new File(QString::fromStdString(userString), fileData, *sizeFile);
-                    enqueue(&ChattingWindow::processFileRecvUser, this, QString::fromStdString(userString), fileData, *sizeFile, filenameString);
+                    enqueue([=]()->void {processFileRecvUser(QString::fromStdString(userString), fileData, *sizeFile, filenameString); });
                     delete sizeFile;
                     delete userFrom;
                     delete fileName;
@@ -116,7 +115,7 @@ namespace SignalSync {
                     std::string filenameString(fileName);
                     std::string groupNameString(groupName);
                     //File* recvFile = new File(QString::fromStdString(userString), fileData, *sizeFile);
-                    enqueue(&ChattingWindow::processFileRecvGroup, this, QString::fromStdString(userString), fileData, *sizeFile, filenameString, groupNameString);
+                    enqueue([=]()->void {processFileRecvGroup(QString::fromStdString(userString), fileData, *sizeFile, filenameString, groupNameString); });
                     delete sizeFile;
                     delete userFrom;
                     delete fileName;
@@ -129,6 +128,14 @@ namespace SignalSync {
                 break;
             }
         }
+    }
+
+    void ChattingWindow::enqueue(std::function<void()> func) {
+        {
+            std::lock_guard<std::mutex> lock(m_queueMutex);
+            m_functionQueue.push(func);
+        }
+        m_queueSemaphore.release();
     }
 
     void ChattingWindow::initThreads() {
