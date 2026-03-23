@@ -136,7 +136,7 @@ namespace SignalSync {
 
 			return total;
 		}
-		char* recvFile(const size_t t_sizeFile) const;
+		std::tuple<char*, char*, char*> recvFile(const size_t t_sizeFile);
 		uint32_t sendFileData(const FileSend* t_data) const;
 		uint32_t sendUsername(const std::string& t_username) const;
 		std::size_t sendInitMsg(const NetworkRequest& t_constant) const;

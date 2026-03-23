@@ -13,6 +13,8 @@
 #include "ChattingWindow.h"
 #include "ui_ChattingWindow.h"
 
+// TODO: Make a send all general method in NetworkClient
+
 namespace SignalSync {
     ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::networkThreadFunction, this),
         m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25),
@@ -83,44 +85,39 @@ namespace SignalSync {
                     break;
                 }
                 case NetworkRequest::FILE_USER: {
-                    uint32_t* sizeFile = m_network.recvMethod<uint32_t>();
-                    if (sizeFile == nullptr) { continue; }
-                    char* fileData = m_network.recvFile(*sizeFile);
-                    if (fileData == nullptr) { continue; }
-                    char* userFrom = m_network.recvUser();
-                    if (userFrom == nullptr) { continue; }
-                    char* fileName = m_network.recvUser();
-                    if (fileName == nullptr) { continue; }
-                    std::string userString(userFrom);
-                    std::string filenameString(fileName);
-                    //File* recvFile = new File(QString::fromStdString(userString), fileData, *sizeFile);
-                    enqueue([=]()->void {processFileRecvUser(QString::fromStdString(userString), fileData, *sizeFile, filenameString); });
-                    delete sizeFile;
-                    delete userFrom;
-                    delete fileName;
+                    uint32_t* size_file = m_network.recvMethod<uint32_t>();
+                    *size_file = ntohl(*size_file);
+                    auto recv_file = m_network.recvFile(*size_file);
+                    char* file_data = std::get<0>(recv_file);
+                    std::string userString(std::get<1>(recv_file));
+                    std::string filenameString(std::get<2>(recv_file));
+                    enqueue([=]()->void {processFileRecvUser(QString::fromStdString(userString), file_data, *size_file, filenameString); });
+                    delete size_file;
+                    delete std::get<1>(recv_file);
+                    delete std::get<2>(recv_file);
                     break;
                 }
                 case NetworkRequest::FILE_GROUP: {
-                    uint32_t* sizeFile = m_network.recvMethod<uint32_t>();
-                    if (sizeFile == nullptr) { continue; }
-                    char* fileData = m_network.recvFile(*sizeFile);
-                    if (fileData == nullptr) { continue; }
-                    char* userFrom = m_network.recvUser();
-                    if (userFrom == nullptr) { continue; }
-                    char* fileName = m_network.recvUser();
-                    if (fileName == nullptr) { continue; }
-                    char* groupName = m_network.recvUser();
-                    if (groupName == nullptr) { continue; }
-                    std::string userString(userFrom);
-                    std::string filenameString(fileName);
-                    std::string groupNameString(groupName);
-                    //File* recvFile = new File(QString::fromStdString(userString), fileData, *sizeFile);
-                    enqueue([=]()->void {processFileRecvGroup(QString::fromStdString(userString), fileData, *sizeFile, filenameString, groupNameString); });
-                    delete sizeFile;
-                    delete userFrom;
-                    delete fileName;
-                    delete groupName;
-                    break;
+                    //uint32_t* sizeFile = m_network.recvMethod<uint32_t>();
+                    //if (sizeFile == nullptr) { continue; }
+                    //char* fileData = m_network.recvFile(*sizeFile);
+                    //if (fileData == nullptr) { continue; }
+                    //char* userFrom = m_network.recvUser();
+                    //if (userFrom == nullptr) { continue; }
+                    //char* fileName = m_network.recvUser();
+                    //if (fileName == nullptr) { continue; }
+                    //char* groupName = m_network.recvUser();
+                    //if (groupName == nullptr) { continue; }
+                    //std::string userString(userFrom);
+                    //std::string filenameString(fileName);
+                    //std::string groupNameString(groupName);
+                    ////File* recvFile = new File(QString::fromStdString(userString), fileData, *sizeFile);
+                    //enqueue([=]()->void {processFileRecvGroup(QString::fromStdString(userString), fileData, *sizeFile, filenameString, groupNameString); });
+                    //delete sizeFile;
+                    //delete userFrom;
+                    //delete fileName;
+                    //delete groupName;
+                    //break;
                 }
                 }
             }

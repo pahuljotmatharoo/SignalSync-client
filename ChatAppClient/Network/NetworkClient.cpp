@@ -49,15 +49,12 @@ namespace SignalSync {
 		return (static_cast<int16_t>(status));
 	}
 
-	char* Network::recvFile(const size_t t_sizeFile) const {
+	std::tuple<char*, char*, char*> Network::recvFile(const size_t t_sizeFile) {
 		char* pngData = new char[t_sizeFile];
-		std::size_t total = 0;
-
-		while (total < t_sizeFile) {
-			std::size_t recvBytes = recv(getSockID(), pngData + total, t_sizeFile - (total), 0);
-			total += recvBytes;
-		}
-		return pngData;
+		recvAll<char>(pngData, t_sizeFile);
+		char* userFrom = recvUser();
+		char* fileName = recvUser();
+		return { pngData, userFrom, fileName };
 	}
 
 	uint32_t Network::sendFileData(const FileSend* t_data) const {
@@ -103,8 +100,9 @@ namespace SignalSync {
 		png.size_u = t_user_to_send.length();
 		png.data = const_cast<char*>(pngData);
 		if (sendInitMsg(constant) == -1) { return -1; }
-		if (sendSize(png.size_m)) { return -1; };
-		if (sendFileData(&png) == -1) { return -1; };
+		if (sendSize(png.size_m) == -1) { return -1; };
+		uint32_t check = sendFileData(&png);
+		if (check == -1) { return -1; };
 		if (sendUsername(t_user_to_send) == -1) { return -1; };
 		if (sendUsername(t_filename_to_send) == -1) { return -1; };
 	}
