@@ -6,6 +6,9 @@ import (
 	"signalsync/backend/database"
 )
 
+// we can see that in every request we are having to "ValidateLogin", makes more sense to
+// use something like JWT token, etc to validate login
+
 func DeleteUserService(db *sql.DB, info *database.Login) bool {
 	login_verification, _ := ValidateLoginService(db, info)
 	if !login_verification {
