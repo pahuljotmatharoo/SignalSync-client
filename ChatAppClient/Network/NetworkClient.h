@@ -133,17 +133,30 @@ namespace SignalSync {
 				std::size_t recvBytes = recv(getSockID(), reinterpret_cast<char*>(t_storage) + total, bytes - total, 0);
 				total += recvBytes;
 			}
-
+			
 			return total;
 		}
+
 		std::tuple<char*, char*, char*> recvFile(const size_t t_sizeFile);
-		uint32_t sendFileData(const FileSend* t_data) const;
-		uint32_t sendUsername(const std::string& t_username) const;
-		std::size_t sendInitMsg(const NetworkRequest& t_constant) const;
-		std::size_t sendSize(uint32_t size) const;
-		int sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant) const;
+		uint32_t sendFileData(const FileSend* t_data);
+		uint32_t sendUsername(const std::string& t_username);
+		std::size_t sendInitMsg(const NetworkRequest& t_constant);
+		std::size_t sendSize(uint32_t size);
+		int sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant);
 		char* recvUser();
-		std::size_t sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& constant) const;
-		std::size_t sendGroupName(const std::string& group_name) const;
+		std::size_t sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& constant);
+		std::size_t sendGroupName(const std::string& group_name);
+
+		template <typename T>
+		std::size_t sendAll(T* t_storage, int bytes) {
+			std::size_t total = 0;
+
+			while (total < bytes) {
+				std::size_t recvBytes = send(getSockID(), reinterpret_cast<const char*>(t_storage) + total, bytes - total, 0);
+				total += recvBytes;
+			}
+			
+			return total;
+		}
 	};
 }

@@ -57,29 +57,17 @@ namespace SignalSync {
 		return { pngData, userFrom, fileName };
 	}
 
-	uint32_t Network::sendFileData(const FileSend* t_data) const {
-		uint32_t currentPointer{ 0 };
-		while (currentPointer < t_data->size_m) {
-			int sent = send(m_sockid, (t_data->data) + currentPointer, t_data->size_m - currentPointer, 0);
-			currentPointer += sent;
-		}
-		return currentPointer;
+	uint32_t Network::sendFileData(const FileSend* t_data) {
+		return sendAll<const char>(t_data->data, t_data->size_m);
 	}
 
-	uint32_t Network::sendUsername(const std::string& t_username) const {
+	uint32_t Network::sendUsername(const std::string& t_username) {
 		sendSize(t_username.length() + 1);
-
-		int t_length = t_username.length() + 1;
-		uint32_t currentPointer{ 0 };
 		const char* userbuf = t_username.c_str();
-		while (currentPointer < t_length) {
-			int sent = send(m_sockid, (userbuf)+currentPointer, t_length - currentPointer, 0);
-			currentPointer += sent;
-		}
-		return currentPointer;
+		return sendAll<const char>(userbuf, t_username.length() + 1);;
 	}
 
-	std::size_t Network::sendInitMsg(const NetworkRequest& t_constant) const {
+	std::size_t Network::sendInitMsg(const NetworkRequest& t_constant) {
 		MsgHeaderr msg = { 0 };
 		msg.type = htonl(static_cast<u_long>(t_constant));
 		msg.length = htonl(static_cast<uint32_t>(5));
@@ -87,12 +75,12 @@ namespace SignalSync {
 		return send(getSockID(), reinterpret_cast<char*>(&msg), sizeof(msg), 0);
 	}
 
-	std::size_t Network::sendSize(uint32_t size) const {
+	std::size_t Network::sendSize(uint32_t size) {
 		size = htonl(size);
-		return send(m_sockid, reinterpret_cast<const char*>(&size), sizeof(uint32_t), 0);
+		return sendAll<uint32_t>(&size, sizeof(uint32_t));
 	}
 
-	int Network::sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant) const {
+	int Network::sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant) {
 		const char* pngData = t_fileData->constData();
 		FileSend png{ 0 };
 		png.user_to_send = const_cast<char*>(t_user_to_send.c_str());
@@ -101,8 +89,7 @@ namespace SignalSync {
 		png.data = const_cast<char*>(pngData);
 		if (sendInitMsg(constant) == -1) { return -1; }
 		if (sendSize(png.size_m) == -1) { return -1; };
-		uint32_t check = sendFileData(&png);
-		if (check == -1) { return -1; };
+		if (sendFileData(&png) == -1) { return -1; };
 		if (sendUsername(t_user_to_send) == -1) { return -1; };
 		if (sendUsername(t_filename_to_send) == -1) { return -1; };
 	}
@@ -116,7 +103,7 @@ namespace SignalSync {
 		return username;
 	}
 
-	std::size_t Network::sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& t_constant) const {
+	std::size_t Network::sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& t_constant) {
 		MsgSend message_to_Send{ 0 };
 
 		if (sendInitMsg(t_constant) <= 0) { return 0; }
@@ -124,18 +111,19 @@ namespace SignalSync {
 
 		memcpy(message_to_Send.message, t_message.c_str(), t_message.length());
 
-		if (send(getSockID(), message_to_Send.message, t_message.length() + 1, 0) <= 0) { return 0; }
+		if (sendAll<const char>(message_to_Send.message, t_message.length() + 1) <= 0) { return 0; }
 
 		if (sendSize(t_username.length() + 1) <= 0) { return 0; }
 
 		memcpy(message_to_Send.user_to_send, t_username.c_str(), 50);
-		if (send(getSockID(), message_to_Send.user_to_send, t_username.length() + 1, 0) <= 0) { return 0; }
+
+		if (sendAll<const char>(message_to_Send.user_to_send, t_username.length() + 1) <= 0) { return 0; }
 
 		return 1;
 	}
 
 
-	std::size_t Network::sendGroupName(const std::string& t_group_name) const {
+	std::size_t Network::sendGroupName(const std::string& t_group_name) {
 		sendInitMsg(NetworkRequest::ROOM_CREATE);
 
 		return sendUsername(t_group_name);
