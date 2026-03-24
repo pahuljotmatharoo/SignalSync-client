@@ -86,12 +86,12 @@ namespace SignalSync {
                 }
                 case NetworkRequest::FILE_USER: {
                     uint32_t* size_file = m_network.recvMethod<uint32_t>();
-                    *size_file = ntohl(*size_file);
-                    auto recv_file = m_network.recvFile(*size_file);
+                    uint32_t size_converted = ntohl(*size_file);
+                    auto recv_file = m_network.recvFile(size_converted);
                     char* file_data = std::get<0>(recv_file);
                     std::string userString(std::get<1>(recv_file));
                     std::string filenameString(std::get<2>(recv_file));
-                    enqueue([=]()->void {processFileRecvUser(QString::fromStdString(userString), file_data, *size_file, filenameString); });
+                    enqueue([=]()->void {processFileRecvUser(QString::fromStdString(userString), file_data, size_converted, filenameString); });
                     delete size_file;
                     delete std::get<1>(recv_file);
                     delete std::get<2>(recv_file);
