@@ -1,4 +1,4 @@
-#include "../../Assets/File.h"
+#include "../../ChatAppClient/Assets/File.h"
 #include "gtest/gtest.h"
 
 namespace Signalsync {

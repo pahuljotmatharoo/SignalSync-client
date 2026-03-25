@@ -1,4 +1,4 @@
-#include "../../Assets/UniquePtr.h"
+#include "../../ChatAppClient/Assets/UniquePtr.h"
 #include "gtest/gtest.h"
 
 namespace SignalSync {

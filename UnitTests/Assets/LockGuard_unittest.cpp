@@ -1,4 +1,4 @@
-#include "../../Assets/LockGuard.h"
+#include "../../ChatAppClient/Assets/LockGuard.h"
 #include "gtest/gtest.h"
 
 namespace SignalSync {
