@@ -27,13 +27,6 @@ namespace SignalSync {
 		uint32_t length;
 	};
 
-	struct MsgSend {
-		char message[128];
-		char user_to_send[50];
-		uint32_t size_m;
-		uint32_t size_u;
-	};
-
 	struct MsgRecvUser {
 		int message_size;
 		char* message;
@@ -50,28 +43,9 @@ namespace SignalSync {
 		char* group;
 	};
 
-	struct RecvGroupName {
-		char groupName[50];
-	};
-
 	struct List { // can be User List or Group List
 		uint32_t size;
 		char arr[MAX_USERS][USERNAME_LENGTH];
-	};
-
-	struct FileSend {
-		char* data;
-		char* user_to_send;
-		uint32_t size_m;
-		uint32_t size_u;
-	};
-
-	struct FileRecv {
-		char* data;
-		char* user_to_send;
-		char* filename_to_send;
-		uint32_t size_m;
-		uint32_t size_u;
 	};
 
 	class Network {
@@ -138,7 +112,8 @@ namespace SignalSync {
 		}
 
 		std::tuple<char*, char*, char*> recvFile(const size_t t_sizeFile);
-		uint32_t sendFileData(const FileSend* t_data);
+		std::tuple<char*, char*, char*, char*, uint32_t*> recvFileGroup();
+		uint32_t sendFileData(const char* t_data, uint32_t size);
 		uint32_t sendUsername(const std::string& t_username);
 		std::size_t sendInitMsg(const NetworkRequest& t_constant);
 		std::size_t sendSize(uint32_t size);

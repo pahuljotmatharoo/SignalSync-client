@@ -3,6 +3,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <QMessageBox>
+//#include "dotenv.h"
 namespace SignalSync {
 	Network::~Network() {
 		closesocket(m_sockid);
@@ -38,6 +39,8 @@ namespace SignalSync {
 
 	int16_t Network::serverConnectHelper(const uint16_t t_port) const {
 		sockaddr_in t_server{};
+		//auto& dotenv = dotenv::env.load_dotenv();
+
 		t_server.sin_family = AF_INET; //specify to use IPV4
 		t_server.sin_port = htons(t_port);
 #pragma warning(push)
@@ -57,8 +60,16 @@ namespace SignalSync {
 		return { pngData, userFrom, fileName };
 	}
 
-	uint32_t Network::sendFileData(const FileSend* t_data) {
-		return sendAll<const char>(t_data->data, t_data->size_m);
+	std::tuple<char*, char*, char*, char*, uint32_t*> Network::recvFileGroup() {
+		uint32_t* temp_size_file = recvMethod<uint32_t>();
+		*temp_size_file = ntohl(*temp_size_file);
+		auto tup = recvFile(*temp_size_file);
+		char* group_name = recvUser();
+		return {std::get<0>(tup), std::get<1>(tup), std::get<2>(tup), group_name, temp_size_file };
+	}
+
+	uint32_t Network::sendFileData(const char* t_data, uint32_t size) {
+		return sendAll<const char>(t_data, size);
 	}
 
 	uint32_t Network::sendUsername(const std::string& t_username) {
@@ -82,16 +93,20 @@ namespace SignalSync {
 
 	int Network::sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant) {
 		const char* pngData = t_fileData->constData();
-		FileSend png{ 0 };
-		png.user_to_send = const_cast<char*>(t_user_to_send.c_str());
-		png.size_m = static_cast<uint32_t>(t_fileData->size());
-		png.size_u = t_user_to_send.length();
-		png.data = const_cast<char*>(pngData);
-		if (sendInitMsg(constant) == -1) { return -1; }
-		if (sendSize(png.size_m) == -1) { return -1; };
-		if (sendFileData(&png) == -1) { return -1; };
-		if (sendUsername(t_user_to_send) == -1) { return -1; };
-		if (sendUsername(t_filename_to_send) == -1) { return -1; };
+		uint32_t file_size = static_cast<uint32_t>(t_fileData->size());
+		uint32_t user_size = t_user_to_send.length();
+
+		if (sendInitMsg(constant) <= 0) { return -1; }
+
+		if (sendSize(file_size) <= 0) { return -1; };
+
+		if (sendFileData(pngData, file_size) <= 0) { return -1; };
+
+		if (sendUsername(t_user_to_send) <= 0) { return -1; };
+
+		if (sendUsername(t_filename_to_send) <= 0) { return -1; };
+
+		return 1;
 	}
 
 	char* Network::recvUser() {
@@ -104,20 +119,18 @@ namespace SignalSync {
 	}
 
 	std::size_t Network::sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& t_constant) {
-		MsgSend message_to_Send{ 0 };
+		const char* message_to_send = t_message.c_str();
+		const char* user_to_send = t_username.c_str();
 
 		if (sendInitMsg(t_constant) <= 0) { return 0; }
+
 		if (sendSize(t_message.length() + 1) <= 0) { return 0; }
 
-		memcpy(message_to_Send.message, t_message.c_str(), t_message.length());
-
-		if (sendAll<const char>(message_to_Send.message, t_message.length() + 1) <= 0) { return 0; }
+		if (sendAll<const char>(message_to_send, t_message.length() + 1) <= 0) { return 0; }
 
 		if (sendSize(t_username.length() + 1) <= 0) { return 0; }
 
-		memcpy(message_to_Send.user_to_send, t_username.c_str(), 50);
-
-		if (sendAll<const char>(message_to_Send.user_to_send, t_username.length() + 1) <= 0) { return 0; }
+		if (sendAll<const char>(user_to_send, t_username.length() + 1) <= 0) { return 0; }
 
 		return 1;
 	}
