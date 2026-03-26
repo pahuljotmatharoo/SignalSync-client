@@ -13,7 +13,11 @@
 #include "ChattingWindow.h"
 #include "ui_ChattingWindow.h"
 
-// TODO: Make a send all general method in NetworkClient
+// TODO: Move recv size to inside recv File for file recieving
+// TODO: Change recvAll to return pointer to object holding data
+
+// TODO: Create methods for all switch cases for thread function
+// TODO: Ensure c-style string sizes are all + 1 before being sent to server
 
 namespace SignalSync {
     ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::networkThreadFunction, this),
@@ -27,98 +31,92 @@ namespace SignalSync {
     }
 
     ChattingWindow::~ChattingWindow() { threadShutdown(); }
-
+    
+    // move every case into its own function (or try to generalize them)
     void ChattingWindow::networkThreadFunction() {
         NetworkRequest type{};
         while (!m_threadStop) {
             std::size_t recvData = recv(m_network.getSockID(), reinterpret_cast<char*>(&type), sizeof(NetworkRequest), 0);
             if (recvData > 0) {
                 switch (type) {
-                case NetworkRequest::MSG_SEND: {
-                    MsgRecvUser* recvStruct = m_network.recvMethod<MsgRecvUser>();
-                    enqueue([=]()->void {addMessage(recvStruct); });
-                    std::string user_from(recvStruct->username);
-                    notificationPassUser(QString::fromStdString(user_from));
-                    break;
-                }
-                case NetworkRequest::MSG_LIST: {
-                    List* list = m_network.recvMethod<List>();
-                    if (list == nullptr) { continue; }
-                    list->size = ntohl(list->size);
-                    enqueue([=]()->void {addUsers(list); });
-                    break;
-                }
-                case NetworkRequest::USER_EXIT: {
-                    char* username = m_network.recvUser();
-                    if (username == nullptr) { continue; }
-                    std::string username_str(username);
-                    enqueue([=]()->void {removeUsers(username_str, username_str.length()); });
-                    delete[] username;
-                    break;
-                }
-                case NetworkRequest::ROOM_CREATE: {
-                    char* groupName = m_network.recvUser();
-                    if (groupName == nullptr) { continue; }
-                    std::string group_name(groupName);
-                    enqueue([=]()->void {addGroup(group_name); });
-                    delete[] groupName;
-                    break;
-                }
-                case NetworkRequest::ROOM_MSG: {
-                    MsgRecvGroup* recvGrpMsg = m_network.recvMethod<MsgRecvGroup>();
-                    if (recvGrpMsg == nullptr) { continue; }
-                    std::string group_name(recvGrpMsg->group);
-                    enqueue([=]()->void {addMessage_group(std::string(recvGrpMsg->message), std::string(recvGrpMsg->username), group_name); });
-                    notificationPassGroup(QString::fromStdString(group_name));
-                    delete recvGrpMsg;
-                    break;
-                }
-                case NetworkRequest::ROOM_LIST: { // ? wtf am i doing here lol
-                    List* listGroup = m_network.recvMethod<List>();
-                    if (listGroup == nullptr) { continue; }
-                    listGroup->size = ntohl(listGroup->size);
-                    if (listGroup->size > MAXUSERS) {
+                    case NetworkRequest::MSG_SEND: {
+                        MsgRecvUser* recvStruct = m_network.recvMethod<MsgRecvUser>();
+                        enqueue([=]()->void {addMessage(recvStruct); });
+                        std::string user_from(recvStruct->username);
+                        notificationPassUser(QString::fromStdString(user_from));
+                        break;
+                    }
+                    case NetworkRequest::MSG_LIST: {
+                        List* list = m_network.recvMethod<List>();
+                        if (list == nullptr) { continue; }
+                        list->size = ntohl(list->size);
+                        enqueue([=]()->void {addUsers(list); });
+                        break;
+                    }
+                    case NetworkRequest::USER_EXIT: {
+                        char* username = m_network.recvUser();
+                        if (username == nullptr) { continue; }
+                        std::string username_str(username);
+                        enqueue([=]()->void {removeUsers(username_str, username_str.length()); });
+                        delete[] username;
+                        break;
+                    }
+                    case NetworkRequest::ROOM_CREATE: {
+                        char* groupName = m_network.recvUser();
+                        if (groupName == nullptr) { continue; }
+                        std::string group_name(groupName);
+                        enqueue([=]()->void {addGroup(group_name); });
+                        delete[] groupName;
+                        break;
+                    }
+                    case NetworkRequest::ROOM_MSG: {
+                        MsgRecvGroup* recvGrpMsg = m_network.recvMethod<MsgRecvGroup>();
+                        if (recvGrpMsg == nullptr) { continue; }
+                        std::string group_name(recvGrpMsg->group);
+                        enqueue([=]()->void {addMessage_group(std::string(recvGrpMsg->message), std::string(recvGrpMsg->username), group_name); });
+                        notificationPassGroup(QString::fromStdString(group_name));
+                        delete recvGrpMsg;
+                        break;
+                    }
+                    case NetworkRequest::ROOM_LIST: { // ? wtf am i doing here lol
+                        List* listGroup = m_network.recvMethod<List>();
+                        if (listGroup == nullptr) { continue; }
+                        listGroup->size = ntohl(listGroup->size);
+                        if (listGroup->size > MAXUSERS) {
+                            delete listGroup;
+                            break;
+                        }
                         delete listGroup;
                         break;
                     }
-                    delete listGroup;
-                    break;
-                }
-                case NetworkRequest::FILE_USER: {
-                    uint32_t* size_file = m_network.recvMethod<uint32_t>();
-                    uint32_t size_converted = ntohl(*size_file);
-                    auto recv_file = m_network.recvFile(size_converted);
-                    char* file_data = std::get<0>(recv_file);
-                    std::string userString(std::get<1>(recv_file));
-                    std::string filenameString(std::get<2>(recv_file));
-                    enqueue([=]()->void {processFileRecvUser(QString::fromStdString(userString), file_data, size_converted, filenameString); });
-                    delete size_file;
-                    delete std::get<1>(recv_file);
-                    delete std::get<2>(recv_file);
-                    break;
-                }
-                case NetworkRequest::FILE_GROUP: {
-                    //uint32_t* sizeFile = m_network.recvMethod<uint32_t>();
-                    //if (sizeFile == nullptr) { continue; }
-                    //char* fileData = m_network.recvFile(*sizeFile);
-                    //if (fileData == nullptr) { continue; }
-                    //char* userFrom = m_network.recvUser();
-                    //if (userFrom == nullptr) { continue; }
-                    //char* fileName = m_network.recvUser();
-                    //if (fileName == nullptr) { continue; }
-                    //char* groupName = m_network.recvUser();
-                    //if (groupName == nullptr) { continue; }
-                    //std::string userString(userFrom);
-                    //std::string filenameString(fileName);
-                    //std::string groupNameString(groupName);
-                    ////File* recvFile = new File(QString::fromStdString(userString), fileData, *sizeFile);
-                    //enqueue([=]()->void {processFileRecvGroup(QString::fromStdString(userString), fileData, *sizeFile, filenameString, groupNameString); });
-                    //delete sizeFile;
-                    //delete userFrom;
-                    //delete fileName;
-                    //delete groupName;
-                    //break;
-                }
+                    case NetworkRequest::FILE_USER: {
+                        uint32_t* size_file = m_network.recvMethod<uint32_t>();
+                        uint32_t size_converted = ntohl(*size_file);
+                        auto recv_file = m_network.recvFile(size_converted);
+                        char* file_data = std::get<0>(recv_file);
+                        std::string userString(std::get<1>(recv_file));
+                        std::string filenameString(std::get<2>(recv_file));
+                        enqueue([=]()->void {processFileRecvUser(QString::fromStdString(userString), file_data, size_converted, filenameString); });
+                        delete size_file;
+                        delete std::get<1>(recv_file);
+                        delete std::get<2>(recv_file);
+                        break;
+                    }
+                    case NetworkRequest::FILE_GROUP: {
+                        auto recv_file = m_network.recvFileGroup();
+                        char* file_data = std::get<0>(recv_file);
+                        std::string user(std::get<1>(recv_file));
+                        std::string filename(std::get<2>(recv_file));
+                        std::string group_name(std::get<3>(recv_file));
+                        uint32_t* file_size(std::get<4>(recv_file));
+                        uint32_t copy = *file_size;
+                        enqueue([=]()->void {processFileRecvGroup(QString::fromStdString(user), file_data, copy, filename, group_name); });
+                        delete std::get<1>(recv_file);
+                        delete std::get<2>(recv_file);
+                        delete std::get<3>(recv_file);
+                        delete std::get<4>(recv_file);
+                        break;
+                    }
                 }
             }
             else {

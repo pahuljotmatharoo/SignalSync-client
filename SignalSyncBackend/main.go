@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"os"
 
 	"signalsync/backend/database"
 
@@ -57,5 +58,5 @@ func main() {
 	router := gin.Default()
 	db := database.InitDataBase()
 	defineEndpoints(router, db)
-	router.Run("localhost:8080")
+	router.Run(os.Getenv("HTTP_ADDRESS"))
 }
