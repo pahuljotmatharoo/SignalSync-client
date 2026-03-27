@@ -1,35 +1,34 @@
-#include "../../ChatAppClient/Assets/UniquePtr.h"
-#include "gtest/gtest.h"
+#include "pch.h"
+#include "../ChatAppClient/Assets/UnqiuePtr.h"
+#include "../ChatAppClient/Messages/User Messages/UserMessage.h"
 
-namespace SignalSync {
     TEST(UniquePtr, DefaultConstructor) {
-        UnqiuePtr<int> ptr;
+        SignalSync::UniquePtr<int> ptr;
         EXPECT_NE(ptr.operator->(), nullptr); // ptr should not be null, and have some memory address
     }
 
     TEST(UniquePtr, ConstructorWithInitalValue) {
-        UniquePtr<int> ptr(5);
+        SignalSync::UniquePtr<int> ptr(5);
         EXPECT_NE(ptr.operator->(), nullptr);
         EXPECT_EQ(*ptr, 5); 
     }
 
     TEST(UniquePtr, NotCopyConstructible) {
-        EXPECT_FALSE(std::is_copy_constructible_v<UniquePtr>);
+        EXPECT_FALSE(std::is_copy_constructible_v<SignalSync::UniquePtr<int>>);
     }
 
     TEST(UniquePtr, MoveConstructor) {
-        UniquePtr<double> ptr(5.234);
-        UniquePtr<double> ptr_2(std::move(ptr));
+        SignalSync::UniquePtr<double> ptr(5.234);
+        SignalSync::UniquePtr<double> ptr_2(std::move(ptr));
         EXPECT_EQ(ptr.operator->(), nullptr);
         EXPECT_NE(ptr_2.operator->(), nullptr);
         EXPECT_EQ(*ptr_2, 5.234);
     }
 
     TEST(UniquePtr, MoveOperator) {
-        UniquePtr<int> ptr(43);
-        Unique<int> ptr_2 = std::move(ptr);
+        SignalSync::UniquePtr<int> ptr(43);
+        SignalSync::UniquePtr<int> ptr_2 = std::move(ptr);
         EXPECT_EQ(ptr.operator->(), nullptr);
         EXPECT_NE(ptr_2.operator->(), nullptr);
         EXPECT_EQ(*ptr_2, 43);
     }
-}
