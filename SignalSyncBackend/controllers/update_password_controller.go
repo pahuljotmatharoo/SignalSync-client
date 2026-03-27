@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func DeleteUser(db *sql.DB) gin.HandlerFunc {
+func UpdatePasswordController(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req database.SessionVerification
 
