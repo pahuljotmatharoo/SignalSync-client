@@ -41,5 +41,14 @@ namespace SignalSync {
 			}
 			return 0;
 		}
+
+		std::size_t changePassword(const std::string& username, const std::string& password, const std::string& api_key) {
+			std::string jsonBody = "{\"username\":\"" + username + "\", \"password\":\"" + password + "\", \"api_key\":\"" + api_key + "\"}";
+			auto response = m_client.Post("/changePassword", jsonBody, "application/json");
+			if (response && response->status == 200) {
+				return 1;
+			}
+			return 0;
+		}
 	};
 }

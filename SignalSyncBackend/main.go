@@ -51,6 +51,7 @@ func defineEndpoints(router *gin.Engine, db *sql.DB) {
 	router.POST("/register", controllers.RegisterUser(db))
 	router.POST("/delete", controllers.DeleteUser(db))
 	router.POST("/validateApiKey", controllers.ValidateAPIKey(db))
+	router.POST("/changePassed", controllers.UpdatePasswordController(db))
 }
 
 func main() {
