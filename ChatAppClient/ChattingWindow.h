@@ -74,6 +74,13 @@ namespace SignalSync {
         void setApiKey(const std::string t_apiKey) { m_apiKey = t_apiKey; }
         std::string getApiKey() { return m_apiKey; }
         void setNetwork(Network& t_network) { m_network = t_network; };
+        void networkMessageRecv();
+        void networkUserExit();
+        void networkRoomCreateRecv();
+        void networkRoomMessageRecv();
+        void networkFileRecv();
+        void networkFileGroupRecv();
+        void networkUserListRecv();
         void addMessage(MsgRecvUser* recvStruct);
         void addMessage_group(std::string message_toadd, const std::string username_toadd, const std::string group_toadd);
         void sendMessageToScreenRecv(const QString& message, const QString& user, bool type);

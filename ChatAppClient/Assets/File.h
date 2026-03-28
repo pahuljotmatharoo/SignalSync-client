@@ -1,7 +1,7 @@
 #pragma once
-#include <QMessageBox>
 #include <fstream>
 #include <cstdlib>
+#include <QString>
 namespace SignalSync {
 	class File {
 	private:
@@ -19,7 +19,10 @@ namespace SignalSync {
 			m_size = other_file.getSize();
 			other_file.setSize(0);
 		}
-		~File();
+		~File() {
+			delete[] m_data;
+			m_data = nullptr;
+		}
 		QString getUserFrom() const { return m_userFrom; }
 		void setUserFrom(const QString& t_userFrom) { m_userFrom = t_userFrom; }
 		uint32_t getSize() const { return m_size; }
