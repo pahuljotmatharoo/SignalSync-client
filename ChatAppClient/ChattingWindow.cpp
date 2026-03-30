@@ -59,17 +59,10 @@ namespace SignalSync {
                         networkRoomMessageRecv();
                         break;
                     }
-                    //case NetworkRequest::ROOM_LIST: { // ? wtf am i doing here lol
-                    //    List* listGroup = m_network.recvMethod<List>();
-                    //    if (listGroup == nullptr) { continue; }
-                    //    listGroup->size = ntohl(listGroup->size);
-                    //    if (listGroup->size > MAXUSERS) {
-                    //        delete listGroup;
-                    //        break;
-                    //    }
-                    //    delete listGroup;
-                    //    break;
-                    //}
+                    case NetworkRequest::ROOM_LIST: {
+                        networkRoomListRecv();
+                        break;
+                    }
                     case NetworkRequest::FILE_USER: {
                         networkFileRecv();
                         break;
@@ -173,6 +166,18 @@ namespace SignalSync {
         delete recvGrpMsg;
     }
 
+    void ChattingWindow::networkRoomListRecv() {
+        std::pair<std::vector<std::string>, uint32_t> listGroup = m_network.recvGroupList();
+
+        if (listGroup.first.size() == 0) {
+            return;
+        }
+
+        for (const auto& group_name : listGroup.first) {
+            addGroup(group_name);
+        }
+    }
+
     void ChattingWindow::networkFileRecv() {
         uint32_t* size_file = m_network.recvMethod<uint32_t>();
         uint32_t size_converted = ntohl(*size_file);
@@ -225,6 +230,14 @@ namespace SignalSync {
         delete[]t_msg->message;
         delete[]t_msg->username;
     }
+
+    void ChattingWindow::freeListGroup(std::pair<char**, uint32_t>& list_group) {
+        for (int i{ 0 }; i < list_group.second; i++) {
+            delete[] list_group.first[i];
+        }
+        delete[] list_group.first;
+    }
+
 
     //these are the same basically, fix
     void ChattingWindow::downloadUserFile() {

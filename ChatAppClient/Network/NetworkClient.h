@@ -121,6 +121,7 @@ namespace SignalSync {
 		char* recvUser();
 		std::size_t sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& constant);
 		std::size_t sendGroupName(const std::string& group_name);
+		std::pair<std::vector<std::string>, uint32_t> recvGroupList();
 
 		template <typename T>
 		std::size_t sendAll(T* t_storage, int bytes) {

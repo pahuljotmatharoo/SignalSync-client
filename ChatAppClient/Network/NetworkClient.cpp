@@ -113,8 +113,8 @@ namespace SignalSync {
 		int size{ 0 };
 		recvAll<int>(&size, sizeof(int));
 		size = ntohl(size);
-		char* username = new char[size];
-		recvAll<char>(username, size);
+		char* username = new char[size]();
+		int ret = recvAll<char>(username, size);
 		return username;
 	}
 
@@ -128,13 +128,23 @@ namespace SignalSync {
 
 		if (sendAll<const char>(message_to_send, t_message.length() + 1) <= 0) { return 0; }
 
-		if (sendSize(t_username.length() + 1) <= 0) { return 0; }
-
-		if (sendAll<const char>(user_to_send, t_username.length() + 1) <= 0) { return 0; }
+		if (sendUsername(t_username) <= 0) { return 0; }
 
 		return 1;
 	}
 
+	std::pair<std::vector<std::string>, uint32_t> SignalSync::Network::recvGroupList() {
+		int size{ 0 };
+		recvAll<int>(&size, sizeof(int));
+		size = ntohl(size);
+		std::vector<std::string> group_list(size);
+		for (int i{ 0 }; i < size; i++) {
+			char* username = recvUser();
+			group_list[i] = std::string(username);
+			delete[] username;
+		}
+		return { group_list, size };
+	}
 
 	std::size_t Network::sendGroupName(const std::string& t_group_name) {
 		sendInitMsg(NetworkRequest::ROOM_CREATE);

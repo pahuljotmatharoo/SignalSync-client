@@ -78,6 +78,7 @@ namespace SignalSync {
         void networkUserExit();
         void networkRoomCreateRecv();
         void networkRoomMessageRecv();
+        void networkRoomListRecv();
         void networkFileRecv();
         void networkFileGroupRecv();
         void networkUserListRecv();
@@ -129,6 +130,7 @@ namespace SignalSync {
         void waitingThreadFunction();
         void initThreads();
         QString decrypt(const std::string message);
+        void freeListGroup(std::pair<char**, uint32_t>& list_group);
     private slots:
         void on_sendButton_clicked();
         void on_fileButton_clicked();
