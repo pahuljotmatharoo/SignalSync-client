@@ -113,6 +113,7 @@ namespace SignalSync {
 		int sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant);
 		char* recvUser();
 		uint32_t recvSize();
+		char* recvString();
 		std::size_t sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& constant);
 		std::size_t sendGroupName(const std::string& group_name);
 		std::pair<std::vector<std::string>, uint32_t> recvGroupList();

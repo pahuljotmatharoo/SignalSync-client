@@ -115,6 +115,13 @@ namespace SignalSync {
 		return username;
 	}
 
+	char* recvString() {
+		uint32_t size = recvSize();
+		char* text = new char[size]();
+		int ret = recvAll<char>(text, size);
+		return text;
+	}
+
 	uint32_t Network::recvSize() {
 		uint32_t size{ 0 };
 		recvAll<uint32_t>(&size, sizeof(uint32_t));
