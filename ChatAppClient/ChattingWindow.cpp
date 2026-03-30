@@ -13,10 +13,6 @@
 #include "ChattingWindow.h"
 #include "ui_ChattingWindow.h"
 
-// TODO: Move recv size to inside recv File for file recieving
-// TODO: Change recvAll to return pointer to object holding data
-
-// TODO: Create methods for all switch cases for thread function
 // TODO: Ensure c-style string sizes are all + 1 before being sent to server
 
 namespace SignalSync {
@@ -30,7 +26,9 @@ namespace SignalSync {
         initThreads();
     }
 
-    ChattingWindow::~ChattingWindow() { threadShutdown(); }
+    ChattingWindow::~ChattingWindow() {
+        threadShutdown(); 
+    }
     
     // move every case into its own function (or try to generalize them)
     void ChattingWindow::networkThreadFunction() {
@@ -179,14 +177,12 @@ namespace SignalSync {
     }
 
     void ChattingWindow::networkFileRecv() {
-        uint32_t* size_file = m_network.recvMethod<uint32_t>();
-        uint32_t size_converted = ntohl(*size_file);
-        auto recv_file = m_network.recvFile(size_converted);
+        auto recv_file = m_network.recvFile();
         char* file_data = std::get<0>(recv_file);
         std::string userString(std::get<1>(recv_file));
         std::string filenameString(std::get<2>(recv_file));
+        uint32_t size_converted = std::get<3>(recv_file);
         enqueue([=]()->void {processFileRecvUser(QString::fromStdString(userString), file_data, size_converted, filenameString); });
-        delete size_file;
         delete std::get<1>(recv_file);
         delete std::get<2>(recv_file);
     }
@@ -198,15 +194,13 @@ namespace SignalSync {
         std::string user(std::get<1>(recv_file));
         std::string filename(std::get<2>(recv_file));
         std::string group_name(std::get<3>(recv_file));
-        uint32_t* file_size(std::get<4>(recv_file));
-        uint32_t copy = *file_size;
+        uint32_t file_size(std::get<4>(recv_file));
 
-        enqueue([=]()->void {processFileRecvGroup(QString::fromStdString(user), file_data, copy, filename, group_name); });
+        enqueue([=]()->void {processFileRecvGroup(QString::fromStdString(user), file_data, file_size, filename, group_name); });
 
         delete std::get<1>(recv_file);
         delete std::get<2>(recv_file);
         delete std::get<3>(recv_file);
-        delete std::get<4>(recv_file);
     }
 
     void ChattingWindow::networkUserListRecv() {

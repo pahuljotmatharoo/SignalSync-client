@@ -67,19 +67,13 @@ namespace SignalSync {
 		T* recvMethod() {
 			T* msg = new T;
 
-			int size_message{ 0 };
-			int size_username{ 0 };
-			int size_group{ 0 };
-
 			if constexpr (std::is_same_v<T, MsgRecvUser> || std::is_same_v<T, MsgRecvGroup>) {
-				recvAll<int>(&size_message, sizeof(int));
-				size_message = ntohl(size_message);
+				uint32_t size_message = recvSize();
 				msg->message = new char[size_message + 1];
 				recvAll<char>(msg->message, size_message);
 				msg->message[size_message] = '\0';
 
-				recvAll<int>(&size_username, sizeof(int));
-				size_username = ntohl(size_username);
+				uint32_t size_username = recvSize();
 				msg->username = new char[size_username + 1];
 				recvAll<char>(msg->username, size_username);
 				msg->username[size_username] = '\0';
@@ -89,8 +83,7 @@ namespace SignalSync {
 			}
 
 			if constexpr (std::is_same_v<T, MsgRecvGroup>) {
-				recvAll<int>(&size_group, sizeof(int));
-				size_group = ntohl(size_group);
+				uint32_t size_group = recvSize();
 				msg->group = new char[size_group + 1];
 				recvAll<char>(msg->group, size_group);
 				msg->group[size_group] = '\0';
@@ -111,14 +104,15 @@ namespace SignalSync {
 			return total;
 		}
 
-		std::tuple<char*, char*, char*> recvFile(const size_t t_sizeFile);
-		std::tuple<char*, char*, char*, char*, uint32_t*> recvFileGroup();
+		std::tuple<char*, char*, char*, uint32_t> recvFile();
+		std::tuple<char*, char*, char*, char*, uint32_t> recvFileGroup();
 		uint32_t sendFileData(const char* t_data, uint32_t size);
 		uint32_t sendUsername(const std::string& t_username);
 		std::size_t sendInitMsg(const NetworkRequest& t_constant);
 		std::size_t sendSize(uint32_t size);
 		int sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant);
 		char* recvUser();
+		uint32_t recvSize();
 		std::size_t sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& constant);
 		std::size_t sendGroupName(const std::string& group_name);
 		std::pair<std::vector<std::string>, uint32_t> recvGroupList();

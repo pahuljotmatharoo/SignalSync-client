@@ -52,20 +52,19 @@ namespace SignalSync {
 		return (static_cast<int16_t>(status));
 	}
 
-	std::tuple<char*, char*, char*> Network::recvFile(const size_t t_sizeFile) {
-		char* pngData = new char[t_sizeFile];
-		recvAll<char>(pngData, t_sizeFile);
+	std::tuple<char*, char*, char*, uint32_t> Network::recvFile() {
+		uint32_t size_file = recvSize();
+		char* pngData = new char[size_file];
+		recvAll<char>(pngData, size_file);
 		char* userFrom = recvUser();
 		char* fileName = recvUser();
-		return { pngData, userFrom, fileName };
+		return { pngData, userFrom, fileName, size_file };
 	}
 
-	std::tuple<char*, char*, char*, char*, uint32_t*> Network::recvFileGroup() {
-		uint32_t* temp_size_file = recvMethod<uint32_t>();
-		*temp_size_file = ntohl(*temp_size_file);
-		auto tup = recvFile(*temp_size_file);
+	std::tuple<char*, char*, char*, char*, uint32_t> Network::recvFileGroup() {
+		auto tup = recvFile();
 		char* group_name = recvUser();
-		return {std::get<0>(tup), std::get<1>(tup), std::get<2>(tup), group_name, temp_size_file };
+		return {std::get<0>(tup), std::get<1>(tup), std::get<2>(tup), group_name, std::get<3>(tup) };
 	}
 
 	uint32_t Network::sendFileData(const char* t_data, uint32_t size) {
@@ -110,12 +109,16 @@ namespace SignalSync {
 	}
 
 	char* Network::recvUser() {
-		int size{ 0 };
-		recvAll<int>(&size, sizeof(int));
-		size = ntohl(size);
+		uint32_t size = recvSize();
 		char* username = new char[size]();
 		int ret = recvAll<char>(username, size);
 		return username;
+	}
+
+	uint32_t Network::recvSize() {
+		uint32_t size{ 0 };
+		recvAll<uint32_t>(&size, sizeof(uint32_t));
+		return ntohl(size);
 	}
 
 	std::size_t Network::sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& t_constant) {
@@ -134,9 +137,7 @@ namespace SignalSync {
 	}
 
 	std::pair<std::vector<std::string>, uint32_t> SignalSync::Network::recvGroupList() {
-		int size{ 0 };
-		recvAll<int>(&size, sizeof(int));
-		size = ntohl(size);
+		uint32_t size = recvSize();
 		std::vector<std::string> group_list(size);
 		for (int i{ 0 }; i < size; i++) {
 			char* username = recvUser();

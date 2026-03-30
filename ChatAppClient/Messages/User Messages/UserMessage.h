@@ -1,4 +1,10 @@
 #pragma once
+
+#include <QString>
+#include <vector>
+#include <string>
+#include <utility>
+
 namespace SignalSync {
 	class UserMessage {
 	private:
@@ -12,6 +18,5 @@ namespace SignalSync {
 		void addMessage(std::pair<bool, std::string> message) { m_messages.push_back(message); }
 		void setName(QString t_name) { m_name = t_name; }
 		QString getName() const { return m_name; }
-
 	};
 }
