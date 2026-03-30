@@ -134,7 +134,7 @@ namespace SignalSync {
     }
 
     void SignalSync::ChattingWindow::networkUserExit() {
-        char* username = m_network.recvUser();
+        char* username = m_network.recvString();
         if (username == nullptr) { 
             return;
         }
@@ -144,7 +144,7 @@ namespace SignalSync {
     }
 
     void SignalSync::ChattingWindow::networkRoomCreateRecv() {
-        char* groupName = m_network.recvUser();
+        char* groupName = m_network.recvString();
         if (groupName == nullptr) { 
             return;
         }
