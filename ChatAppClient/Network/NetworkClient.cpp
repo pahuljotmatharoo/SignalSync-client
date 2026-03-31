@@ -56,14 +56,14 @@ namespace SignalSync {
 		uint32_t size_file = recvSize();
 		char* pngData = new char[size_file];
 		recvAll<char>(pngData, size_file);
-		char* userFrom = recvUser();
-		char* fileName = recvUser();
+		char* userFrom = recvString();
+		char* fileName = recvString();
 		return { pngData, userFrom, fileName, size_file };
 	}
 
 	std::tuple<char*, char*, char*, char*, uint32_t> Network::recvFileGroup() {
 		auto tup = recvFile();
-		char* group_name = recvUser();
+		char* group_name = recvString();
 		return {std::get<0>(tup), std::get<1>(tup), std::get<2>(tup), group_name, std::get<3>(tup) };
 	}
 
@@ -78,9 +78,8 @@ namespace SignalSync {
 	}
 
 	std::size_t Network::sendInitMsg(const NetworkRequest& t_constant) {
-		MsgHeaderr msg = { 0 };
-		msg.type = htonl(static_cast<u_long>(t_constant));
-		msg.length = htonl(static_cast<uint32_t>(5));
+		uint32_t msg{ 0 };
+		msg = htonl(static_cast<u_long>(t_constant));
 
 		return send(getSockID(), reinterpret_cast<char*>(&msg), sizeof(msg), 0);
 	}
@@ -108,14 +107,7 @@ namespace SignalSync {
 		return 1;
 	}
 
-	char* Network::recvUser() {
-		uint32_t size = recvSize();
-		char* username = new char[size]();
-		int ret = recvAll<char>(username, size);
-		return username;
-	}
-
-	char* recvString() {
+	char* Network::recvString() {
 		uint32_t size = recvSize();
 		char* text = new char[size]();
 		int ret = recvAll<char>(text, size);
@@ -143,11 +135,11 @@ namespace SignalSync {
 		return 1;
 	}
 
-	std::pair<std::vector<std::string>, uint32_t> SignalSync::Network::recvGroupList() {
+	std::pair<std::vector<std::string>, uint32_t> SignalSync::Network::recvList() {
 		uint32_t size = recvSize();
 		std::vector<std::string> group_list(size);
 		for (int i{ 0 }; i < size; i++) {
-			char* username = recvUser();
+			char* username = recvString();
 			group_list[i] = std::string(username);
 			delete[] username;
 		}
@@ -158,5 +150,11 @@ namespace SignalSync {
 		sendInitMsg(NetworkRequest::ROOM_CREATE);
 
 		return sendUsername(t_group_name);
+	}
+
+	RecvUserMessage SignalSync::Network::recvUserMessage() {
+		char* message = recvString();
+		char* username = recvString();
+		return RecvUserMessage(message, username);
 	}
 }

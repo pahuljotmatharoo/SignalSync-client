@@ -33,7 +33,7 @@ namespace SignalSync {
         Q_OBJECT
     private:
         Ui::ChattingWindow* m_ui;
-        bool m_userOrGroup; // lets us know whether the user is on userlist or grouplist
+        bool m_userOrGroup;
         HTTPRequest m_http;
         std::string m_apiKey;
         QString m_defaultButtonStylesheet;
@@ -45,8 +45,8 @@ namespace SignalSync {
         QString m_messageToSend;
         QString m_groupToSend;
         QString m_selfUsername;
-        QPushButton* m_lastPressedUser; // basically current button pressed (last pressed as we need to see if we had pressed a button before, and which)
-        QPushButton* m_lastPressedGroup; // basically current button pressed (last pressed as we need to see if we had pressed a button before, and which)
+        QPushButton* m_lastPressedUser;
+        QPushButton* m_lastPressedGroup;
         QFont m_messageFont;
         QFont m_titleFont;
         QFont m_buttonAddGroupFont;
@@ -82,16 +82,15 @@ namespace SignalSync {
         void networkFileRecv();
         void networkFileGroupRecv();
         void networkUserListRecv();
-        void addMessage(MsgRecvUser* recvStruct);
+        void addMessage(const std::string username_toadd, const std::string message_toadd);
         void addMessage_group(std::string message_toadd, const std::string username_toadd, const std::string group_toadd);
         void sendMessageToScreenRecv(const QString& message, const QString& user, bool type);
         void sendMessageToScreenSend(const QString& message);
         void sendUserToScreen(const QString username);
-        void addUsers(List* list);
-        void removeUsers(const std::string user, uint32_t size);
+        void addUsers(const std::vector<std::string> list_users);
+        void removeUsers(const std::string user);
         void removeUserfromScreen(const QString& user);
         void addGroup(const std::string group);
-        void addGroups(char users[MAXUSERS][USERNAME_LENGTH], uint32_t size);
         void addGrouptoScreen(const QString group_name);
         void removeAllChatItemsFromScreen();
         void initEncryptMap();

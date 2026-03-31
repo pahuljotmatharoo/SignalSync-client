@@ -2,6 +2,7 @@
 #include <string>
 #include <WinSock2.h>
 #include <QFileDialog>
+#include "RecvUserMessage.h"
 namespace SignalSync {
 
 	enum class NetworkRequest {
@@ -21,11 +22,6 @@ namespace SignalSync {
 	constexpr auto USERNAME_LENGTH = 50;
 	constexpr auto MAXUSERS = 10;
 	constexpr auto MAX_FILE_SIZE = 5000000;
-
-	struct MsgHeaderr {
-		uint32_t type;
-		uint32_t length;
-	};
 
 	struct MsgRecvUser {
 		int message_size;
@@ -92,6 +88,7 @@ namespace SignalSync {
 			return msg;
 		};
 
+
 		template <typename T>
 		int recvAll(T* t_storage, int bytes) {
 			std::size_t total = 0;
@@ -106,17 +103,20 @@ namespace SignalSync {
 
 		std::tuple<char*, char*, char*, uint32_t> recvFile();
 		std::tuple<char*, char*, char*, char*, uint32_t> recvFileGroup();
+		uint32_t recvSize();
+		char* recvString();
+		std::pair<std::vector<std::string>, uint32_t> recvList();
+		RecvUserMessage recvUserMessage();
+
+
+
 		uint32_t sendFileData(const char* t_data, uint32_t size);
 		uint32_t sendUsername(const std::string& t_username);
 		std::size_t sendInitMsg(const NetworkRequest& t_constant);
 		std::size_t sendSize(uint32_t size);
 		int sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant);
-		char* recvUser();
-		uint32_t recvSize();
-		char* recvString();
 		std::size_t sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& constant);
 		std::size_t sendGroupName(const std::string& group_name);
-		std::pair<std::vector<std::string>, uint32_t> recvGroupList();
 
 		template <typename T>
 		std::size_t sendAll(T* t_storage, int bytes) {

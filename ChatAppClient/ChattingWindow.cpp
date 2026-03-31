@@ -127,24 +127,25 @@ namespace SignalSync {
     }
 
     void ChattingWindow::networkMessageRecv() {
-        MsgRecvUser* recvStruct = m_network.recvMethod<MsgRecvUser>(); // make this a class
-        enqueue([=]()->void {addMessage(recvStruct); });
-        std::string user_from(recvStruct->username);
-        notificationPassUser(QString::fromStdString(user_from));
+        RecvUserMessage recv_msg = m_network.recvUserMessage();
+        std::string username (recv_msg.getUsername());
+        std::string message(recv_msg.getMessage());
+        enqueue([=]()->void {addMessage(username, message); });
+        notificationPassUser(QString::fromStdString(username));
     }
 
     void SignalSync::ChattingWindow::networkUserExit() {
-        char* username = m_network.recvUser();
+        char* username = m_network.recvString();
         if (username == nullptr) { 
             return;
         }
         std::string username_str(username);
-        enqueue([=]()->void {removeUsers(username_str, username_str.length()); });
+        enqueue([=]()->void {removeUsers(username_str); });
         delete[] username;
     }
 
     void SignalSync::ChattingWindow::networkRoomCreateRecv() {
-        char* groupName = m_network.recvUser();
+        char* groupName = m_network.recvString();
         if (groupName == nullptr) { 
             return;
         }
@@ -165,13 +166,13 @@ namespace SignalSync {
     }
 
     void ChattingWindow::networkRoomListRecv() {
-        std::pair<std::vector<std::string>, uint32_t> listGroup = m_network.recvGroupList();
+        std::pair<std::vector<std::string>, uint32_t> list_group = m_network.recvList();
 
-        if (listGroup.first.size() == 0) {
+        if (list_group.first.size() == 0) {
             return;
         }
 
-        for (const auto& group_name : listGroup.first) {
+        for (const auto& group_name : list_group.first) {
             addGroup(group_name);
         }
     }
@@ -204,12 +205,8 @@ namespace SignalSync {
     }
 
     void ChattingWindow::networkUserListRecv() {
-        List* list = m_network.recvMethod<List>();
-        if (list == nullptr) { 
-            return;
-        }
-        list->size = ntohl(list->size);
-        enqueue([=]()->void {addUsers(list); });
+        std::pair<std::vector<std::string>, uint32_t> list_users = m_network.recvList();
+        enqueue([=]()->void {addUsers(list_users.first); });
     }
 
     void ChattingWindow::processFileRecvUser(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName) {
@@ -701,10 +698,7 @@ namespace SignalSync {
         QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(username_toadd + " : " + message_toadd), QString::fromStdString(group_toadd), GroupB); }, Qt::QueuedConnection);
     }
 
-    void ChattingWindow::addMessage(MsgRecvUser* recvStruct) {
-        std::string username_toadd(recvStruct->username);
-        std::string message_toadd(recvStruct->message);
-
+    void ChattingWindow::addMessage(std::string username_toadd, std::string message_toadd) {
         message_toadd = decrypt(message_toadd).toStdString();
 
         {
@@ -715,33 +709,20 @@ namespace SignalSync {
             m_messages[QString::fromStdString(username_toadd)]->addMessage(std::make_pair(OTHER_USER, message_toadd));
         }
 
-        freeMessageStruct(recvStruct);
-
         QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(message_toadd), QString::fromStdString(username_toadd), UserB); }, Qt::QueuedConnection);
     }
 
-    void ChattingWindow::addUsers(List* list) {
-        for (std::size_t i{ 0 }; i < list->size; i++) {
-            QString username = QString::fromStdString(std::string(list->arr[i]));
+    void ChattingWindow::addUsers(const std::vector<std::string> list_users) {
+        for (const auto& user : list_users) {
+            QString username = QString::fromStdString(user);
             LockGuard guard(m_generalSemaphore);
-            if ((m_Users).find(QString::fromStdString(std::string(list->arr[i]))) == (m_Users).end()) {
+            if ((m_Users).find(username) == (m_Users).end()) {
                 QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(username); }, Qt::QueuedConnection);
             }
         }
-        delete list;
     }
 
-    void ChattingWindow::addGroups(char groups[MAXUSERS][USERNAME_LENGTH], uint32_t size) {
-        for (std::size_t i{ 0 }; i < size; i++) {
-            QString group = QString::fromStdString(std::string(groups[i]));
-            LockGuard guard(m_generalSemaphore);
-            if ((m_Groups).find(group) == (m_Groups).end()) {
-                QMetaObject::invokeMethod(this, [=] { this->addGroup(std::string(groups[i])); }, Qt::QueuedConnection);
-            }
-        }
-    }
-
-    void ChattingWindow::removeUsers(const std::string user, uint32_t size) {
+    void ChattingWindow::removeUsers(const std::string user) {
         QMetaObject::invokeMethod(this, [=] { this->removeUserfromScreen(QString::fromStdString(std::string(user))); }, Qt::QueuedConnection);
     }
 
