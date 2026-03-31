@@ -7,11 +7,13 @@ namespace SignalSync {
         RecvUserMessage() : message{ nullptr }, username{ nullptr } {}
         RecvUserMessage(char* t_message, char* t_username) : message{ t_message }, username{ t_username } {}
         ~RecvUserMessage() {
-            if (message != nullptr) {
+            if (message) {
                 delete[] message;
+                message = nullptr;
             }
-            if (username != nullptr) {
+            if (username) {
                 delete[] username;
+                username = nullptr;
             }
         }
 

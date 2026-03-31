@@ -3,7 +3,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <QMessageBox>
-//#include "dotenv.h"
+
 namespace SignalSync {
 	Network::~Network() {
 		closesocket(m_sockid);
@@ -156,5 +156,10 @@ namespace SignalSync {
 		char* message = recvString();
 		char* username = recvString();
 		return RecvUserMessage(message, username);
+	}
+	RecvGroupMessage Network::recvGroupMessage() {
+		RecvUserMessage user_message = recvUserMessage();
+		char* group_name = recvString();
+		return RecvGroupMessage(user_message, group_name);
 	}
 }

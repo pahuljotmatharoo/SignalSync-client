@@ -155,14 +155,12 @@ namespace SignalSync {
     }
 
     void ChattingWindow::networkRoomMessageRecv() {
-        MsgRecvGroup* recvGrpMsg = m_network.recvMethod<MsgRecvGroup>(); // make it a class
-        if (recvGrpMsg == nullptr) { 
-            return;
-        }
-        std::string group_name(recvGrpMsg->group);
-        enqueue([=]()->void {addMessage_group(std::string(recvGrpMsg->message), std::string(recvGrpMsg->username), group_name); });
+        RecvGroupMessage group_message = m_network.recvGroupMessage();
+        std::string group_name(group_message.getGroupName());
+        std::string username(group_message.getUsername());
+        std::string message(group_message.getMessage());
+        enqueue([=]()->void {addMessage_group(message, username, group_name); });
         notificationPassGroup(QString::fromStdString(group_name));
-        delete recvGrpMsg;
     }
 
     void ChattingWindow::networkRoomListRecv() {
@@ -216,19 +214,6 @@ namespace SignalSync {
     void ChattingWindow::processFileRecvGroup(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName, const std::string& groupName) {
         QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenGroup(t_userFrom, t_data, t_size  ,fileName, groupName); }, Qt::QueuedConnection);
     }
-
-    void ChattingWindow::freeMessageStruct(MsgRecvUser* t_msg) {
-        delete[]t_msg->message;
-        delete[]t_msg->username;
-    }
-
-    void ChattingWindow::freeListGroup(std::pair<char**, uint32_t>& list_group) {
-        for (int i{ 0 }; i < list_group.second; i++) {
-            delete[] list_group.first[i];
-        }
-        delete[] list_group.first;
-    }
-
 
     //these are the same basically, fix
     void ChattingWindow::downloadUserFile() {

@@ -123,13 +123,11 @@ namespace SignalSync {
         void initButtons();
         void initLayout();
         void initContentLayout();
-        void freeMessageStruct(MsgRecvUser* t_msg);
         void enqueue(std::function<void()> func);
         void dequeue();
         void waitingThreadFunction();
         void initThreads();
         QString decrypt(const std::string message);
-        void freeListGroup(std::pair<char**, uint32_t>& list_group);
     private slots:
         void on_sendButton_clicked();
         void on_fileButton_clicked();

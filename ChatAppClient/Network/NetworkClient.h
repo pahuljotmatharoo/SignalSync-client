@@ -2,7 +2,7 @@
 #include <string>
 #include <WinSock2.h>
 #include <QFileDialog>
-#include "RecvUserMessage.h"
+#include "RecvGroupMessage.h"
 namespace SignalSync {
 
 	enum class NetworkRequest {
@@ -59,35 +59,6 @@ namespace SignalSync {
 		int serverConnect(std::string username);
 		int16_t serverConnectHelper(const uint16_t port) const;
 
-		template <typename T>
-		T* recvMethod() {
-			T* msg = new T;
-
-			if constexpr (std::is_same_v<T, MsgRecvUser> || std::is_same_v<T, MsgRecvGroup>) {
-				uint32_t size_message = recvSize();
-				msg->message = new char[size_message + 1];
-				recvAll<char>(msg->message, size_message);
-				msg->message[size_message] = '\0';
-
-				uint32_t size_username = recvSize();
-				msg->username = new char[size_username + 1];
-				recvAll<char>(msg->username, size_username);
-				msg->username[size_username] = '\0';
-			}
-			else {
-				recvAll<T>(msg, sizeof(T));
-			}
-
-			if constexpr (std::is_same_v<T, MsgRecvGroup>) {
-				uint32_t size_group = recvSize();
-				msg->group = new char[size_group + 1];
-				recvAll<char>(msg->group, size_group);
-				msg->group[size_group] = '\0';
-			}
-
-			return msg;
-		};
-
 
 		template <typename T>
 		int recvAll(T* t_storage, int bytes) {
@@ -107,7 +78,7 @@ namespace SignalSync {
 		char* recvString();
 		std::pair<std::vector<std::string>, uint32_t> recvList();
 		RecvUserMessage recvUserMessage();
-
+		RecvGroupMessage recvGroupMessage();
 
 
 		uint32_t sendFileData(const char* t_data, uint32_t size);
