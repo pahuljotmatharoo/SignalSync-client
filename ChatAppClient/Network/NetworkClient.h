@@ -14,7 +14,8 @@ namespace SignalSync {
 		ROOM_MSG = 6,
 		ROOM_LIST = 7,
 		FILE_USER = 8,
-		FILE_GROUP = 9
+		FILE_GROUP = 9,
+		USER_JOIN = 10
 	};
 
 	constexpr auto MESSAGE_LENGTH = 128;
@@ -22,27 +23,6 @@ namespace SignalSync {
 	constexpr auto USERNAME_LENGTH = 50;
 	constexpr auto MAXUSERS = 10;
 	constexpr auto MAX_FILE_SIZE = 5000000;
-
-	struct MsgRecvUser {
-		int message_size;
-		char* message;
-		int username_size;
-		char* username;
-	};
-
-	struct MsgRecvGroup {
-		int message_size;
-		char* message;
-		int username_size;
-		char* username;
-		int group_size;
-		char* group;
-	};
-
-	struct List { // can be User List or Group List
-		uint32_t size;
-		char arr[MAX_USERS][USERNAME_LENGTH];
-	};
 
 	class Network {
 	private:

@@ -82,12 +82,13 @@ namespace SignalSync {
         void networkFileRecv();
         void networkFileGroupRecv();
         void networkUserListRecv();
+        void networkUserJoinRecv();
         void addMessage(const std::string username_toadd, const std::string message_toadd);
         void addMessage_group(std::string message_toadd, const std::string username_toadd, const std::string group_toadd);
         void sendMessageToScreenRecv(const QString& message, const QString& user, bool type);
         void sendMessageToScreenSend(const QString& message);
         void sendUserToScreen(const QString username);
-        void addUsers(const std::vector<std::string> list_users);
+        void addUser(const std::string username);
         void removeUsers(const std::string user);
         void removeUserfromScreen(const QString& user);
         void addGroup(const std::string group);

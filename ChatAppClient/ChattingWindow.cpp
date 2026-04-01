@@ -14,6 +14,7 @@
 #include "ui_ChattingWindow.h"
 
 // TODO: Ensure c-style string sizes are all + 1 before being sent to server
+// TODO: Change user list recieve logic (inital connect should send all users) (once a user joins, only need to send that user)
 
 namespace SignalSync {
     ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::networkThreadFunction, this),
@@ -67,6 +68,10 @@ namespace SignalSync {
                     }
                     case NetworkRequest::FILE_GROUP: {
                         networkFileGroupRecv();
+                        break;
+                    }
+                    case NetworkRequest::USER_JOIN: {
+                        networkUserJoinRecv();
                         break;
                     }
                     default: {
@@ -204,7 +209,16 @@ namespace SignalSync {
 
     void ChattingWindow::networkUserListRecv() {
         std::pair<std::vector<std::string>, uint32_t> list_users = m_network.recvList();
-        enqueue([=]()->void {addUsers(list_users.first); });
+        for (const std::string& user : list_users.first) {
+            enqueue([=]()->void {addUser(user); });
+        }
+    }
+
+    void ChattingWindow::networkUserJoinRecv() {
+        char* username = m_network.recvString();
+        std::string username_s(username);
+        enqueue([=]()->void {addUser(username_s); });
+        delete[] username;
     }
 
     void ChattingWindow::processFileRecvUser(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName) {
@@ -697,13 +711,11 @@ namespace SignalSync {
         QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(message_toadd), QString::fromStdString(username_toadd), UserB); }, Qt::QueuedConnection);
     }
 
-    void ChattingWindow::addUsers(const std::vector<std::string> list_users) {
-        for (const auto& user : list_users) {
-            QString username = QString::fromStdString(user);
-            LockGuard guard(m_generalSemaphore);
-            if ((m_Users).find(username) == (m_Users).end()) {
-                QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(username); }, Qt::QueuedConnection);
-            }
+    void ChattingWindow::addUser(const std::string username) {
+        LockGuard guard(m_generalSemaphore);
+        QString username_q = QString::fromStdString(username);
+        if ((m_Users).find(username_q) == (m_Users).end()) {
+            QMetaObject::invokeMethod(this, [=] { this->sendUserToScreen(username_q); }, Qt::QueuedConnection);
         }
     }
 

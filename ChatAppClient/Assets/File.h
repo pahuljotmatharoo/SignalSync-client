@@ -11,7 +11,7 @@ namespace SignalSync {
 	public:
 		File() {}
 		File(QString t_userFrom, char* t_data, uint32_t t_size) : m_userFrom(t_userFrom), m_data((t_data)), m_size(t_size) {}
-		File(File&& other_file) {
+		File(File&& other_file) noexcept {
 			m_userFrom = other_file.getUserFrom();
 			other_file.setUserFrom("");
 			m_data = other_file.getData();
