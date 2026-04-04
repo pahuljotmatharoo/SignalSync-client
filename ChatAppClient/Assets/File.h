@@ -19,6 +19,15 @@ namespace SignalSync {
 			m_size = other_file.getSize();
 			other_file.setSize(0);
 		}
+		File& operator=(File&& other_file) noexcept {
+			m_userFrom = other_file.getUserFrom();
+			other_file.setUserFrom("");
+			m_data = other_file.getData();
+			other_file.setData(nullptr);
+			m_size = other_file.getSize();
+			other_file.setSize(0);
+			return *this;
+		}
 		~File() {
 			delete[] m_data;
 			m_data = nullptr;

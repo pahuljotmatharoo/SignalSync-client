@@ -3,6 +3,7 @@
 #include <WinSock2.h>
 #include <QFileDialog>
 #include "RecvGroupMessage.h"
+#include "../Assets/File.h"
 namespace SignalSync {
 
 	enum class NetworkRequest {
@@ -15,7 +16,8 @@ namespace SignalSync {
 		ROOM_LIST = 7,
 		FILE_USER = 8,
 		FILE_GROUP = 9,
-		USER_JOIN = 10
+		USER_JOIN = 10,
+		FILE_DOWNLOAD = 11
 	};
 
 	constexpr auto MESSAGE_LENGTH = 128;
@@ -52,13 +54,15 @@ namespace SignalSync {
 			return total;
 		}
 
-		std::tuple<char*, char*, char*, uint32_t> recvFile();
+		std::pair<std::string, std::string> recvFile();
 		std::tuple<char*, char*, char*, char*, uint32_t> recvFileGroup();
 		uint32_t recvSize();
 		char* recvString();
 		std::pair<std::vector<std::string>, uint32_t> recvList();
 		RecvUserMessage recvUserMessage();
 		RecvGroupMessage recvGroupMessage();
+		File downloadFileFromServer(std::string username, std::string filename);
+		void startDownloadFile(std::string filename);
 
 
 		uint32_t sendFileData(const char* t_data, uint32_t size);

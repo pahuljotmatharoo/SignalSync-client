@@ -56,17 +56,21 @@ namespace SignalSync {
         std::unordered_map<QString, QPushButton*> m_Users;
         std::unordered_map<QString, QPushButton*> m_Groups;
         std::unordered_map<QChar, QChar> m_encryptMap;
-        std::unordered_map <QPushButton*, File> m_filesUsers;
+        std::unordered_map <QPushButton*, std::pair<std::string, std::string>> m_filesUsers;
         std::unordered_map<QPushButton*, std::pair<File, QString>> m_filesGroup;
         Network m_network;
         std::thread m_thread;
         std::vector<std::thread> m_threadPool;
         std::queue<std::function<void()>> m_functionQueue;
         std::mutex m_queueMutex;
+        std::binary_semaphore m_fileDownloadStart;
+        std::binary_semaphore m_fileDownloadDone;
         std::binary_semaphore m_groupSemaphore;
         std::binary_semaphore m_generalSemaphore;
         std::counting_semaphore<INT_MAX> m_queueSemaphore;
         std::atomic<bool> m_threadStop;
+        std::string m_fileToDownload;
+        File m_downloaded;
     public:
         explicit ChattingWindow(QWidget* parent = nullptr);
         ~ChattingWindow();
@@ -83,6 +87,7 @@ namespace SignalSync {
         void networkFileGroupRecv();
         void networkUserListRecv();
         void networkUserJoinRecv();
+        void networkDownloadFile();
         void addMessage(const std::string username_toadd, const std::string message_toadd);
         void addMessage_group(std::string message_toadd, const std::string username_toadd, const std::string group_toadd);
         void sendMessageToScreenRecv(const QString& message, const QString& user, bool type);
@@ -102,11 +107,11 @@ namespace SignalSync {
         QPushButton* createAndStyleButton(const QString& name);
         QPushButton* createAndStyleFileButton(const std::string& fileName);
         void userOrGroupSelect(std::unordered_map<QString, QPushButton*>& hide, std::unordered_map<QString, QPushButton*>& show, QPushButton*& lastPressedButton) const;
-        void addFileButtonToScreenUser(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName);
+        void addFileButtonToScreenUser(const std::string fileName, const std::string username);
         void addFileButtonToScreenGroup(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName, const std::string& groupName);
         void downloadUserFile();
         void downloadGroupFile();
-        void processFileRecvUser(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName);
+        void processFileRecvUser(const std::string filename, const std::string username);
         void processFileRecvGroup(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName, const std::string& groupName);
         void threadShutdown();
         void displayUserMessages(const QString& t_user_name);

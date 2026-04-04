@@ -52,19 +52,37 @@ namespace SignalSync {
 		return (static_cast<int16_t>(status));
 	}
 
-	std::tuple<char*, char*, char*, uint32_t> Network::recvFile() {
+	std::pair<std::string, std::string> Network::recvFile() {
+		//uint32_t size_file = recvSize();
+		//char* pngData = new char[size_file];
+		//recvAll<char>(pngData, size_file);
+		//char* userFrom = recvString();
+		char* username = recvString();
+		char* filename = recvString();
+		std::string filename_str(filename);
+		std::string username_str(username);
+		delete[] filename;
+		delete[] username;
+		return { username_str,filename_str };
+	}
+
+	File Network::downloadFileFromServer(std::string username, std::string filename) {
 		uint32_t size_file = recvSize();
 		char* pngData = new char[size_file];
 		recvAll<char>(pngData, size_file);
-		char* userFrom = recvString();
-		char* fileName = recvString();
-		return { pngData, userFrom, fileName, size_file };
+		return File(QString::fromStdString(username), pngData, size_file);
+	}
+
+	void Network::startDownloadFile(std::string filename) {
+		sendInitMsg(NetworkRequest::FILE_DOWNLOAD);
+		sendUsername(filename);
 	}
 
 	std::tuple<char*, char*, char*, char*, uint32_t> Network::recvFileGroup() {
 		auto tup = recvFile();
 		char* group_name = recvString();
-		return {std::get<0>(tup), std::get<1>(tup), std::get<2>(tup), group_name, std::get<3>(tup) };
+		return { nullptr, nullptr, nullptr, nullptr, 0 };
+		//return {std::get<0>(tup), std::get<1>(tup), std::get<2>(tup), group_name, std::get<3>(tup) };
 	}
 
 	uint32_t Network::sendFileData(const char* t_data, uint32_t size) {
