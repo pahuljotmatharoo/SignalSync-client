@@ -114,7 +114,8 @@ namespace SignalSync {
             {
                 std::lock_guard<std::mutex> lock(m_queueMutex);
                 if (m_functionQueue.size() > 0) {
-                    task = std::move(m_functionQueue.front());
+                    //task = std::move(m_functionQueue.front());
+                    task = m_functionQueue.front();
                     dequeue();
                 }
             }

@@ -23,7 +23,7 @@ namespace SignalSync {
 		UniquePtr(UniquePtr&) = delete;
 		UniquePtr& operator=(const UniquePtr*) = delete;
 
-		UniquePtr(UniquePtr&& ptr) {
+		UniquePtr(UniquePtr&& ptr) noexcept {
 			m_ptr = ptr.m_ptr;
 			ptr.m_ptr = nullptr;
 		}

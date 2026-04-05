@@ -120,8 +120,9 @@ namespace SignalSync {
 
 	char* Network::recvString() {
 		uint32_t size = recvSize();
-		char* text = new char[size]();
+		char* text = new char[size + 1]();
 		int ret = recvAll<char>(text, size);
+		text[size] = '\0';
 		return text;
 	}
 
