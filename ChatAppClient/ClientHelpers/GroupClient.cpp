@@ -15,15 +15,24 @@
 
 namespace SignalSync {
 
-    void ChattingWindow::processFileRecvGroup(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName, const std::string& groupName) {
-        QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenGroup(t_userFrom, t_data, t_size, fileName, groupName); }, Qt::QueuedConnection);
+    void ChattingWindow::processFileRecvGroup(const std::string filename, const std::string username, const std::string groupname) {
+        QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenGroup(filename, username, groupname); }, Qt::QueuedConnection);
     }
 
     void ChattingWindow::downloadGroupFile() {
         QString dirName = QFileDialog::getExistingDirectory(this, tr("Select a directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
         QPushButton* btn = qobject_cast<QPushButton*>(sender());
-        if (m_filesGroup[btn].first.downloadFile(btn->text().toStdString(), dirName.toStdString())) {
+
+        m_fileToDownload = btn->text().toStdString();
+
+        m_network.startDownloadFile(m_fileToDownload);
+
+        // Pretty much using Producer-Consumer pattern
+        m_fileDownloadStart.release();
+        m_fileDownloadDone.acquire();
+
+        if (m_downloaded.downloadFile(btn->text().toStdString(), dirName.toStdString())) {
             ChatAppClient::sendError("File download successfully!");
         }
         else {
@@ -31,20 +40,20 @@ namespace SignalSync {
         }
     }
 
-    void ChattingWindow::addFileButtonToScreenGroup(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName, const std::string& groupName) {
-        QPushButton* file_button = createAndStyleFileButton(fileName);
+    void ChattingWindow::addFileButtonToScreenGroup(const std::string filename, const std::string username, const std::string groupname) {
+        QPushButton* file_button = createAndStyleFileButton(filename);
 
-        if (m_lastPressedGroup != nullptr && groupName == m_lastPressedGroup->text()) {
+        if (m_lastPressedGroup != nullptr && groupname == m_lastPressedGroup->text()) {
             file_button->show();
         }
 
-        m_filesGroup.emplace(file_button, std::make_pair(File(t_userFrom, t_data, t_size), QString::fromStdString(groupName)));
+        m_filesGroup.emplace(file_button, std::tuple(username, filename, groupname));
 
         connect(file_button, &QPushButton::clicked, this, &ChattingWindow::downloadGroupFile);
 
         addWidgetToLayout(file_button, Qt::AlignLeft);
 
-        notificationPassGroup(QString::fromStdString(groupName));
+        notificationPassGroup(QString::fromStdString(groupname));
     }
 
     QString ChattingWindow::findNewGroupName() {
@@ -119,7 +128,7 @@ namespace SignalSync {
         }
 
         for (auto itr = m_filesGroup.begin(); itr != m_filesGroup.end(); itr++) {
-            if (itr->second.second == t_group_name) {
+            if (std::get<2>(itr->second) == t_group_name) {
                 itr->first->show();
             }
         }

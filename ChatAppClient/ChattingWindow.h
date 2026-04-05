@@ -57,7 +57,7 @@ namespace SignalSync {
         std::unordered_map<QString, QPushButton*> m_Groups;
         std::unordered_map<QChar, QChar> m_encryptMap;
         std::unordered_map <QPushButton*, std::pair<std::string, std::string>> m_filesUsers;
-        std::unordered_map<QPushButton*, std::pair<File, QString>> m_filesGroup;
+        std::unordered_map <QPushButton*, std::tuple < std::string, std::string, std::string >> m_filesGroup; // user,file,group
         Network m_network;
         std::thread m_thread;
         std::vector<std::thread> m_threadPool;
@@ -108,11 +108,11 @@ namespace SignalSync {
         QPushButton* createAndStyleFileButton(const std::string& fileName);
         void userOrGroupSelect(std::unordered_map<QString, QPushButton*>& hide, std::unordered_map<QString, QPushButton*>& show, QPushButton*& lastPressedButton) const;
         void addFileButtonToScreenUser(const std::string fileName, const std::string username);
-        void addFileButtonToScreenGroup(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName, const std::string& groupName);
+        void addFileButtonToScreenGroup(const std::string filename, const std::string username, const std::string groupname);
         void downloadUserFile();
         void downloadGroupFile();
         void processFileRecvUser(const std::string filename, const std::string username);
-        void processFileRecvGroup(const QString t_userFrom, char* t_data, const uint32_t t_size, const std::string& fileName, const std::string& groupName);
+        void processFileRecvGroup(const std::string filename, const std::string username, const std::string groupname);
         void threadShutdown();
         void displayUserMessages(const QString& t_user_name);
         void displayGroupMessages(const QString& t_group_name);

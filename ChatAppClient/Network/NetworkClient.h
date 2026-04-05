@@ -2,6 +2,9 @@
 #include <string>
 #include <WinSock2.h>
 #include <QFileDialog>
+#include <ws2tcpip.h>
+#include <QMessageBox>
+#include <iostream>
 #include "RecvGroupMessage.h"
 #include "../Assets/File.h"
 namespace SignalSync {
@@ -21,9 +24,7 @@ namespace SignalSync {
 	};
 
 	constexpr auto MESSAGE_LENGTH = 128;
-	constexpr auto MAX_USERS = 10;
 	constexpr auto USERNAME_LENGTH = 50;
-	constexpr auto MAXUSERS = 10;
 	constexpr auto MAX_FILE_SIZE = 5000000;
 
 	class Network {
@@ -55,7 +56,7 @@ namespace SignalSync {
 		}
 
 		std::pair<std::string, std::string> recvFile();
-		std::tuple<char*, char*, char*, char*, uint32_t> recvFileGroup();
+		std::tuple<std::string, std::string, std::string> recvFileGroup();
 		uint32_t recvSize();
 		char* recvString();
 		std::pair<std::vector<std::string>, uint32_t> recvList();

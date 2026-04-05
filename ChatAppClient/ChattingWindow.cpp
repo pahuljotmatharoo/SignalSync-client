@@ -13,7 +13,7 @@
 #include "ChattingWindow.h"
 #include "ui_ChattingWindow.h"
 
-// Continue working on making files store on backend, only retrieve when clicked (groups left)
+// Some sort of race conditions with 3 users, check
 
 // TODO: Ensure c-style string sizes are all + 1 before being sent to server
 
@@ -192,17 +192,11 @@ namespace SignalSync {
     void ChattingWindow::networkFileGroupRecv() {
         auto recv_file = m_network.recvFileGroup();
 
-        char* file_data = std::get<0>(recv_file);
-        std::string user(std::get<1>(recv_file));
-        std::string filename(std::get<2>(recv_file));
-        std::string group_name(std::get<3>(recv_file));
-        uint32_t file_size(std::get<4>(recv_file));
+        std::string user(std::get<0>(recv_file));
+        std::string filename(std::get<1>(recv_file));
+        std::string group_name(std::get<2>(recv_file));
 
-        enqueue([=]()->void {processFileRecvGroup(QString::fromStdString(user), file_data, file_size, filename, group_name); });
-
-        delete std::get<1>(recv_file);
-        delete std::get<2>(recv_file);
-        delete std::get<3>(recv_file);
+        enqueue([=]()->void {processFileRecvGroup(filename, user, group_name); });
     }
 
     void ChattingWindow::networkUserListRecv() {

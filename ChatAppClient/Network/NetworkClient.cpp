@@ -1,8 +1,4 @@
 #include "../Network/NetworkClient.h"
-#include <iostream>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <QMessageBox>
 
 namespace SignalSync {
 	Network::~Network() {
@@ -53,10 +49,6 @@ namespace SignalSync {
 	}
 
 	std::pair<std::string, std::string> Network::recvFile() {
-		//uint32_t size_file = recvSize();
-		//char* pngData = new char[size_file];
-		//recvAll<char>(pngData, size_file);
-		//char* userFrom = recvString();
 		char* username = recvString();
 		char* filename = recvString();
 		std::string filename_str(filename);
@@ -78,11 +70,12 @@ namespace SignalSync {
 		sendUsername(filename);
 	}
 
-	std::tuple<char*, char*, char*, char*, uint32_t> Network::recvFileGroup() {
-		auto tup = recvFile();
+	std::tuple<std::string, std::string, std::string> Network::recvFileGroup() { // username, filename, groupname
+		auto pair = recvFile();
 		char* group_name = recvString();
-		return { nullptr, nullptr, nullptr, nullptr, 0 };
-		//return {std::get<0>(tup), std::get<1>(tup), std::get<2>(tup), group_name, std::get<3>(tup) };
+		std::string group_name_str(group_name);
+		delete[] group_name;
+		return std::tuple( pair.first, pair.second, group_name_str);
 	}
 
 	uint32_t Network::sendFileData(const char* t_data, uint32_t size) {

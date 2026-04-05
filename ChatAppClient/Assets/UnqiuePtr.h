@@ -2,7 +2,10 @@
 // to unallow something at compile time, use function = delete
 // do constexpr if statements & functions
 namespace SignalSync {
-	template <typename T>
+	template<typename T>
+	concept Ptr = std::is_same_v<T, UserMessage> || std::is_same_v<T, GroupMessage> || std::is_same_v<T, File>;
+
+	template <Ptr T>
 	class UniquePtr {
 	private:
 		T* m_ptr = nullptr;
@@ -12,11 +15,8 @@ namespace SignalSync {
 			if constexpr (std::is_same_v<T, UserMessage> || std::is_same_v<T, GroupMessage>) {
 				m_ptr = new T(m_value.getName());
 			}
-			else if constexpr (std::is_same_v<T, File>) {
-				m_ptr = new T(m_value.getUserFrom(), m_value.getData(), m_value.getSize());
-			}
 			else {
-				m_ptr = new T(m_value);
+				m_ptr = new T(m_value.getUserFrom(), m_value.getData(), m_value.getSize());
 			}
 		}
 
