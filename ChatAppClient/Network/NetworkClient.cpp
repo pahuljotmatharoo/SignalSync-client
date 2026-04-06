@@ -49,13 +49,9 @@ namespace SignalSync {
 	}
 
 	std::pair<std::string, std::string> Network::recvFile() {
-		char* username = recvString();
-		char* filename = recvString();
-		std::string filename_str(filename);
-		std::string username_str(username);
-		delete[] filename;
-		delete[] username;
-		return { username_str,filename_str };
+		std::string username = recvString();
+		std::string filename = recvString();
+		return { username, filename };
 	}
 
 	File Network::downloadFileFromServer(std::string username, std::string filename) {
@@ -71,11 +67,9 @@ namespace SignalSync {
 	}
 
 	std::tuple<std::string, std::string, std::string> Network::recvFileGroup() { // username, filename, groupname
-		auto pair = recvFile();
-		char* group_name = recvString();
-		std::string group_name_str(group_name);
-		delete[] group_name;
-		return std::tuple( pair.first, pair.second, group_name_str);
+		auto [username, filename] = recvFile();
+		std::string group_name = recvString();
+		return std::tuple(username, filename, group_name);
 	}
 
 	uint32_t Network::sendFileData(const char* t_data, uint32_t size) {
@@ -118,12 +112,17 @@ namespace SignalSync {
 		return 1;
 	}
 
-	char* Network::recvString() {
+	std::string Network::recvString() {
 		uint32_t size = recvSize();
+
 		char* text = new char[size + 1]();
-		int ret = recvAll<char>(text, size);
+		recvAll<char>(text, size);
 		text[size] = '\0';
-		return text;
+
+		std::string ret_val(text);
+
+		delete[] text;
+		return ret_val;
 	}
 
 	uint32_t Network::recvSize() {
@@ -151,9 +150,8 @@ namespace SignalSync {
 		uint32_t size = recvSize();
 		std::vector<std::string> group_list(size);
 		for (int i{ 0 }; i < size; i++) {
-			char* username = recvString();
-			group_list[i] = std::string(username);
-			delete[] username;
+			std::string username = recvString();
+			group_list[i] = username;
 		}
 		return { group_list, size };
 	}
@@ -165,13 +163,14 @@ namespace SignalSync {
 	}
 
 	RecvUserMessage SignalSync::Network::recvUserMessage() {
-		char* message = recvString();
-		char* username = recvString();
+		std::string message = recvString();
+		std::string username = recvString();
 		return RecvUserMessage(message, username);
 	}
+
 	RecvGroupMessage Network::recvGroupMessage() {
 		RecvUserMessage user_message = recvUserMessage();
-		char* group_name = recvString();
+		std::string group_name = recvString();
 		return RecvGroupMessage(user_message, group_name);
 	}
 }

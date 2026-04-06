@@ -58,7 +58,7 @@ namespace SignalSync {
 		std::pair<std::string, std::string> recvFile();
 		std::tuple<std::string, std::string, std::string> recvFileGroup();
 		uint32_t recvSize();
-		char* recvString();
+		std::string recvString();
 		std::pair<std::vector<std::string>, uint32_t> recvList();
 		RecvUserMessage recvUserMessage();
 		RecvGroupMessage recvGroupMessage();

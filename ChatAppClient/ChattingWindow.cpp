@@ -138,39 +138,30 @@ namespace SignalSync {
 
     void ChattingWindow::networkMessageRecv() {
         RecvUserMessage recv_msg = m_network.recvUserMessage();
-        std::string username (recv_msg.getUsername());
-        std::string message(recv_msg.getMessage());
-        enqueue([=]()->void {addMessage(username, message); });
-        notificationPassUser(QString::fromStdString(username));
+        enqueue([=]()->void {addMessage(recv_msg.getUsername(), recv_msg.getMessage()); });
+        notificationPassUser(QString::fromStdString(recv_msg.getUsername()));
     }
 
     void SignalSync::ChattingWindow::networkUserExit() {
-        char* username = m_network.recvString();
-        if (username == nullptr) { 
+        std::string username = m_network.recvString();
+        if (username.size() == 0) {
             return;
         }
-        std::string username_str(username);
-        enqueue([=]()->void {removeUsers(username_str); });
-        delete[] username;
+        enqueue([=]()->void {removeUsers(username); });
     }
 
     void SignalSync::ChattingWindow::networkRoomCreateRecv() {
-        char* groupName = m_network.recvString();
-        if (groupName == nullptr) { 
+        std::string group_name = m_network.recvString();
+        if (group_name.size() == 0) {
             return;
         }
-        std::string group_name(groupName);
         enqueue([=]()->void {addGroup(group_name); });
-        delete[] groupName;
     }
 
     void ChattingWindow::networkRoomMessageRecv() {
         RecvGroupMessage group_message = m_network.recvGroupMessage();
-        std::string group_name(group_message.getGroupName());
-        std::string username(group_message.getUsername());
-        std::string message(group_message.getMessage());
-        enqueue([=]()->void {addMessage_group(message, username, group_name); });
-        notificationPassGroup(QString::fromStdString(group_name));
+        enqueue([=]()->void {addMessage_group(group_message.getMessage(), group_message.getUsername(), group_message.getGroupName()); });
+        notificationPassGroup(QString::fromStdString(group_message.getGroupName()));
     }
 
     void ChattingWindow::networkRoomListRecv() {
@@ -205,10 +196,8 @@ namespace SignalSync {
     }
 
     void ChattingWindow::networkUserJoinRecv() {
-        char* username = m_network.recvString();
-        std::string username_s(username);
-        enqueue([=]()->void {addUser(username_s); });
-        delete[] username;
+        std::string username = m_network.recvString();
+        enqueue([=]()->void {addUser(username); });
     }
 
     void ChattingWindow::networkDownloadFile() {

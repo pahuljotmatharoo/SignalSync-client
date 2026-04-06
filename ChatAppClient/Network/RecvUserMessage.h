@@ -1,21 +1,11 @@
 namespace SignalSync {
     class RecvUserMessage {
     private:
-        char* message;
-        char* username;
+        std::string message;
+        std::string username;
     public:
-        RecvUserMessage() : message{ nullptr }, username{ nullptr } {}
-        RecvUserMessage(char* t_message, char* t_username) : message{ t_message }, username{ t_username } {}
-        ~RecvUserMessage() {
-            if (message) {
-                delete[] message;
-                message = nullptr;
-            }
-            if (username) {
-                delete[] username;
-                username = nullptr;
-            }
-        }
+        RecvUserMessage() : message{""}, username{""} {}
+        RecvUserMessage(std::string t_message, std::string t_username) : message{ t_message }, username{ t_username } {}
 
         RecvUserMessage(const RecvUserMessage& other) {
             message = other.getMessage();
@@ -26,14 +16,14 @@ namespace SignalSync {
             message = other.getMessage();
             username = other.getUsername();
 
-            other.setMessage(nullptr);
-            other.setUsername(nullptr);
+            other.setMessage("");
+            other.setUsername("");
         }
 
-        char* getMessage() const { return message; }
-        char* getUsername() const { return username; }
+        std::string getMessage() const { return message; }
+        std::string getUsername() const { return username; }
 
-        void setMessage(char* msg) { message = msg; }
-        void setUsername(char* user) { username = user; }
+        void setMessage(std::string msg) { message = msg; }
+        void setUsername(std::string user) { username = user; }
     };
 }
