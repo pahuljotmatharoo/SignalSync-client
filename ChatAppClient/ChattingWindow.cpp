@@ -192,10 +192,7 @@ namespace SignalSync {
 
     void ChattingWindow::networkFileGroupRecv() {
         auto recv_file = m_network.recvFileGroup();
-
-        std::string user(std::get<0>(recv_file));
-        std::string filename(std::get<1>(recv_file));
-        std::string group_name(std::get<2>(recv_file));
+        auto& [user, filename, group_name] = recv_file;
 
         enqueue([=]()->void {processFileRecvGroup(filename, user, group_name); });
     }
