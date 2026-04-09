@@ -13,8 +13,6 @@
 #include "ChattingWindow.h"
 #include "ui_ChattingWindow.h"
 
-// Some sort of race conditions with 3 users, check
-
 // TODO: Ensure c-style string sizes are all + 1 before being sent to server
 
 namespace SignalSync {

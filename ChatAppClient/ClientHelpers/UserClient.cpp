@@ -184,7 +184,9 @@ namespace SignalSync {
 
         {
             LockGuard guard(m_generalSemaphore);
-            m_messages[username] = UniquePtr<UserMessage>(UserMessage(username));
+            if (m_messages.find(username) == m_messages.end()) {
+                m_messages[username] = UniquePtr<UserMessage>(UserMessage(username));
+            }
             m_Users.insert(std::make_pair(username, user));
         }
 
