@@ -6,7 +6,7 @@ A lightweight C++/Qt Messaging & File Transfer System that supports **direct mes
 
 - **Direct messaging:** send text messages to any connected user
 - **Group chats:** create/join group chats with any users and message everyone in the group
-- **File sharing:** send files directly to a user
+- **File sharing:** send files directly to a user or group
 - **Live UI updates:** chat view updates as messages/images arrive
 
 ## Tech Stack
@@ -15,7 +15,7 @@ A lightweight C++/Qt Messaging & File Transfer System that supports **direct mes
 - **Qt (Widgets)**
 - **Sockets networking** (client/server style)
 
-## Project Structure (example)
+## Project Structure
 
 - `exe/` — Executeable with all required dll's
 - `ChatAppClient/` — client logic (routing messages/images to users/groups), and UI
@@ -24,7 +24,6 @@ A lightweight C++/Qt Messaging & File Transfer System that supports **direct mes
 
 - Qt (Qt 5 or Qt 6) with Widgets
 - C++ compiler (MSVC / clang / g++)
-- CMake **or** qmake (depending on how the project is set up)
 
 ## Build & Run
 
