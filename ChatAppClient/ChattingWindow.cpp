@@ -36,11 +36,11 @@ namespace SignalSync {
             std::size_t recvData = recv(m_network.getSockID(), reinterpret_cast<char*>(&type), sizeof(NetworkRequest), 0);
             if (recvData > 0) {
                 switch (type) {
-                    case NetworkRequest::MSG_SEND: {
+                    case NetworkRequest::USER_MSG: {
                         networkMessageRecv();
                         break;
                     }
-                    case NetworkRequest::MSG_LIST: {
+                    case NetworkRequest::USER_LIST: {
                         networkUserListRecv();
                         break;
                     }
@@ -74,6 +74,10 @@ namespace SignalSync {
                     }
                     case NetworkRequest::FILE_DOWNLOAD: {
                         networkDownloadFile();
+                        break;
+                    }
+                    case NetworkRequest::USER_CHATS: {
+                        networkUserChats();
                         break;
                     }
                     default: {
@@ -124,7 +128,7 @@ namespace SignalSync {
     }
 
     void ChattingWindow::threadShutdown() {
-        m_network.sendInitMsg(NetworkRequest::MSG_EXIT);
+        m_network.sendInitMsg(NetworkRequest::SELF_EXIT);
         ::shutdown(m_network.getSockID(), SD_BOTH);
         m_threadStop = true;
         m_thread.join();
@@ -132,6 +136,11 @@ namespace SignalSync {
         for (auto& t : m_threadPool) {
             t.join();
         }
+    }
+
+    //just need to process this now
+    void ChattingWindow::networkUserChats() {
+        auto ret = m_network.recvUserChatlogs();
     }
 
     void ChattingWindow::networkMessageRecv() {
@@ -382,7 +391,7 @@ namespace SignalSync {
                 m_messages[m_usernameToSend]->addMessage((std::make_pair(CURR_USER, m_messageToSend.toStdString())));
             }
 
-            if (m_network.sendMsg(message_to_sendStd, username_to_sendStd, NetworkRequest::MSG_SEND) == -1) {
+            if (m_network.sendMsg(message_to_sendStd, username_to_sendStd, NetworkRequest::USER_MSG) == -1) {
                 ChatAppClient::sendError("Connection Lost! Please reconnect!");
                 std::exit(1);
             }

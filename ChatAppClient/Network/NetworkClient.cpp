@@ -66,6 +66,32 @@ namespace SignalSync {
 		sendUsername(filename);
 	}
 
+	std::vector<std::unordered_map<std::string, std::vector<RecvUserMessage>>> Network::recvUserChatlogs() { // custom class?
+		std::vector<std::unordered_map<std::string, std::vector<RecvUserMessage>>> return_type;
+		std::unordered_map<std::string, std::vector<RecvUserMessage>> temp;
+		std::string current_user_recv{ "" };
+		while (1) {
+			std::string recieved_string = recvString();
+			if (recieved_string == "FILE") {
+				current_user_recv = recvString();
+				if (temp.size() > 0) {
+					return_type.push_back(temp);
+					temp.clear();
+				}
+			}
+			else if(recieved_string == "END") {
+				break;
+			}
+			else { // only want to recieve the username here
+				std::string username = recvString();
+				RecvUserMessage message(recieved_string, username);
+				temp[current_user_recv].push_back(message);
+			}
+		}
+		return_type.push_back(temp);
+		return return_type;
+	}
+
 	std::tuple<std::string, std::string, std::string> Network::recvFileGroup() { // username, filename, groupname
 		auto [username, filename] = recvFile();
 		std::string group_name = recvString();

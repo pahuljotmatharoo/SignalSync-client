@@ -10,9 +10,9 @@
 namespace SignalSync {
 
 	enum class NetworkRequest {
-		MSG_SEND = 1,
-		MSG_LIST = 2,
-		MSG_EXIT = 3,
+		USER_MSG = 1,
+		USER_LIST = 2,
+		SELF_EXIT = 3,
 		USER_EXIT = 4,
 		ROOM_CREATE = 5,
 		ROOM_MSG = 6,
@@ -20,7 +20,8 @@ namespace SignalSync {
 		FILE_USER = 8,
 		FILE_GROUP = 9,
 		USER_JOIN = 10,
-		FILE_DOWNLOAD = 11
+		FILE_DOWNLOAD = 11,
+		USER_CHATS = 12
 	};
 
 	constexpr auto MESSAGE_LENGTH = 128;
@@ -64,6 +65,7 @@ namespace SignalSync {
 		RecvGroupMessage recvGroupMessage();
 		File downloadFileFromServer(std::string username, std::string filename);
 		void startDownloadFile(std::string filename);
+		std::vector<std::unordered_map<std::string, std::vector<RecvUserMessage>>> recvUserChatlogs();
 
 
 		uint32_t sendFileData(const char* t_data, uint32_t size);
