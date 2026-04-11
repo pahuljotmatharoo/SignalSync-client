@@ -1,3 +1,4 @@
+#pragma once
 namespace SignalSync {
     class RecvUserMessage {
     private:

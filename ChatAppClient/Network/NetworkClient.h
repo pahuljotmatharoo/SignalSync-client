@@ -7,6 +7,7 @@
 #include <iostream>
 #include "RecvGroupMessage.h"
 #include "../Assets/File.h"
+#include "ChatLog.h"
 namespace SignalSync {
 
 	enum class NetworkRequest {
@@ -65,7 +66,7 @@ namespace SignalSync {
 		RecvGroupMessage recvGroupMessage();
 		File downloadFileFromServer(std::string username, std::string filename);
 		void startDownloadFile(std::string filename);
-		std::vector<std::unordered_map<std::string, std::vector<RecvUserMessage>>> recvUserChatlogs();
+		std::vector<ChatLog> recvUserChatlogs();
 
 
 		uint32_t sendFileData(const char* t_data, uint32_t size);

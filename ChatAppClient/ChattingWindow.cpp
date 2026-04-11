@@ -116,7 +116,6 @@ namespace SignalSync {
             {
                 std::lock_guard<std::mutex> lock(m_queueMutex);
                 if (m_functionQueue.size() > 0) {
-                    //task = std::move(m_functionQueue.front());
                     task = m_functionQueue.front();
                     dequeue();
                 }
@@ -139,10 +138,14 @@ namespace SignalSync {
     }
 
     void ChattingWindow::networkUserChats() {
-        auto chat_logs = m_network.recvUserChatlogs();
-        for (const auto& map : chat_logs) {
+        std::vector<ChatLog> chat_logs = m_network.recvUserChatlogs();
+        enqueue({[=]()->void{processChatLogs(chat_logs);}});
+    }
+
+    void ChattingWindow::processChatLogs(std::vector<ChatLog> chat_logs) {
+        for (auto& map : chat_logs) {
+            QString name_of_user = QString::fromStdString(map.getUsername());
             for (auto itr = map.begin(); itr != map.end(); ++itr) {
-                QString name_of_user = QString::fromStdString(itr->first);
                 for (auto& message : itr->second) {
                     if (message.getUsername() == m_selfUsername) {
                         m_messages[name_of_user]->addMessage({ CURR_USER , message.getMessage() });

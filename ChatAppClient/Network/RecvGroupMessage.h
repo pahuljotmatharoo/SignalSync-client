@@ -1,6 +1,6 @@
+#pragma once
 #include <iostream>
 #include "RecvUserMessage.h"
-#pragma once
 namespace SignalSync {
 	class RecvGroupMessage {
 	private:
