@@ -138,9 +138,21 @@ namespace SignalSync {
         }
     }
 
-    //just need to process this now
     void ChattingWindow::networkUserChats() {
-        auto ret = m_network.recvUserChatlogs();
+        auto chat_logs = m_network.recvUserChatlogs();
+        for (const auto& map : chat_logs) {
+            for (auto itr = map.begin(); itr != map.end(); ++itr) {
+                QString name_of_user = QString::fromStdString(itr->first);
+                for (auto& message : itr->second) {
+                    if (message.getUsername() == m_selfUsername) {
+                        m_messages[name_of_user]->addMessage({ CURR_USER , message.getMessage() });
+                    }
+                    else {
+                        m_messages[name_of_user]->addMessage({ OTHER_USER , message.getMessage() });
+                    }
+                }
+            }
+        }
     }
 
     void ChattingWindow::networkMessageRecv() {
