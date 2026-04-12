@@ -143,10 +143,10 @@ namespace SignalSync {
     }
 
     void ChattingWindow::processChatLogs(std::vector<ChatLog> chat_logs) {
-        for (auto& map : chat_logs) {
+        for (const auto& map : chat_logs) {
             QString name_of_user = QString::fromStdString(map.getUsername());
             for (auto itr = map.begin(); itr != map.end(); ++itr) {
-                for (auto& message : itr->second) {
+                for (const auto& message : itr->second) {
                     if (message.getUsername() == m_selfUsername) {
                         m_messages[name_of_user]->addMessage({ CURR_USER , message.getMessage() });
                     }

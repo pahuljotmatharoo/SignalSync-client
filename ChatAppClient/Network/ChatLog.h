@@ -10,7 +10,7 @@ namespace SignalSync {
 	public:
 		void addMessage(RecvUserMessage&& message);
 		size_t size() { return m_logs.size(); }
-		std::string getUsername() { return m_user; }
+		std::string getUsername() const { return m_user; }
 		void setUsername(std::string username) { m_user = username; }
 		void clearMap();
 		std::unordered_map<std::string, std::vector<RecvUserMessage>>::iterator begin() {
@@ -19,11 +19,11 @@ namespace SignalSync {
 		std::unordered_map<std::string, std::vector<RecvUserMessage>>::iterator end() {
 			return m_logs.end();
 		}
-		//std::unordered_map<std::string, std::vector<RecvUserMessage>>::const_iterator cbegin() {
-		//	return m_logs.begin();
-		//}
-		//std::unordered_map<std::string, std::vector<RecvUserMessage>>::const_iterator cend() {
-		//	return m_logs.end();
-		//}
+		std::unordered_map<std::string, std::vector<RecvUserMessage>>::const_iterator begin() const {
+			return m_logs.begin();
+		}
+		std::unordered_map<std::string, std::vector<RecvUserMessage>>::const_iterator end() const {
+			return m_logs.end();
+		}
 	};
 }
