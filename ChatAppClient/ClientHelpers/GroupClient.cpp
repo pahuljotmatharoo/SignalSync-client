@@ -47,7 +47,7 @@ namespace SignalSync {
             file_button->show();
         }
 
-        m_filesGroup.emplace(file_button, std::tuple(username, filename, groupname));
+        m_filesGroup.emplace(file_button, FileGroup(filename, username, groupname));
 
         connect(file_button, &QPushButton::clicked, this, &ChattingWindow::downloadGroupFile);
 
@@ -127,10 +127,8 @@ namespace SignalSync {
             displayMessages(*(itr->second), t_group_name, GroupB);
         }
 
-        for (auto itr = m_filesGroup.begin(); itr != m_filesGroup.end(); itr++) {
-            if (std::get<2>(itr->second) == t_group_name) {
-                itr->first->show();
-            }
+        for (auto& [button, group_file] : m_filesGroup) {
+            if (QString::fromStdString(group_file.getGroupName()) == t_group_name) { button->show(); }
         }
     }
 

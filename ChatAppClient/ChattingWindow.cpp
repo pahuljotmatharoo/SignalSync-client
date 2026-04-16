@@ -195,7 +195,8 @@ namespace SignalSync {
 
     void ChattingWindow::networkFileRecv() {
         auto recv_file = m_network.recvFile();
-        enqueue([=]()->void {processFileRecvUser(recv_file.second, recv_file.first); });
+        auto& [user, filename] = recv_file;
+        enqueue([=]()->void {processFileRecvUser(filename, user); });
     }
 
     void ChattingWindow::networkFileGroupRecv() {
@@ -337,9 +338,8 @@ namespace SignalSync {
     }
 
     void ChattingWindow::displayFileButtons(const QString& user_or_group_name) {
-        auto itr = m_filesUsers.begin();
-        for (std::size_t i{ 0 }; i < m_filesUsers.size() && itr != m_filesUsers.end(); i++) {
-            if (itr->second.second == user_or_group_name) { itr->first->show(); itr++; }
+        for (auto& [button, file_user] : m_filesUsers) {
+            if (QString::fromStdString(file_user.getUsername()) == user_or_group_name) { button->show(); }
         }
     }
 

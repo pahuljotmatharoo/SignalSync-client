@@ -20,6 +20,7 @@
 #include "./Assets/SemaphoreLockGuard.h"
 #include "./Assets/HttpRequest.h"
 #include "./Assets/UnqiuePtr.h"
+#include "./Assets/FileGroup.h"
 namespace Ui { class ChattingWindow; }
 
 namespace SignalSync {
@@ -56,8 +57,8 @@ namespace SignalSync {
         std::unordered_map<QString, QPushButton*> m_Users;
         std::unordered_map<QString, QPushButton*> m_Groups;
         std::unordered_map<QChar, QChar> m_encryptMap;
-        std::unordered_map <QPushButton*, std::pair<std::string, std::string>> m_filesUsers;
-        std::unordered_map <QPushButton*, std::tuple < std::string, std::string, std::string >> m_filesGroup; // user,file,group
+        std::unordered_map <QPushButton*, FileUser> m_filesUsers;
+        std::unordered_map <QPushButton*, FileGroup> m_filesGroup;
         Network m_network;
         std::thread m_thread;
         std::vector<std::thread> m_threadPool;

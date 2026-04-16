@@ -96,7 +96,7 @@ namespace SignalSync {
             file_button->show();
         }
 
-        m_filesUsers.emplace(file_button, std::make_pair(filename, username));
+        m_filesUsers.emplace(file_button, FileUser(filename, username));
 
         connect(file_button, &QPushButton::clicked, this, &ChattingWindow::downloadUserFile);
 
