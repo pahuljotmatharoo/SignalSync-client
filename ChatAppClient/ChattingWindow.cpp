@@ -147,12 +147,7 @@ namespace SignalSync {
             QString name_of_user = QString::fromStdString(map.getUsername());
             for (auto itr = map.begin(); itr != map.end(); ++itr) {
                 for (const auto& message : itr->second) {
-                    if (message.getUsername() == m_selfUsername) {
-                        m_messages[name_of_user]->addMessage({ CURR_USER , message.getMessage() });
-                    }
-                    else {
-                        m_messages[name_of_user]->addMessage({ OTHER_USER , message.getMessage() });
-                    }
+                    addMessage( message.getUsername() , message.getMessage() );
                 }
             }
         }

@@ -25,13 +25,13 @@ namespace SignalSync {
     }
 
     void ChatAppClient::on_registerButton_clicked() {
-        if (m_http.registerToServer(m_username.toStdString(), m_password.toStdString(), generateAPIKey(10)) == 0) { sendError("Login information incorrect!"); return; }
-        sendError("Registered Successfully!");
+        //if (m_http.registerToServer(m_username.toStdString(), m_password.toStdString(), generateAPIKey(10)) == 0) { sendError("Login information incorrect!"); return; }
+        //sendError("Registered Successfully!");
     }
 
     void ChatAppClient::on_deleteButton_clicked() {
-        if (m_http.deleteToServer(m_username.toStdString(), m_password.toStdString()) == 0) { sendError("Login information incorrect!"); return; }
-        sendError("Deleted Successfully!");
+        //if (m_http.deleteToServer(m_username.toStdString(), m_password.toStdString()) == 0) { sendError("Login information incorrect!"); return; }
+        //sendError("Deleted Successfully!");
     }
 
     void ChatAppClient::on_usernameEdit_textEdited(const QString& text) {
@@ -64,14 +64,14 @@ namespace SignalSync {
             sendError("Username too short! Cannot be shorter than 5 characters.");
             return;
         }
-        auto connect_to_server = m_http.connectToServer(m_username.toStdString(), m_password.toStdString());
-        if (connect_to_server.first == 0) {
-            sendError("Login information incorrect!");
-            return;
-        }
-        else {
-            m_apiKey = connect_to_server.second;
-        }
+        //auto connect_to_server = m_http.connectToServer(m_username.toStdString(), m_password.toStdString());
+        //if (connect_to_server.first == 0) {
+        //    sendError("Login information incorrect!");
+        //    return;
+        //}
+        //else {
+        //    m_apiKey = connect_to_server.second;
+        //}
 
         if (m_network.serverConnect(userStd) == SOCKET_ERROR) { sendError("Cannot Connect to Server!"); return; }
 

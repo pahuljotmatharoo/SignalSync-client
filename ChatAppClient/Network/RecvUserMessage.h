@@ -1,30 +1,30 @@
 #pragma once
 namespace SignalSync {
     class RecvUserMessage {
-    private:
-        std::string message;
-        std::string username;
+    protected:
+        std::string m_message;
+        std::string m_username;
     public:
-        RecvUserMessage() : message{""}, username{""} {}
-        RecvUserMessage(std::string t_message, std::string t_username) : message{ t_message }, username{ t_username } {}
+        RecvUserMessage() : m_message{""}, m_username{""} {}
+        RecvUserMessage(std::string t_message, std::string t_username) : m_message{ t_message }, m_username{ t_username } {}
 
         RecvUserMessage(const RecvUserMessage& other) {
-            message = other.getMessage();
-            username = other.getUsername();
+            m_message = other.getMessage();
+            m_username = other.getUsername();
         }
 
         RecvUserMessage(RecvUserMessage&& other) noexcept {
-            message = other.getMessage();
-            username = other.getUsername();
+            m_message = other.getMessage();
+            m_username = other.getUsername();
 
             other.setMessage("");
             other.setUsername("");
         }
 
-        std::string getMessage() const { return message; }
-        std::string getUsername() const { return username; }
+        std::string getMessage() const { return m_message; }
+        std::string getUsername() const { return m_username; }
 
-        void setMessage(std::string msg) { message = msg; }
-        void setUsername(std::string user) { username = user; }
+        void setMessage(std::string msg) { m_message = msg; }
+        void setUsername(std::string user) { m_username = user; }
     };
 }
