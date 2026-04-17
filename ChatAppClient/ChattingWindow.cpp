@@ -220,7 +220,7 @@ namespace SignalSync {
 
     void ChattingWindow::networkDownloadFile() {
         m_fileDownloadStart.acquire();
-        File file = m_network.downloadFileFromServer(m_selfUsername.toStdString(), m_fileToDownload);
+        File file = m_network.downloadFileFromServer(m_selfUsername.toStdString());
         m_downloaded = std::move(file);
         m_fileDownloadDone.release();
     }

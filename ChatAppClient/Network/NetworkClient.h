@@ -64,8 +64,8 @@ namespace SignalSync {
 		std::pair<std::vector<std::string>, uint32_t> recvList();
 		RecvUserMessage recvUserMessage();
 		RecvGroupMessage recvGroupMessage();
-		File downloadFileFromServer(std::string username, std::string filename);
-		void startDownloadFile(std::string filename);
+		File downloadFileFromServer(std::string username);
+		void startDownloadFile(const std::string& filename, const std::string& username);
 		std::vector<ChatLog> recvUserChatlogs();
 
 

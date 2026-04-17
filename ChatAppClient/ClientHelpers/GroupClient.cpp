@@ -26,7 +26,7 @@ namespace SignalSync {
 
         m_fileToDownload = btn->text().toStdString();
 
-        m_network.startDownloadFile(m_fileToDownload);
+        m_network.startDownloadFile(m_fileToDownload, "");
 
         // Pretty much using Producer-Consumer pattern
         m_fileDownloadStart.release();

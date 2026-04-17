@@ -72,10 +72,10 @@ namespace SignalSync {
         QString dirName = QFileDialog::getExistingDirectory(this, tr("Select a directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
         QPushButton* btn = qobject_cast<QPushButton*>(sender());
+        const std::string filename = btn->text().toStdString();
+        const std::string& username = m_filesUsers[btn].getUsername();
 
-        m_fileToDownload = btn->text().toStdString();
-
-        m_network.startDownloadFile(m_fileToDownload);
+        m_network.startDownloadFile(filename, username);
 
         // Pretty much using Producer-Consumer pattern
         m_fileDownloadStart.release();

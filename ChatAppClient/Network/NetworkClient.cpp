@@ -54,16 +54,17 @@ namespace SignalSync {
 		return { username, filename };
 	}
 
-	File Network::downloadFileFromServer(std::string username, std::string filename) {
+	File Network::downloadFileFromServer(std::string username) {
 		uint32_t size_file = recvSize();
 		char* pngData = new char[size_file];
 		recvAll<char>(pngData, size_file);
 		return File(QString::fromStdString(username), pngData, size_file);
 	}
 
-	void Network::startDownloadFile(std::string filename) {
+	void Network::startDownloadFile(const std::string& filename, const std::string& username) {
 		sendInitMsg(NetworkRequest::FILE_DOWNLOAD);
 		sendUsername(filename);
+		sendUsername(username);
 	}
 
 	std::vector<ChatLog> Network::recvUserChatlogs() {
