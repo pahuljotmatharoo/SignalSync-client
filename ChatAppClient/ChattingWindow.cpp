@@ -72,7 +72,11 @@ namespace SignalSync {
                         networkUserJoinRecv();
                         break;
                     }
-                    case NetworkRequest::FILE_DOWNLOAD: {
+                    case NetworkRequest::FILE_DOWNLOAD_USER: {
+                        networkDownloadFile();
+                        break;
+                    }
+                    case NetworkRequest::FILE_DOWNLOAD_GROUP: {
                         networkDownloadFile();
                         break;
                     }
@@ -220,7 +224,7 @@ namespace SignalSync {
 
     void ChattingWindow::networkDownloadFile() {
         m_fileDownloadStart.acquire();
-        File file = m_network.downloadFileFromServer(m_selfUsername.toStdString());
+        File file = m_network.downloadFileFromServer(m_groupFileDownloaded);
         m_downloaded = std::move(file);
         m_fileDownloadDone.release();
     }

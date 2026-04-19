@@ -70,8 +70,8 @@ namespace SignalSync {
         std::binary_semaphore m_generalSemaphore;
         std::counting_semaphore<INT_MAX> m_queueSemaphore;
         std::atomic<bool> m_threadStop;
-        std::string m_fileToDownload;
         File m_downloaded;
+        std::string m_groupFileDownloaded;
     public:
         explicit ChattingWindow(QWidget* parent = nullptr);
         ~ChattingWindow();

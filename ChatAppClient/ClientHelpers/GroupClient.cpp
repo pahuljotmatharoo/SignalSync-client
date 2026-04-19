@@ -24,9 +24,12 @@ namespace SignalSync {
 
         QPushButton* btn = qobject_cast<QPushButton*>(sender());
 
-        m_fileToDownload = btn->text().toStdString();
+        std::string filename = btn->text().toStdString();
+        const std::string& group_name = m_filesGroup[btn].getGroupName();
 
-        m_network.startDownloadFile(m_fileToDownload, "");
+        m_network.startDownloadFile(filename, group_name, NetworkRequest::FILE_DOWNLOAD_GROUP);
+
+        m_groupFileDownloaded = group_name;
 
         // Pretty much using Producer-Consumer pattern
         m_fileDownloadStart.release();

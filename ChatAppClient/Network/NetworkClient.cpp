@@ -61,8 +61,8 @@ namespace SignalSync {
 		return File(QString::fromStdString(username), pngData, size_file);
 	}
 
-	void Network::startDownloadFile(const std::string& filename, const std::string& username) {
-		sendInitMsg(NetworkRequest::FILE_DOWNLOAD);
+	void Network::startDownloadFile(const std::string& filename, const std::string& username, NetworkRequest constant) {
+		sendInitMsg(constant);
 		sendUsername(filename);
 		sendUsername(username);
 	}

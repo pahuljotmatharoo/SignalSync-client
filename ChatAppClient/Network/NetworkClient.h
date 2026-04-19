@@ -21,8 +21,9 @@ namespace SignalSync {
 		FILE_USER = 8,
 		FILE_GROUP = 9,
 		USER_JOIN = 10,
-		FILE_DOWNLOAD = 11,
-		USER_CHATS = 12
+		FILE_DOWNLOAD_USER = 11,
+		USER_CHATS = 12,
+		FILE_DOWNLOAD_GROUP = 13
 	};
 
 	constexpr auto MESSAGE_LENGTH = 128;
@@ -65,7 +66,7 @@ namespace SignalSync {
 		RecvUserMessage recvUserMessage();
 		RecvGroupMessage recvGroupMessage();
 		File downloadFileFromServer(std::string username);
-		void startDownloadFile(const std::string& filename, const std::string& username);
+		void startDownloadFile(const std::string& filename, const std::string& username, NetworkRequest constant);
 		std::vector<ChatLog> recvUserChatlogs();
 
 

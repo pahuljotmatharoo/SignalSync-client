@@ -75,7 +75,7 @@ namespace SignalSync {
         const std::string filename = btn->text().toStdString();
         const std::string& username = m_filesUsers[btn].getUsername();
 
-        m_network.startDownloadFile(filename, username);
+        m_network.startDownloadFile(filename, username, NetworkRequest::FILE_DOWNLOAD_USER);
 
         // Pretty much using Producer-Consumer pattern
         m_fileDownloadStart.release();
