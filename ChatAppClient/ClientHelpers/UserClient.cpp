@@ -60,14 +60,6 @@ namespace SignalSync {
         }
     }
 
-    void ChattingWindow::removeUsers(const std::string user) {
-        QMetaObject::invokeMethod(this, [=] { this->removeUserfromScreen(QString::fromStdString(std::string(user))); }, Qt::QueuedConnection);
-    }
-
-    void ChattingWindow::processFileRecvUser(const std::string filename, const std::string username) {
-        QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenUser(filename, username); }, Qt::QueuedConnection);
-    }
-
     void ChattingWindow::downloadUserFile() {
         QString dirName = QFileDialog::getExistingDirectory(this, tr("Select a directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 

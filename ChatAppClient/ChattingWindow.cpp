@@ -168,7 +168,7 @@ namespace SignalSync {
         if (username.size() == 0) {
             return;
         }
-        enqueue([=]()->void {removeUsers(username); });
+        QMetaObject::invokeMethod(this, [=] { this->removeUserfromScreen(QString::fromStdString(username)); }, Qt::QueuedConnection);
     }
 
     void SignalSync::ChattingWindow::networkRoomCreateRecv() {
@@ -200,14 +200,13 @@ namespace SignalSync {
     void ChattingWindow::networkFileRecv() {
         auto recv_file = m_network.recvFile();
         auto& [user, filename] = recv_file;
-        enqueue([=]()->void {processFileRecvUser(filename, user); });
+        QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenUser(filename, user); }, Qt::QueuedConnection);
     }
 
     void ChattingWindow::networkFileGroupRecv() {
         auto recv_file = m_network.recvFileGroup();
         auto& [user, filename, group_name] = recv_file;
-
-        enqueue([=]()->void {processFileRecvGroup(filename, user, group_name); });
+        QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenGroup(filename, user, group_name); }, Qt::QueuedConnection);
     }
 
     void ChattingWindow::networkUserListRecv() {

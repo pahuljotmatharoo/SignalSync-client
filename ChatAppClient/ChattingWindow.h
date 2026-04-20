@@ -97,7 +97,6 @@ namespace SignalSync {
         void sendMessageToScreenSend(const QString& message);
         void sendUserToScreen(const QString username);
         void addUser(const std::string username);
-        void removeUsers(const std::string user);
         void removeUserfromScreen(const QString& user);
         void addGroup(const std::string group);
         void addGrouptoScreen(const QString group_name);
@@ -114,8 +113,6 @@ namespace SignalSync {
         void addFileButtonToScreenGroup(const std::string filename, const std::string username, const std::string groupname);
         void downloadUserFile();
         void downloadGroupFile();
-        void processFileRecvUser(const std::string filename, const std::string username);
-        void processFileRecvGroup(const std::string filename, const std::string username, const std::string groupname);
         void threadShutdown();
         void displayUserMessages(const QString& t_user_name);
         void displayGroupMessages(const QString& t_group_name);

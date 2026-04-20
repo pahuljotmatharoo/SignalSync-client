@@ -15,10 +15,6 @@
 
 namespace SignalSync {
 
-    void ChattingWindow::processFileRecvGroup(const std::string filename, const std::string username, const std::string groupname) {
-        QMetaObject::invokeMethod(this, [=] { this->addFileButtonToScreenGroup(filename, username, groupname); }, Qt::QueuedConnection);
-    }
-
     void ChattingWindow::downloadGroupFile() {
         QString dirName = QFileDialog::getExistingDirectory(this, tr("Select a directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
