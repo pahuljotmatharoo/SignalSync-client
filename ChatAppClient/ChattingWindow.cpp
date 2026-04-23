@@ -15,6 +15,11 @@
 
 // TODO: Ensure c-style string sizes are all + 1 before being sent to server
 
+// Make the codebase more modern c++ like
+// use std::optional
+// use try-catch's for exception handling
+// implement automatic reconnecting if the server goes offline
+
 namespace SignalSync {
     ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::networkThreadFunction, this),
         m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25),
