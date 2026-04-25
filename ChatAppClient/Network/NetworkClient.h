@@ -42,8 +42,8 @@ namespace SignalSync {
 		void setSockID(const SOCKET sockid) { m_sockid = sockid; }
 		void setWsaData(const WSADATA wsadata) { m_wsaData = wsadata; }
 		WSADATA getWsaData() const { return m_wsaData; }
-		int serverConnect(std::string username);
-		int16_t serverConnectHelper(const uint16_t port) const;
+		std::optional<int16_t> serverConnect(std::string username);
+		std::optional<int16_t> serverConnectHelper(const uint16_t port) const;
 
 
 		template <typename T>

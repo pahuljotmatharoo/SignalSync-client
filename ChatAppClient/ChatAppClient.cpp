@@ -73,7 +73,7 @@ namespace SignalSync {
         //    m_apiKey = connect_to_server.second;
         //}
 
-        if (m_network.serverConnect(userStd) == SOCKET_ERROR) { sendError("Cannot Connect to Server!"); return; }
+        if (m_network.serverConnect(userStd) == std::nullopt) { sendError("Cannot Connect to Server!"); return; }
 
         QMessageBox::information(this, tr("Logged in!"), tr("Logged in as %1").arg(m_username));
 

@@ -6,7 +6,7 @@ namespace SignalSync {
 		WSACleanup();
 	}
 
-	int Network::serverConnect(std::string t_username) {
+	std::optional<int16_t> Network::serverConnect(std::string t_username) {
 		WSADATA wsaData;
 		int r = WSAStartup(MAKEWORD(2, 2), &wsaData);
 		if (r != 0) {
@@ -17,9 +17,9 @@ namespace SignalSync {
 
 		setSockID(sock);
 
-		int16_t status = serverConnectHelper(2520);
+		std::optional<int16_t> status = serverConnectHelper(2520);
 
-		if (status == SOCKET_ERROR) {
+		if (status == std::nullopt) {
 			int error = WSAGetLastError();
 			closesocket(sock);
 			WSACleanup();
@@ -33,10 +33,8 @@ namespace SignalSync {
 		return 0;
 	}
 
-	int16_t Network::serverConnectHelper(const uint16_t t_port) const {
+	std::optional<int16_t> Network::serverConnectHelper(const uint16_t t_port) const {
 		sockaddr_in t_server{};
-		//auto& dotenv = dotenv::env.load_dotenv();
-
 		t_server.sin_family = AF_INET; //specify to use IPV4
 		t_server.sin_port = htons(t_port);
 #pragma warning(push)
@@ -45,6 +43,7 @@ namespace SignalSync {
 #pragma warning(pop)
 
 		int status = connect(getSockID(), reinterpret_cast<sockaddr*>(&t_server), sizeof(t_server));
+		if (status == SOCKET_ERROR) { return std::nullopt; }
 		return (static_cast<int16_t>(status));
 	}
 
