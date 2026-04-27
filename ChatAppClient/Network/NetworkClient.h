@@ -26,8 +26,6 @@ namespace SignalSync {
 		FILE_DOWNLOAD_GROUP = 13
 	};
 
-	constexpr auto MESSAGE_LENGTH = 128;
-	constexpr auto USERNAME_LENGTH = 50;
 	constexpr auto MAX_FILE_SIZE = 5000000;
 
 	class Network {
@@ -72,10 +70,10 @@ namespace SignalSync {
 
 		uint32_t sendFileData(const char* t_data, uint32_t size);
 		uint32_t sendUsername(const std::string& t_username);
-		std::size_t sendInitMsg(const NetworkRequest& t_constant);
+		std::size_t sendInitMsg(const NetworkRequest& t_constant) const;
 		std::size_t sendSize(uint32_t size);
-		int sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant);
-		std::size_t sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& constant);
+		std::optional<std::size_t> sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant);
+		std::optional<std::size_t> sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& constant);
 		std::size_t sendGroupName(const std::string& group_name);
 
 		template <typename T>

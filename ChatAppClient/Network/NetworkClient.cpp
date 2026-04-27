@@ -108,7 +108,7 @@ namespace SignalSync {
 		return sendAll<const char>(userbuf, t_username.length() + 1);;
 	}
 
-	std::size_t Network::sendInitMsg(const NetworkRequest& t_constant) {
+	std::size_t Network::sendInitMsg(const NetworkRequest& t_constant) const {
 		uint32_t msg{ 0 };
 		msg = htonl(static_cast<u_long>(t_constant));
 
@@ -120,20 +120,20 @@ namespace SignalSync {
 		return sendAll<uint32_t>(&size, sizeof(uint32_t));
 	}
 
-	int Network::sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant) {
+	std::optional<std::size_t> Network::sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant) {
 		const char* pngData = t_fileData->constData();
 		uint32_t file_size = static_cast<uint32_t>(t_fileData->size());
 		uint32_t user_size = t_user_to_send.length();
 
-		if (sendInitMsg(constant) <= 0) { return -1; }
+		if (sendInitMsg(constant) <= 0) { return std::nullopt; }
 
-		if (sendSize(file_size) <= 0) { return -1; };
+		if (sendSize(file_size) <= 0) { return std::nullopt; };
 
-		if (sendFileData(pngData, file_size) <= 0) { return -1; };
+		if (sendFileData(pngData, file_size) <= 0) { return std::nullopt; };
 
-		if (sendUsername(t_user_to_send) <= 0) { return -1; };
+		if (sendUsername(t_user_to_send) <= 0) { return std::nullopt; };
 
-		if (sendUsername(t_filename_to_send) <= 0) { return -1; };
+		if (sendUsername(t_filename_to_send) <= 0) { return std::nullopt; };
 
 		return 1;
 	}
@@ -157,17 +157,17 @@ namespace SignalSync {
 		return ntohl(size);
 	}
 
-	std::size_t Network::sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& t_constant) {
+	std::optional<std::size_t> Network::sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& t_constant) {
 		const char* message_to_send = t_message.c_str();
 		const char* user_to_send = t_username.c_str();
 
-		if (sendInitMsg(t_constant) <= 0) { return 0; }
+		if (sendInitMsg(t_constant) <= 0) { return std::nullopt; }
 
-		if (sendSize(t_message.length() + 1) <= 0) { return 0; }
+		if (sendSize(t_message.length() + 1) <= 0) { return std::nullopt; }
 
-		if (sendAll<const char>(message_to_send, t_message.length() + 1) <= 0) { return 0; }
+		if (sendAll<const char>(message_to_send, t_message.length() + 1) <= 0) { return std::nullopt; }
 
-		if (sendUsername(t_username) <= 0) { return 0; }
+		if (sendUsername(t_username) <= 0) { return std::nullopt; }
 
 		return 1;
 	}

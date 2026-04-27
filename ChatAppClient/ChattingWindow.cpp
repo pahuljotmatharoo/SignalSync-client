@@ -15,6 +15,11 @@
 
 // TODO: Ensure c-style string sizes are all + 1 before being sent to server
 
+// Make the codebase more modern c++ like
+// use std::optional
+// use try-catch's for exception handling
+// implement automatic reconnecting if the server goes offline
+
 namespace SignalSync {
     ChattingWindow::ChattingWindow(QWidget* parent) : QMainWindow(parent), m_lastPressedUser(nullptr), m_threadStop(false), m_thread(&ChattingWindow::networkThreadFunction, this),
         m_lastPressedGroup(nullptr), m_messageFont("Montserrat", 14), m_titleFont("Montserrat", 25),
@@ -300,7 +305,7 @@ namespace SignalSync {
                 }
                 else {
                     if (m_lastPressedUser) {
-                        if (m_network.sendFile(&content, m_usernameToSend.toStdString(), fileName.toStdString(), NetworkRequest::FILE_USER) == -1) {
+                        if (m_network.sendFile(&content, m_usernameToSend.toStdString(), fileName.toStdString(), NetworkRequest::FILE_USER) == std::nullopt) {
                             ChatAppClient::sendError("Cannot send file successfully");
                             file.close();
                             //processFileRecvUser()
@@ -308,7 +313,7 @@ namespace SignalSync {
                         }
                     }
                     else if (m_lastPressedGroup) {
-                        if (m_network.sendFile(&content, m_groupToSend.toStdString(), fileName.toStdString(), NetworkRequest::FILE_GROUP) == -1) {
+                        if (m_network.sendFile(&content, m_groupToSend.toStdString(), fileName.toStdString(), NetworkRequest::FILE_GROUP) == std::nullopt) {
                             ChatAppClient::sendError("Cannot send file successfully");
                             file.close();
                             //processFileRecvGroup()
@@ -404,7 +409,7 @@ namespace SignalSync {
                 m_messages[m_usernameToSend]->addMessage((std::make_pair(CURR_USER, m_messageToSend.toStdString())));
             }
 
-            if (m_network.sendMsg(message_to_sendStd, username_to_sendStd, NetworkRequest::USER_MSG) == -1) {
+            if (m_network.sendMsg(message_to_sendStd, username_to_sendStd, NetworkRequest::USER_MSG) == std::nullopt) {
                 ChatAppClient::sendError("Connection Lost! Please reconnect!");
                 std::exit(1);
             }
@@ -431,7 +436,7 @@ namespace SignalSync {
                 m_groupMessages[m_groupToSend]->addMessage(m_selfUsername, CURR_USER, m_selfUsername + " : " + m_messageToSend);
             }
 
-            if (m_network.sendMsg(message_to_sendStd, group_to_sendStd, NetworkRequest::ROOM_MSG) == -1) {
+            if (m_network.sendMsg(message_to_sendStd, group_to_sendStd, NetworkRequest::ROOM_MSG) == std::nullopt) {
                 ChatAppClient::sendError("Connection Lost! Please reconnect!");
                 std::exit(1);
             }
