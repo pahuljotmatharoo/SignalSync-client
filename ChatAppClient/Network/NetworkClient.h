@@ -74,7 +74,7 @@ namespace SignalSync {
 		std::size_t sendSize(uint32_t size);
 		std::optional<std::size_t> sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant);
 		std::optional<std::size_t> sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& constant);
-		std::size_t sendGroupName(const std::string& group_name);
+		std::optional<std::size_t> sendGroupName(const std::string& group_name);
 
 		template <typename T>
 		std::size_t sendAll(T* t_storage, int bytes) {

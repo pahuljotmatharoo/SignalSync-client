@@ -16,7 +16,7 @@
 namespace SignalSync {
 
     void ChattingWindow::downloadGroupFile() {
-        QString dirName = QFileDialog::getExistingDirectory(this, tr("Select a directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+        QString dir_name = QFileDialog::getExistingDirectory(this, tr("Select a directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
         QPushButton* btn = qobject_cast<QPushButton*>(sender());
 
@@ -31,7 +31,7 @@ namespace SignalSync {
         m_fileDownloadStart.release();
         m_fileDownloadDone.acquire();
 
-        if (m_downloaded.downloadFile(btn->text().toStdString(), dirName.toStdString())) {
+        if (m_downloaded.downloadFile(btn->text().toStdString(), dir_name.toStdString())) {
             ChatAppClient::sendError("File download successfully!");
         }
         else {
@@ -67,18 +67,18 @@ namespace SignalSync {
     }
 
     void ChattingWindow::on_addGroup_clicked() {
-        auto buttonAndName = createAndStyleGroupButton();
+        auto [button, name] = createAndStyleGroupButton();
 
-        if (buttonAndName.first == nullptr) { return; }
+        if (button == nullptr) { return; }
 
-        connect(buttonAndName.first, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
+        connect(button, &QPushButton::clicked, this, &ChattingWindow::onGroupClick);
 
         {
             LockGuard guard(m_generalSemaphore);
-            m_groupMessages.insert(std::make_pair(buttonAndName.second, UniquePtr<GroupMessage>(GroupMessage(buttonAndName.second))));
+            m_groupMessages.insert(std::make_pair(name, UniquePtr<GroupMessage>(GroupMessage(name))));
         }
 
-        if (m_network.sendGroupName(buttonAndName.second.toStdString()) == -1) {
+        if (m_network.sendGroupName(name.toStdString()) == std::nullopt) {
             ChatAppClient::sendError("Cannot add group successfully");
         };
     }
@@ -94,9 +94,9 @@ namespace SignalSync {
 
 
     void ChattingWindow::onGroupClick() {
-        QPushButton* clickedButton = qobject_cast<QPushButton*>(sender());
+        QPushButton* clicked_button = qobject_cast<QPushButton*>(sender());
 
-        if (m_lastPressedGroup == clickedButton) {
+        if (m_lastPressedGroup == clicked_button) {
             return;
         }
 
@@ -104,15 +104,15 @@ namespace SignalSync {
             m_lastPressedGroup->setStyleSheet(m_defaultButtonStylesheet);
         }
 
-        clickedButton->setStyleSheet(m_pressedButtonStylesheet);
+        clicked_button->setStyleSheet(m_pressedButtonStylesheet);
 
-        m_lastPressedGroup = clickedButton;
+        m_lastPressedGroup = clicked_button;
 
 
         removeAllChatItemsFromScreen();
 
-        m_ui->username_label->setText(clickedButton->text());
-        m_groupToSend = clickedButton->text();
+        m_ui->username_label->setText(clicked_button->text());
+        m_groupToSend = clicked_button->text();
 
         displayGroupMessages(m_groupToSend);
     }
@@ -122,8 +122,8 @@ namespace SignalSync {
 
         auto& vec_m = group_messages.getMessages();
 
-        for (auto itr = vec_m.begin(); itr != vec_m.end(); ++itr) {
-            displayMessages(*(itr->second), t_group_name, GroupB);
+        for (auto& [group_name, message] : vec_m) {
+            displayMessages(*message, t_group_name, GroupB);
         }
 
         for (auto& [button, group_file] : m_filesGroup) {

@@ -6,7 +6,7 @@ namespace SignalSync {
 	protected:
 		std::string m_group;
 	public:
-		RecvGroupMessage(const RecvUserMessage& t_usermessage, std::string t_group) : RecvUserMessage{ t_usermessage.getUsername(), t_usermessage.getMessage() }, m_group { t_group } {}
+		RecvGroupMessage(const RecvUserMessage& t_usermessage, std::string t_group) : RecvUserMessage{ t_usermessage.getMessage(), t_usermessage.getUsername() }, m_group { t_group } {}
 		std::string getGroupName() const { return m_group; }
 		void setGroupName(std::string group_name) { m_group = group_name; }
 	};

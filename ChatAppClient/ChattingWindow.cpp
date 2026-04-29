@@ -153,10 +153,9 @@ namespace SignalSync {
 
     void ChattingWindow::processChatLogs(std::vector<ChatLog> chat_logs) {
         for (const auto& map : chat_logs) {
-            QString name_of_user = QString::fromStdString(map.getUsername());
-            for (auto itr = map.begin(); itr != map.end(); ++itr) {
-                for (const auto& message : itr->second) {
-                    addMessage( message.getUsername() , message.getMessage() );
+            for (auto& [name, message_list] : map) {
+                for (const auto& message : message_list) {
+                    addMessage(message.getUsername(), message.getMessage());
                 }
             }
         }
@@ -327,15 +326,15 @@ namespace SignalSync {
     }
 
     void ChattingWindow::userOrGroupSelect(std::unordered_map<QString, QPushButton*>& hide, std::unordered_map<QString, QPushButton*>& show, QPushButton*& lastPressedButton) const {
-        if (hide.size() != 0) {
-            for (auto itr = hide.begin(); itr != hide.end(); itr++) {
-                itr->second->hide();
+        if (hide.size() > 0) {
+            for (auto& [name, button] : hide) {
+                button->hide();
             }
         }
 
-        if (show.size() != 0) {
-            for (auto itr = show.begin(); itr != show.end(); itr++) {
-                itr->second->show();
+        if (show.size() > 0) {
+            for (auto& [name, button] : show) {
+                button->show();
             }
         }
 

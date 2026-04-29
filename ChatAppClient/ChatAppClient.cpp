@@ -43,24 +43,23 @@ namespace SignalSync {
     }
 
     void ChatAppClient::sendError(const QString& error_message) {
-        QMessageBox msgBox;
-        msgBox.setText(error_message);
-        msgBox.setStandardButtons(QMessageBox::Ok);
-        msgBox.setDefaultButton(QMessageBox::Ok);
-        int ret = msgBox.exec();
-        return;
+        QMessageBox msg_box;
+        msg_box.setText(error_message);
+        msg_box.setStandardButtons(QMessageBox::Ok);
+        msg_box.setDefaultButton(QMessageBox::Ok);
+        int ret = msg_box.exec();
     }
 
     void ChatAppClient::on_connectButton_clicked() {
 
-        const std::string userStd = m_username.toStdString();
+        const std::string user_std = m_username.toStdString();
 
-        if (userStd.length() >= 50) {
+        if (user_std.length() >= 50) {
             sendError("Username too long! Cannot be longer than 50 characters.");
             return;
         }
 
-        if (userStd.length() <= 4) {
+        if (user_std.length() <= 4) {
             sendError("Username too short! Cannot be shorter than 5 characters.");
             return;
         }
@@ -73,7 +72,7 @@ namespace SignalSync {
         //    m_apiKey = connect_to_server.second;
         //}
 
-        if (m_network.serverConnect(userStd) == std::nullopt) { sendError("Cannot Connect to Server!"); return; }
+        if (m_network.serverConnect(user_std) == std::nullopt) { sendError("Cannot Connect to Server!"); return; }
 
         QMessageBox::information(this, tr("Logged in!"), tr("Logged in as %1").arg(m_username));
 

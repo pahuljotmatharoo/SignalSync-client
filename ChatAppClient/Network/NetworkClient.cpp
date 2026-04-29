@@ -182,10 +182,15 @@ namespace SignalSync {
 		return { group_list, size };
 	}
 
-	std::size_t Network::sendGroupName(const std::string& t_group_name) {
+	std::optional<std::size_t> Network::sendGroupName(const std::string& t_group_name) {
 		sendInitMsg(NetworkRequest::ROOM_CREATE);
 
-		return sendUsername(t_group_name);
+		if (uint32_t response = sendUsername(t_group_name); response == -1) {
+			return std::nullopt;
+		}
+		else {
+			return response;
+		}
 	}
 
 	RecvUserMessage SignalSync::Network::recvUserMessage() {
