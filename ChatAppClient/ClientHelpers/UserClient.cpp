@@ -15,7 +15,7 @@
 
 namespace SignalSync {
 
-    void ChattingWindow::addMessage(std::string username_toadd, std::string message_toadd) {
+    void ChattingWindow::addMessage(std::string username_toadd, std::string message_toadd, std::string overall_sender) {
         message_toadd = decrypt(message_toadd).toStdString();
 
         {
@@ -23,7 +23,12 @@ namespace SignalSync {
             if (m_messages.find(QString::fromStdString(username_toadd)) == m_messages.end()) {
                 m_messages.emplace(QString::fromStdString(username_toadd), UniquePtr<UserMessage>(UserMessage(QString::fromStdString(username_toadd))));
             }
-            m_messages[QString::fromStdString(username_toadd)]->addMessage(std::make_pair(OTHER_USER, message_toadd));
+            if (overall_sender == m_selfUsername) {
+                m_messages[QString::fromStdString(username_toadd)]->addMessage(std::make_pair(CURR_USER, message_toadd));
+            }
+            else {
+                m_messages[QString::fromStdString(username_toadd)]->addMessage(std::make_pair(OTHER_USER, message_toadd));
+            }
         }
 
         QMetaObject::invokeMethod(this, [=] { this->sendMessageToScreenRecv(QString::fromStdString(message_toadd), QString::fromStdString(username_toadd), UserB); }, Qt::QueuedConnection);

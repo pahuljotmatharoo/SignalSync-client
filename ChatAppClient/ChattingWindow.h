@@ -91,7 +91,7 @@ namespace SignalSync {
         void networkDownloadFile();
         void networkUserChats();
         void processChatLogs(std::vector<ChatLog> chat_logs);
-        void addMessage(const std::string username_toadd, const std::string message_toadd);
+        void addMessage(std::string username_toadd, std::string message_toadd, std::string overall_sender = "");
         void addMessage_group(std::string message_toadd, const std::string username_toadd, const std::string group_toadd);
         void sendMessageToScreenRecv(const QString& message, const QString& user, bool type);
         void sendMessageToScreenSend(const QString& message);

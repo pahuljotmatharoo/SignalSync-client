@@ -155,7 +155,7 @@ namespace SignalSync {
         for (const auto& map : chat_logs) {
             for (auto& [name, message_list] : map) {
                 for (const auto& message : message_list) {
-                    addMessage(message.getUsername(), message.getMessage());
+                    addMessage(name, message.getMessage(), message.getUsername());
                 }
             }
         }
