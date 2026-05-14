@@ -12,6 +12,7 @@ A lightweight C++/Qt Messaging & File Transfer System that supports **direct mes
 ## Tech Stack
 
 - **C++**
+- **Go**
 - **Qt (Widgets)**
 - **Sockets networking** (client/server style)
 
