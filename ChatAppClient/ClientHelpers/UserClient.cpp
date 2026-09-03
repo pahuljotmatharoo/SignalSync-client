@@ -122,6 +122,13 @@ namespace SignalSync {
             m_lastPressedUser->setStyleSheet(m_defaultButtonStylesheet);
         }
 
+        QColor color = clickedButton->palette().color(QPalette::Button);
+        QString hex = color.name();
+
+        if (hex == "#ff6b6b") {
+            QMetaObject::invokeMethod(this, [=] { m_network.sendRead(clickedButton->text().toStdString()); }, Qt::QueuedConnection);
+        }
+
         clickedButton->setStyleSheet(m_pressedButtonStylesheet);
         m_lastPressedUser = clickedButton;
 
@@ -131,6 +138,8 @@ namespace SignalSync {
         m_usernameToSend = clickedButton->text();
 
         displayUserMessages(m_usernameToSend);
+
+        // server then sends to that user that this user read the message!
     }
 
     void ChattingWindow::notificationPassUser(const QString user_from) {

@@ -23,7 +23,8 @@ namespace SignalSync {
 		USER_JOIN = 10,
 		FILE_DOWNLOAD_USER = 11,
 		USER_CHATS = 12,
-		FILE_DOWNLOAD_GROUP = 13
+		FILE_DOWNLOAD_GROUP = 13,
+		READ_MSG = 14
 	};
 
 	constexpr auto MAX_FILE_SIZE = 5000000;
@@ -66,7 +67,8 @@ namespace SignalSync {
 		File downloadFileFromServer(std::string username);
 		void startDownloadFile(const std::string& filename, const std::string& username, NetworkRequest constant);
 		std::vector<ChatLog> recvUserChatlogs();
-
+		std::string recvRead();
+		
 
 		uint32_t sendFileData(const char* t_data, uint32_t size);
 		uint32_t sendUsername(const std::string& t_username);
@@ -75,6 +77,7 @@ namespace SignalSync {
 		std::optional<std::size_t> sendFile(const QByteArray* t_fileData, const std::string& t_user_to_send, const std::string& t_filename_to_send, NetworkRequest constant);
 		std::optional<std::size_t> sendMsg(const std::string& t_message, const std::string& t_username, const NetworkRequest& constant);
 		std::optional<std::size_t> sendGroupName(const std::string& group_name);
+		std::optional<std::size_t> sendRead(const std::string& user_name);
 
 		template <typename T>
 		std::size_t sendAll(T* t_storage, int bytes) {

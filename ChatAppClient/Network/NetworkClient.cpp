@@ -19,7 +19,7 @@ namespace SignalSync {
 
 		std::optional<int16_t> status = serverConnectHelper(2520);
 
-		if (status == std::nullopt) {
+ 		if (status == std::nullopt) {
 			int error = WSAGetLastError();
 			closesocket(sock);
 			WSACleanup();
@@ -39,7 +39,7 @@ namespace SignalSync {
 		t_server.sin_port = htons(t_port);
 #pragma warning(push)
 #pragma warning(disable:4996)   // disable this function is deprecated warnings
-		t_server.sin_addr.s_addr = inet_addr("");
+		t_server.sin_addr.s_addr = inet_addr("74.14.159.39");
 #pragma warning(pop)
 
 		int status = connect(getSockID(), reinterpret_cast<sockaddr*>(&t_server), sizeof(t_server));
@@ -186,11 +186,25 @@ namespace SignalSync {
 		sendInitMsg(NetworkRequest::ROOM_CREATE);
 
 		if (uint32_t response = sendUsername(t_group_name); response == -1) {
-			return std::nullopt;
+			return std::nullopt; // ?
 		}
 		else {
 			return response;
 		}
+	}
+
+	std::optional<std::size_t> Network::sendRead(const std::string& user_name) {
+		sendInitMsg(NetworkRequest::READ_MSG);
+		if (sendUsername(user_name) == -1) {
+			return std::nullopt;
+		}
+		else {
+			return 1;
+		}
+	}
+
+	std::string Network::recvRead() {
+		return recvString();
 	}
 
 	RecvUserMessage SignalSync::Network::recvUserMessage() {

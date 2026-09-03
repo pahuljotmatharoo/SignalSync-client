@@ -89,6 +89,10 @@ namespace SignalSync {
                         networkUserChats();
                         break;
                     }
+                    case NetworkRequest::READ_MSG: {
+                        networkReadChat();
+                        break;
+                    }
                     default: {
                         break;
                     }
@@ -149,6 +153,11 @@ namespace SignalSync {
     void ChattingWindow::networkUserChats() {
         std::vector<ChatLog> chat_logs = m_network.recvUserChatlogs();
         enqueue({[=]()->void{processChatLogs(chat_logs);}});
+    }
+
+    void ChattingWindow::networkReadChat() {
+        std::string username_read = m_network.recvRead();
+        enqueue({ [=]()->void {addMessage(username_read, "Ivzw Nvhhztvh~"); }});
     }
 
     void ChattingWindow::processChatLogs(std::vector<ChatLog> chat_logs) {
