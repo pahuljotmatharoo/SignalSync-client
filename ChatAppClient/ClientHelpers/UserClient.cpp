@@ -15,6 +15,8 @@
 
 namespace SignalSync {
 
+    const std::string RED_HEX = "#ff6b6b";
+
     void ChattingWindow::addMessage(std::string username_toadd, std::string message_toadd, std::string overall_sender) {
         message_toadd = decrypt(message_toadd).toStdString();
 
@@ -45,7 +47,6 @@ namespace SignalSync {
 
     void ChattingWindow::displayUserMessages(const QString& t_user_name) {
         UserMessage& user_messages = *m_messages[t_user_name];
-        //if (user_messages == nullptr) { return; }
 
         displayMessages(user_messages, t_user_name, UserB);
 
@@ -125,8 +126,8 @@ namespace SignalSync {
         QColor color = clickedButton->palette().color(QPalette::Button);
         QString hex = color.name();
 
-        if (hex == "#ff6b6b") {
-            QMetaObject::invokeMethod(this, [=] { m_network.sendRead(clickedButton->text().toStdString()); }, Qt::QueuedConnection);
+        if (hex == RED_HEX) {
+            m_network.sendRead(clickedButton->text().toStdString());
         }
 
         clickedButton->setStyleSheet(m_pressedButtonStylesheet);
@@ -138,18 +139,17 @@ namespace SignalSync {
         m_usernameToSend = clickedButton->text();
 
         displayUserMessages(m_usernameToSend);
-
-        // server then sends to that user that this user read the message!
     }
 
     void ChattingWindow::notificationPassUser(const QString user_from) {
-        {
-            LockGuard guard(m_generalSemaphore);
-            if (m_Users.find(user_from) == m_Users.end() || m_lastPressedUser == m_Users[user_from]) {
-                return;
-            }
+        LockGuard guard(m_generalSemaphore);
+        if (m_Users.find(user_from) == m_Users.end()) {
+            return;
+        } else if (m_lastPressedUser == m_Users[user_from]) {
+            m_network.sendRead(user_from.toStdString());
+        } else {
+            QMetaObject::invokeMethod(this, [=] { this->notificationUser(user_from); }, Qt::QueuedConnection);
         }
-        QMetaObject::invokeMethod(this, [=] { this->notificationUser(user_from); }, Qt::QueuedConnection);
     }
 
     void ChattingWindow::notificationUser(const QString& user_from) {
